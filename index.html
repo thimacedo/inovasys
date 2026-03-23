@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peticionamento - inovaSys</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        :root {
+            --primary-blue: #0f172a;
+            --light-blue: #f0f9ff;
+            --accent-blue: #0284c7;
+            --gray-text: #4b5563;
+            --border-color: #e5e7eb;
+            --bg-color: #f3f4f6;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: #111827;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            margin: 40px 20px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* =========================================
+           NOVO CABEÇALHO: Delicado e Branco
+           ========================================= */
+        .header {
+            background-color: white; /* Fundo todo branco */
+            color: var(--primary-blue); /* Texto escuro para contraste */
+            padding: 16px 32px; /* Padding reduzido para visual slim */
+            display: flex;
+            flex-direction: row; /* Layout em linha (lado a lado) */
+            align-items: center; /* Centraliza verticalmente */
+            justify-content: flex-start; /* Alinha tudo à esquerda */
+            border-bottom: 1px solid var(--border-color); /* Linha sutil para definir o topo */
+        }
+
+        /* Contêiner do Logo: Ocupando 22% (faixa de 20-25%) */
+        .header-logo {
+            flex: 0 0 22%; /* Não cresce, não encolhe, base de 22% */
+            max-width: 22%;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start; /* Alinhado à esquerda */
+        }
+
+        /* Logotipo pequeno e responsivo dentro dos 22% */
+        .header-logo img {
+            max-width: 100%; /* Ocupa o máximo do contêiner de 22% */
+            height: auto;
+            display: block;
+        }
+
+        /* Contêiner do Título: Ocupando o restante (78%) */
+        .header-title {
+            flex: 1; /* Ocupa todo o espaço restante */
+            padding-left: 24px; /* Espaço entre o logo e o texto */
+            text-align: left; /* Título alinhado à esquerda */
+        }
+
+        /* Estilo do Título delicate */
+        .header-title p {
+            margin: 0;
+            font-size: 16px; /* Tamanho equilibrado */
+            font-weight: 500; /* Peso médio para delicadeza */
+            color: var(--primary-blue);
+            line-height: 1.4;
+        }
+
+        /* =========================================
+           Restante do Sistema (Mantido)
+           ========================================= */
+        .form-content { padding: 32px; flex: 1; }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary-blue);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 8px;
+            margin-bottom: 20px;
+            margin-top: 30px;
+        }
+        .section-title:first-child { margin-top: 0; }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-group { margin-bottom: 16px; }
+        .form-group.full-width { grid-column: span 2; }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: var(--gray-text);
+        }
+
+        input[type="text"], input[type="email"], input[type="number"], textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1);
+        }
+
+        .legal-lock {
+            background-color: var(--light-blue);
+            border-left: 4px solid var(--accent-blue);
+            padding: 16px;
+            border-radius: 4px;
+            margin-top: 24px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .legal-lock input[type="checkbox"] {
+            margin-top: 4px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .legal-lock label { margin: 0; color: #111827; cursor: pointer; line-height: 1.5; }
+
+        .btn-submit {
+            background-color: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 6px;
+            width: 100%;
+            margin-top: 32px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-submit:hover:not(:disabled) { background-color: #0369a1; }
+        
+        .btn-submit:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        #success-screen { display: none; text-align: center; padding: 40px 20px; }
+        
+        .success-icon {
+            font-size: 48px;
+            color: #10b981;
+            margin-bottom: 16px;
+        }
+
+        #pdf-template { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="main-card">
+        <div class="header">
+            <div class="header-logo">
+                <img src="logo-inovasys.png" alt="Logotipo inovaSys">
+            </div>
+            <div class="header-title">
+                <p>Plataforma de Resolução de Conflitos - Ambiente Seguro</p>
+            </div>
+        </div>
+
+        <div class="form-content" id="form-screen">
+            <form id="peticaoForm">
+                
+                <div class="section-title">Qualificação do Requerente</div>
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label>Nome Completo ou Razão Social</label>
+                        <input type="text" id="reqNome" required placeholder="Ex: João da Silva">
+                    </div>
+                    <div class="form-group">
+                        <label>CPF / CNPJ</label>
+                        <input type="text" id="reqDoc" required placeholder="000.000.000-00">
+                    </div>
+                    <div class="form-group">
+                        <label>E-mail</label>
+                        <input type="email" id="reqEmail" required placeholder="joao@email.com">
+                    </div>
+                </div>
+
+                <div class="section-title">Qualificação do Requerido</div>
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label>Nome Completo ou Razão Social</label>
+                        <input type="text" id="defNome" required placeholder="Ex: Empresa XYZ Ltda">
+                    </div>
+                </div>
+
+                <div class="section-title">Objeto do Litígio</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Valor da Causa (R$)</label>
+                        <input type="number" id="valorCausa" required placeholder="Ex: 50000">
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Resumo dos Fatos e Pedidos</label>
+                        <textarea id="resumoFatos" rows="4" required placeholder="Descreva brevemente o motivo do conflito..."></textarea>
+                    </div>
+                </div>
+
+                <div class="legal-lock">
+                    <input type="checkbox" id="aceiteClausula">
+                    <label for="aceiteClausula">
+                        <strong>Cláusula Compromissória (Art. 4º, § 2º da Lei 9.307/96):</strong> Reconheço e concordo expressamente que qualquer litígio originário deste instrumento será resolvido definitivamente por arbitragem, renunciando ao foro da justiça comum.
+                    </label>
+                </div>
+
+                <button type="submit" class="btn-submit" id="btnSubmit" disabled>Avançar para Pagamento e Protocolo</button>
+            </form>
+        </div>
+
+        <div id="success-screen">
+            <div class="success-icon">✓</div>
+            <h2>Petição Pré-Protocolada!</h2>
+            <p style="color: var(--gray-text); margin-bottom: 24px;">Em um ambiente real, você seria redirecionado para o PagSeguro neste momento.</p>
+            
+            <div style="background: var(--light-blue); padding: 20px; border-radius: 8px; margin-bottom: 24px; text-align: left;">
+                <strong>Ação Simulada:</strong> O sistema acabou de compilar seus dados e gerar um processo eletrônico formalizado.
+            </div>
+
+            <button onclick="gerarPDF()" class="btn-submit" style="margin-top: 0; width: auto;">Baixar PDF do Processo</button>
+        </div>
+    </div>
+
+    <div id="pdf-template">
+        <div style="padding: 40px; font-family: Arial, sans-serif; color: #000; line-height: 1.6;">
+            
+            <div style="text-align: center; margin-bottom: 15px;">
+                <img src="logo-inovasys.png" alt="Logotipo inovaSys" style="max-width: 150px; height: auto;">
+            </div>
+            
+            <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 25px;">
+                <p style="margin: 0; font-size: 14px; font-weight: bold; text-transform: uppercase;">Câmara de Arbitragem e Resolução de Conflitos</p>
+            </div>
+            
+            <h2 style="text-align: center; font-size: 18px; text-decoration: underline; margin-bottom: 30px;">AUTO DE PETICIONAMENTO INICIAL</h2>
+
+            <p><strong>Nº DO PROCESSO (Provisório):</strong> <span id="pdfProcesso"></span></p>
+            
+            <h3 style="font-size: 16px; background-color: #f0f0f0; padding: 5px;">1. PARTES</h3>
+            <p><strong>REQUERENTE:</strong> <span id="pdfReqNome"></span>, inscrito no CPF/CNPJ: <span id="pdfReqDoc"></span>, e-mail: <span id="pdfReqEmail"></span>.</p>
+            <p><strong>REQUERIDO(A):</strong> <span id="pdfDefNome"></span>.</p>
+
+            <h3 style="font-size: 16px; background-color: #f0f0f0; padding: 5px;">2. DO OBJETO E VALOR DA CAUSA</h3>
+            <p><strong>Valor da Causa:</strong> R$ <span id="pdfValor"></span></p>
+            <p><strong>Resumo dos Fatos:</strong></p>
+            <p style="border: 1px solid #ccc; padding: 10px; min-height: 80px;" id="pdfFatos"></p>
+
+            <h3 style="font-size: 16px; background-color: #f0f0f0; padding: 5px;">3. CONFORMIDADE LEGAL (LEI 9.307/96)</h3>
+            <p>O Requerente <strong>aceitou expressamente em destaque (negrito)</strong> a instituição da arbitragem, preenchendo os requisitos do Art. 4º, § 2º da Lei de Arbitragem, às <span id="pdfHora"></span> do dia <span id="pdfData"></span>, registrando o carimbo de tempo no sistema da instituição.</p>
+
+            <div style="margin-top: 60px; text-align: center;">
+                <p>____________________________________________________</p>
+                <p><strong>Assinatura Eletrônica Registrada</strong></p>
+                <p>Parnamirim/RN, <span id="pdfDataLocal"></span></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const checkboxClausula = document.getElementById('aceiteClausula');
+        const btnSubmit = document.getElementById('btnSubmit');
+
+        checkboxClausula.addEventListener('change', function() {
+            btnSubmit.disabled = !this.checked;
+        });
+
+        document.getElementById('peticaoForm').addEventListener('submit', function(e) {
+            e.preventDefault(); 
+            
+            document.getElementById('pdfReqNome').textContent = document.getElementById('reqNome').value;
+            document.getElementById('pdfReqDoc').textContent = document.getElementById('reqDoc').value;
+            document.getElementById('pdfReqEmail').textContent = document.getElementById('reqEmail').value;
+            document.getElementById('pdfDefNome').textContent = document.getElementById('defNome').value;
+            document.getElementById('pdfValor').textContent = document.getElementById('valorCausa').value;
+            document.getElementById('pdfFatos').textContent = document.getElementById('resumoFatos').value;
+            
+            const agora = new Date();
+            document.getElementById('pdfProcesso').textContent = Math.floor(Math.random() * 10000) + "/2026";
+            document.getElementById('pdfData').textContent = agora.toLocaleDateString('pt-BR');
+            document.getElementById('pdfDataLocal').textContent = agora.toLocaleDateString('pt-BR');
+            document.getElementById('pdfHora').textContent = agora.toLocaleTimeString('pt-BR');
+
+            document.getElementById('form-screen').style.display = 'none';
+            document.getElementById('success-screen').style.display = 'block';
+        });
+
+        function gerarPDF() {
+            const elemento = document.getElementById('pdf-template');
+            
+            const opcoes = {
+                margin:       0,
+                filename:     'Auto_Peticionamento_inovaSys.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true }, 
+                jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+            };
+
+            elemento.style.display = 'block';
+            
+            html2pdf().set(opcoes).from(elemento).save().then(() => {
+                elemento.style.display = 'none';
+            });
+        }
+    </script>
+</body>
+</html>
