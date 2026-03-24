@@ -28,10 +28,9 @@
             min-height: 100vh;
         }
 
-        /* Oculta as telas por padrão */
-        .screen { display: none; }
-        .active-screen { display: block; }
-
+        /* Oculta as telas por padrão nas views internas */
+        .view { display: none; }
+        
         /* =========================================
            TELA DE LOGIN
            ========================================= */
@@ -60,7 +59,7 @@
         /* =========================================
            LAYOUT DA APLICAÇÃO (SIDEBAR + MAIN)
            ========================================= */
-        #app-layout { width: 100%; display: none; } /* Ativado após o login */
+        #app-layout { width: 100%; display: none; }
 
         .sidebar {
             width: var(--sidebar-width);
@@ -193,7 +192,7 @@
 </head>
 <body>
 
-    <div id="login-screen" class="screen active-screen">
+    <div id="login-screen">
         <div class="login-box">
             <img src="logo-inovasys.png" alt="inovaSys Logo">
             <h2>Acesso Restrito</h2>
@@ -228,7 +227,7 @@
 
         <div class="main-content">
             
-            <div id="dashboard-view" class="view">
+            <div id="dashboard-view" class="view" style="display: block;">
                 <div class="page-header">
                     <h1>Painel Administrativo</h1>
                     <button class="btn-primary" onclick="navigate('peticionamento')">+ Iniciar Processo</button>
@@ -283,7 +282,7 @@
                 </div>
             </div>
 
-            <div id="peticionamento-view" class="view" style="display: none;">
+            <div id="peticionamento-view" class="view">
                 <div class="page-header">
                     <h1>Novo Peticionamento</h1>
                 </div>
@@ -338,7 +337,7 @@
                 </div>
             </div>
 
-            <div id="success-view" class="view" style="display: none;">
+            <div id="success-view" class="view">
                 <div class="card" style="text-align: center;">
                     <div class="success-icon">✓</div>
                     <h2>Petição Pré-Protocolada!</h2>
@@ -387,31 +386,28 @@
         // 1. Lógica de Login Simulada
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            document.getElementById('login-screen').classList.remove('active-screen');
+            document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app-layout').style.display = 'flex';
         });
 
         function logout() {
             document.getElementById('app-layout').style.display = 'none';
-            document.getElementById('login-screen').classList.add('active-screen');
-            navigate('dashboard'); // Reseta a visão interna
+            document.getElementById('login-screen').style.display = 'flex';
+            navigate('dashboard'); 
         }
 
         // 2. Navegação do Menu Lateral
         function navigate(viewId) {
-            // Esconde todas as views
             document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
-            // Remove classe ativa dos menus
             document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
             
-            // Mostra a view correta e ativa o menu
             document.getElementById(viewId + '-view').style.display = 'block';
             if(document.getElementById('menu-' + viewId)) {
                 document.getElementById('menu-' + viewId).classList.add('active');
             }
         }
 
-        // 3. Lógica do Formulário e PDF (Mantida)
+        // 3. Lógica do Formulário e PDF
         const checkboxClausula = document.getElementById('aceiteClausula');
         const btnSubmit = document.getElementById('btnSubmit');
 
@@ -435,7 +431,6 @@
             document.getElementById('pdfDataLocal').textContent = agora.toLocaleDateString('pt-BR');
             document.getElementById('pdfHora').textContent = agora.toLocaleTimeString('pt-BR');
 
-            // Muda para a tela de sucesso dentro do layout
             navigate('success');
             document.getElementById('peticaoForm').reset();
             btnSubmit.disabled = true;
