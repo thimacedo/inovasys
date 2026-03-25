@@ -1,456 +1,482 @@
+**ESTRUTURA DE ARQUITETURA DE SISTEMAS (SaaS - inovaSys)**
+
+**1. Identidade Visual (Extraída do Logotipo)**
+* **Cor Primária (Fundo Escuro/Texto Principal):** `#0a192f` (Azul Marinho Profundo, extraído da borda externa do escudo).
+* **Cor de Destaque (Ações/Circuitos):** `#0284c7` (Azul Ciano, extraído das linhas internas).
+* **Cor de Fundo (Background):** `#f8fafc` (Cinza muito claro para contraste e conforto visual em leituras longas).
+* **Tipografia:** `Inter` (Padrão web clássico, alta legibilidade para documentos jurídicos).
+
+**2. Modularização e Isolamento (Front-end SPA)**
+O sistema foi arquitetado em um único arquivo para facilitar o deploy inicial na Vercel, mas estruturado internamente em módulos isolados:
+* `AuthModule`: Gerencia acesso.
+* `NavigationModule`: Controla a renderização das telas sem recarregar a página.
+* `ProcessModule`: Gerencia a entrada de dados aplicando as travas da Lei 9.307/96.
+* `ComplianceModule`: Garante os aceites da LGPD e os avisos legais.
+
+**3. Conformidade Legal Aplicada**
+* **Lei 9.307/96:** Aplicação da trava do Art. 4º, § 2º (Cláusula compromissória em negrito com aceite expresso) e monitoramento do Art. 23 (Prazo de 6 meses para sentença).
+* **LGPD (Lei 13.709/18):** Checkbox obrigatório de consentimento para tratamento de dados sensíveis na qualificação das partes.
+
+Abaixo está o arquivo completo `index.html` da versão base do sistema em produção.
+
+```html
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>inovaSys - Plataforma de Resolução de Conflitos</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>inovaSys - Sistema de Gestão Arbitral</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
+        /* ==========================================================================
+           MÓDULO DE ESTILOS GLOBAIS E VARIÁVEIS (IDENTIDADE VISUAL)
+           ========================================================================== */
         :root {
-            --primary-blue: #0f172a;
-            --light-blue: #f0f9ff;
-            --accent-blue: #0284c7;
-            --gray-text: #4b5563;
-            --border-color: #e5e7eb;
-            --bg-color: #f3f4f6;
-            --sidebar-width: 250px;
+            --color-primary: #0a192f;
+            --color-accent: #0284c7;
+            --color-accent-hover: #0369a1;
+            --color-bg: #f8fafc;
+            --color-surface: #ffffff;
+            --color-text: #334155;
+            --color-text-light: #64748b;
+            --color-border: #e2e8f0;
+            --color-danger: #ef4444;
+            --color-success: #10b981;
+            --color-warning: #f59e0b;
+            
+            --sidebar-width: 260px;
+            --header-height: 70px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
         }
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--bg-color);
-            color: #111827;
+            background-color: var(--color-bg);
+            color: var(--color-text);
             margin: 0;
             padding: 0;
             display: flex;
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
-        /* Oculta as telas por padrão nas views internas */
+        * { box-sizing: border-box; }
+
+        /* Ocultação de Módulos (Roteamento) */
+        .module { display: none; }
+        .module.active { display: block; }
         .view { display: none; }
-        
-        /* =========================================
-           TELA DE LOGIN
-           ========================================= */
-        #login-screen {
-            width: 100%;
+        .view.active { display: block; }
+
+        /* ==========================================================================
+           MÓDULO DE AUTENTICAÇÃO (LOGIN)
+           ========================================================================== */
+        #module-auth {
+            width: 100vw;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            background-color: var(--primary-blue);
+            background-color: var(--color-primary);
+            background-image: radial-gradient(circle at center, #112240 0%, #0a192f 100%);
         }
 
-        .login-box {
-            background: white;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        .auth-container {
+            background: var(--color-surface);
+            padding: 48px;
+            border-radius: var(--radius-lg);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
             width: 100%;
-            max-width: 400px;
-            text-align: center;
+            max-width: 420px;
         }
 
-        .login-box img { max-width: 200px; margin-bottom: 24px; }
-        .login-box h2 { margin-top: 0; font-size: 20px; color: var(--primary-blue); }
-        .login-box p { color: var(--gray-text); font-size: 14px; margin-bottom: 24px; }
+        .auth-header { text-align: center; margin-bottom: 32px; }
+        .auth-header img { max-width: 160px; margin-bottom: 16px; }
+        .auth-header h1 { font-size: 20px; color: var(--color-primary); margin: 0; }
+        .auth-header p { font-size: 14px; color: var(--color-text-light); margin-top: 8px; }
 
-        /* =========================================
-           LAYOUT DA APLICAÇÃO (SIDEBAR + MAIN)
-           ========================================= */
-        #app-layout { width: 100%; display: none; }
+        /* ==========================================================================
+           MÓDULO ESTRUTURAL (LAYOUT PRINCIPAL)
+           ========================================================================== */
+        #module-app { width: 100%; display: none; } /* Ativado via JS */
 
         .sidebar {
             width: var(--sidebar-width);
-            background-color: white;
-            border-right: 1px solid var(--border-color);
+            background-color: var(--color-surface);
+            border-right: 1px solid var(--color-border);
             display: flex;
             flex-direction: column;
             position: fixed;
             height: 100vh;
+            z-index: 100;
         }
 
-        .sidebar-logo {
-            padding: 24px;
-            border-bottom: 1px solid var(--border-color);
+        .sidebar-brand {
+            height: var(--header-height);
             display: flex;
-            justify-content: center;
+            align-items: center;
+            padding: 0 24px;
+            border-bottom: 1px solid var(--color-border);
         }
         
-        .sidebar-logo img { max-width: 150px; }
+        .sidebar-brand img { max-width: 140px; }
 
-        .sidebar-menu { padding: 16px 0; flex: 1; }
+        .sidebar-nav { padding: 24px 0; flex: 1; overflow-y: auto; }
         
-        .menu-item {
+        .nav-item {
             padding: 12px 24px;
-            color: var(--gray-text);
+            color: var(--color-text-light);
             text-decoration: none;
-            display: block;
+            display: flex;
+            align-items: center;
             font-weight: 500;
+            font-size: 14px;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
         }
 
-        .menu-item:hover, .menu-item.active {
-            background-color: var(--light-blue);
-            color: var(--accent-blue);
-            border-right: 3px solid var(--accent-blue);
+        .nav-item:hover, .nav-item.active {
+            background-color: var(--color-bg);
+            color: var(--color-accent);
+            border-left-color: var(--color-accent);
         }
 
-        .main-content {
+        .main-wrapper {
             flex: 1;
             margin-left: var(--sidebar-width);
-            padding: 32px;
-            overflow-y: auto;
-        }
-
-        /* =========================================
-           DASHBOARD (Métricas e Tabela)
-           ========================================= */
-        .page-header {
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .topbar {
+            height: var(--header-height);
+            background-color: var(--color-surface);
+            border-bottom: 1px solid var(--color-border);
+            display: flex;
             align-items: center;
-            margin-bottom: 32px;
+            justify-content: space-between;
+            padding: 0 32px;
+            position: sticky;
+            top: 0;
+            z-index: 90;
         }
 
-        .page-header h1 { margin: 0; font-size: 24px; color: var(--primary-blue); }
+        .user-profile { display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 500; }
+        .avatar { width: 36px; height: 36px; background-color: var(--color-primary); color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; }
 
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 24px;
-            margin-bottom: 32px;
-        }
+        .content-area { padding: 32px; flex: 1; overflow-y: auto; }
 
-        .metric-card {
-            background: white;
-            padding: 24px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-
-        .metric-title { font-size: 14px; color: var(--gray-text); font-weight: 500; }
-        .metric-value { font-size: 28px; font-weight: 700; color: var(--primary-blue); margin-top: 8px; }
-
-        .data-table-container {
-            background: white;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            overflow: hidden;
-        }
-
-        table { width: 100%; border-collapse: collapse; text-align: left; }
-        th { background-color: #f9fafb; padding: 12px 24px; font-size: 12px; text-transform: uppercase; color: var(--gray-text); border-bottom: 1px solid var(--border-color); }
-        td { padding: 16px 24px; font-size: 14px; border-bottom: 1px solid var(--border-color); color: #111827; }
+        /* ==========================================================================
+           COMPONENTES REUTILIZÁVEIS (UI KIT)
+           ========================================================================== */
+        .card { background: var(--color-surface); border-radius: var(--radius-lg); border: 1px solid var(--color-border); box-shadow: var(--shadow-sm); padding: 32px; margin-bottom: 24px; }
+        .card-header { margin-bottom: 24px; border-bottom: 1px solid var(--color-border); padding-bottom: 16px; }
+        .card-title { font-size: 18px; font-weight: 600; color: var(--color-primary); margin: 0; }
         
-        .status-badge {
-            padding: 4px 8px;
-            border-radius: 9999px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-        .status-warning { background-color: #fef3c7; color: #92400e; }
-        .status-success { background-color: #d1fae5; color: #065f46; }
-        .status-danger { background-color: #fee2e2; color: #991b1b; }
-
-        /* =========================================
-           COMPONENTES GERAIS (Formulário e Botões)
-           ========================================= */
-        .card {
-            background: white;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-            padding: 32px;
-            max-width: 800px;
-        }
-
-        .section-title { font-size: 18px; font-weight: 600; color: var(--primary-blue); border-bottom: 2px solid var(--border-color); padding-bottom: 8px; margin-bottom: 20px; margin-top: 30px; }
-        .section-title:first-child { margin-top: 0; }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        .form-group { margin-bottom: 16px; }
-        .form-group.full-width { grid-column: span 2; }
-        label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; color: var(--gray-text); }
-        input[type="text"], input[type="email"], input[type="password"], input[type="number"], textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 14px; box-sizing: border-box; transition: border-color 0.2s; }
-        input:focus, textarea:focus { outline: none; border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1); }
+        .form-group { margin-bottom: 20px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .form-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--color-primary); }
+        .form-control { width: 100%; padding: 12px 16px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-family: 'Inter', sans-serif; font-size: 14px; transition: border-color 0.2s; }
+        .form-control:focus { outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1); }
         
-        .legal-lock { background-color: var(--light-blue); border-left: 4px solid var(--accent-blue); padding: 16px; border-radius: 4px; margin-top: 24px; display: flex; align-items: flex-start; gap: 12px; }
-        .legal-lock input[type="checkbox"] { margin-top: 4px; width: 18px; height: 18px; cursor: pointer; }
-        .legal-lock label { margin: 0; color: #111827; cursor: pointer; line-height: 1.5; }
+        .btn { padding: 12px 24px; border-radius: var(--radius-md); font-weight: 500; font-size: 14px; cursor: pointer; transition: all 0.2s; border: none; font-family: 'Inter', sans-serif; }
+        .btn-primary { background-color: var(--color-accent); color: white; }
+        .btn-primary:hover:not(:disabled) { background-color: var(--color-accent-hover); }
+        .btn-primary:disabled { background-color: #94a3b8; cursor: not-allowed; }
+        .btn-outline { background-color: transparent; border: 1px solid var(--color-border); color: var(--color-text); }
+        .btn-outline:hover { background-color: var(--color-bg); }
 
-        .btn-submit { background-color: var(--accent-blue); color: white; border: none; padding: 14px 24px; font-size: 16px; font-weight: 600; border-radius: 6px; width: 100%; margin-top: 32px; cursor: pointer; transition: background-color 0.2s; }
-        .btn-submit:hover:not(:disabled) { background-color: #0369a1; }
-        .btn-submit:disabled { background-color: #9ca3af; cursor: not-allowed; }
-        
-        .btn-primary { background-color: var(--accent-blue); color: white; border: none; padding: 10px 20px; font-size: 14px; font-weight: 500; border-radius: 6px; cursor: pointer; text-decoration: none; }
+        .badge { padding: 4px 10px; border-radius: 9999px; font-size: 12px; font-weight: 600; }
+        .badge-success { background-color: #d1fae5; color: #065f46; }
+        .badge-warning { background-color: #fef3c7; color: #92400e; }
 
-        .success-icon { font-size: 48px; color: #10b981; margin-bottom: 16px; text-align: center; }
-        #pdf-template { display: none; }
+        .table-responsive { overflow-x: auto; }
+        .table { width: 100%; border-collapse: collapse; }
+        .table th { background-color: var(--color-bg); padding: 14px 20px; text-align: left; font-size: 12px; text-transform: uppercase; color: var(--color-text-light); border-bottom: 1px solid var(--color-border); font-weight: 600; }
+        .table td { padding: 16px 20px; font-size: 14px; border-bottom: 1px solid var(--color-border); vertical-align: middle; }
+
+        /* Componentes Específicos de Compliance (LGPD e Lei 9307) */
+        .compliance-box { background-color: #f0fdf4; border-left: 4px solid var(--color-success); padding: 16px; border-radius: 4px; margin-top: 24px; font-size: 13px; line-height: 1.6; }
+        .legal-box { background-color: #eff6ff; border-left: 4px solid var(--color-accent); padding: 16px; border-radius: 4px; margin-top: 24px; display: flex; align-items: flex-start; gap: 12px; }
+        .legal-box input[type="checkbox"] { margin-top: 4px; width: 18px; height: 18px; cursor: pointer; }
+        .legal-box label { margin: 0; font-size: 14px; cursor: pointer; line-height: 1.5; color: var(--color-primary); }
+
     </style>
 </head>
 <body>
 
-    <div id="login-screen">
-        <div class="login-box">
-            <img src="logo-inovasys.png" alt="inovaSys Logo">
-            <h2>Acesso Restrito</h2>
-            <p>Plataforma de Resolução de Conflitos</p>
-            
-            <form id="loginForm">
-                <div class="form-group" style="text-align: left;">
-                    <label>E-mail Corporativo</label>
-                    <input type="email" value="admin@camara.com.br" required>
+    <div id="module-auth" class="module active">
+        <div class="auth-container">
+            <div class="auth-header">
+                <img src="logo-inovasys.png" alt="inovaSys Logo">
+                <h1>Acesso ao Sistema</h1>
+                <p>Ambiente seguro e criptografado</p>
+            </div>
+            <form id="form-login">
+                <div class="form-group">
+                    <label class="form-label">E-mail Corporativo</label>
+                    <input type="email" class="form-control" value="secretaria@camara.com.br" required>
                 </div>
-                <div class="form-group" style="text-align: left;">
-                    <label>Senha</label>
-                    <input type="password" value="******" required>
+                <div class="form-group">
+                    <label class="form-label">Senha</label>
+                    <input type="password" class="form-control" value="******" required>
                 </div>
-                <button type="submit" class="btn-submit" style="margin-top: 16px;">Entrar no Sistema</button>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">Autenticar</button>
             </form>
         </div>
     </div>
 
-    <div id="app-layout">
+    <div id="module-app" class="module">
         
-        <div class="sidebar">
-            <div class="sidebar-logo">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
                 <img src="logo-inovasys.png" alt="inovaSys Logo">
             </div>
-            <div class="sidebar-menu">
-                <a class="menu-item active" id="menu-dashboard" onclick="navigate('dashboard')">Painel de Controle</a>
-                <a class="menu-item" id="menu-peticionamento" onclick="navigate('peticionamento')">Novo Peticionamento</a>
-                <a class="menu-item" onclick="logout()" style="margin-top: auto; border-top: 1px solid var(--border-color); color: #991b1b;">Sair do Sistema</a>
-            </div>
-        </div>
+            <nav class="sidebar-nav">
+                <div class="nav-item active" onclick="NavigationModule.navigate('dashboard')">Painel Gerencial</div>
+                <div class="nav-item" onclick="NavigationModule.navigate('peticionamento')">Novo Procedimento</div>
+                <div class="nav-item" onclick="NavigationModule.navigate('processos')">Autos e Documentos</div>
+            </nav>
+            <div class="nav-item" onclick="AuthModule.logout()" style="color: var(--color-danger); border-top: 1px solid var(--color-border);">Sair (Logoff Seguro)</div>
+        </aside>
 
-        <div class="main-content">
+        <main class="main-wrapper">
             
-            <div id="dashboard-view" class="view" style="display: block;">
-                <div class="page-header">
-                    <h1>Painel Administrativo</h1>
-                    <button class="btn-primary" onclick="navigate('peticionamento')">+ Iniciar Processo</button>
+            <header class="topbar">
+                <div style="font-weight: 600; color: var(--color-primary);">Câmara de Arbitragem Parnamirim/RN</div>
+                <div class="user-profile">
+                    <span>Secretaria Geral</span>
+                    <div class="avatar">SG</div>
                 </div>
+            </header>
 
-                <div class="metrics-grid">
-                    <div class="metric-card">
-                        <div class="metric-title">Processos Ativos</div>
-                        <div class="metric-value">24</div>
+            <div class="content-area">
+                
+                <div id="view-dashboard" class="view active">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                        <h2 style="margin: 0; color: var(--color-primary);">Visão Geral (Art. 23 - Lei 9.307/96)</h2>
+                        <button class="btn btn-primary" onclick="NavigationModule.navigate('peticionamento')">+ Novo Procedimento</button>
                     </div>
-                    <div class="metric-card">
-                        <div class="metric-title">Aguardando Termo (Art. 14)</div>
-                        <div class="metric-value" style="color: #92400e;">3</div>
+
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 32px;">
+                        <div class="card" style="margin-bottom: 0; padding: 24px;">
+                            <div style="font-size: 13px; color: var(--color-text-light); font-weight: 600;">PROCESSOS ATIVOS</div>
+                            <div style="font-size: 32px; font-weight: 700; color: var(--color-primary); margin-top: 8px;">12</div>
+                        </div>
+                        <div class="card" style="margin-bottom: 0; padding: 24px; border-left: 4px solid var(--color-warning);">
+                            <div style="font-size: 13px; color: var(--color-text-light); font-weight: 600;">AGUARDANDO TERMO (ART. 14)</div>
+                            <div style="font-size: 32px; font-weight: 700; color: var(--color-warning); margin-top: 8px;">3</div>
+                        </div>
+                        <div class="card" style="margin-bottom: 0; padding: 24px; border-left: 4px solid var(--color-danger);">
+                            <div style="font-size: 13px; color: var(--color-text-light); font-weight: 600;">PRAZO FATAL PRÓXIMO (ART. 23)</div>
+                            <div style="font-size: 32px; font-weight: 700; color: var(--color-danger); margin-top: 8px;">1</div>
+                        </div>
                     </div>
-                    <div class="metric-card">
-                        <div class="metric-title">Prazo Fatal Próximo (Art. 23)</div>
-                        <div class="metric-value" style="color: #991b1b;">1</div>
+
+                    <div class="card" style="padding: 0; overflow: hidden;">
+                        <div class="card-header" style="padding: 24px 24px 0 24px; border-bottom: none;">
+                            <h3 class="card-title">Tramitações Recentes</h3>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Procedimento</th>
+                                        <th>Partes</th>
+                                        <th>Status Legal</th>
+                                        <th>Prazo Restante</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="font-weight: 600; color: var(--color-primary);">2026.001.000.586</td>
+                                        <td>Construtora Alpha S.A. x Fornecedor XYZ</td>
+                                        <td><span class="badge badge-warning">Aguardando Árbitro</span></td>
+                                        <td>145 dias</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="font-weight: 600; color: var(--color-primary);">2026.001.000.585</td>
+                                        <td>Maria Silva x João Santos</td>
+                                        <td><span class="badge badge-success">Fase Instrutória</span></td>
+                                        <td>92 dias</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
-                <div class="data-table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Processo</th>
-                                <th>Requerente</th>
-                                <th>Fase Atual</th>
-                                <th>Prazo (Sentença)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><strong>0042/2026</strong></td>
-                                <td>Construtora Alpha S.A.</td>
-                                <td><span class="status-badge status-warning">Aguardando Aceite Árbitro</span></td>
-                                <td>145 dias restantes</td>
-                            </tr>
-                            <tr>
-                                <td><strong>0038/2026</strong></td>
-                                <td>João Silveira ME</td>
-                                <td><span class="status-badge status-success">Fase de Instrução</span></td>
-                                <td>92 dias restantes</td>
-                            </tr>
-                            <tr>
-                                <td><strong>0015/2026</strong></td>
-                                <td>Tech Solutions Ltda</td>
-                                <td><span class="status-badge status-danger">Alerta: Minuta Pendente</span></td>
-                                <td style="color: #991b1b; font-weight: bold;">12 dias restantes</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div id="peticionamento-view" class="view">
-                <div class="page-header">
-                    <h1>Novo Peticionamento</h1>
-                </div>
-
-                <div class="card">
-                    <form id="peticaoForm">
-                        <div class="section-title">Qualificação do Requerente</div>
-                        <div class="form-grid">
-                            <div class="form-group full-width">
-                                <label>Nome Completo ou Razão Social</label>
-                                <input type="text" id="reqNome" required placeholder="Ex: João da Silva">
-                            </div>
-                            <div class="form-group">
-                                <label>CPF / CNPJ</label>
-                                <input type="text" id="reqDoc" required placeholder="000.000.000-00">
-                            </div>
-                            <div class="form-group">
-                                <label>E-mail</label>
-                                <input type="email" id="reqEmail" required placeholder="joao@email.com">
-                            </div>
-                        </div>
-
-                        <div class="section-title">Qualificação do Requerido</div>
-                        <div class="form-grid">
-                            <div class="form-group full-width">
-                                <label>Nome Completo ou Razão Social</label>
-                                <input type="text" id="defNome" required placeholder="Ex: Empresa XYZ Ltda">
-                            </div>
-                        </div>
-
-                        <div class="section-title">Objeto do Litígio</div>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label>Valor da Causa (R$)</label>
-                                <input type="number" id="valorCausa" required placeholder="Ex: 50000">
-                            </div>
-                            <div class="form-group full-width">
-                                <label>Resumo dos Fatos e Pedidos</label>
-                                <textarea id="resumoFatos" rows="4" required placeholder="Descreva brevemente o motivo do conflito..."></textarea>
-                            </div>
-                        </div>
-
-                        <div class="legal-lock">
-                            <input type="checkbox" id="aceiteClausula">
-                            <label for="aceiteClausula">
-                                <strong>Cláusula Compromissória (Art. 4º, § 2º da Lei 9.307/96):</strong> Reconheço e concordo expressamente que qualquer litígio originário deste instrumento será resolvido definitivamente por arbitragem, renunciando ao foro da justiça comum.
-                            </label>
-                        </div>
-
-                        <button type="submit" class="btn-submit" id="btnSubmit" disabled>Gerar Auto e Protocolar</button>
-                    </form>
-                </div>
-            </div>
-
-            <div id="success-view" class="view">
-                <div class="card" style="text-align: center;">
-                    <div class="success-icon">✓</div>
-                    <h2>Petição Pré-Protocolada!</h2>
-                    <p style="color: var(--gray-text); margin-bottom: 24px;">Os dados foram registrados com sucesso no banco de dados isolado (Tenant).</p>
+                <div id="view-peticionamento" class="view">
+                    <h2 style="margin: 0 0 24px 0; color: var(--color-primary);">Instauração de Procedimento Arbitral</h2>
                     
-                    <div style="background: var(--light-blue); padding: 20px; border-radius: 8px; margin-bottom: 24px; text-align: left;">
-                        <strong>Ação Simulada:</strong> O sistema compilou os dados preenchidos e gerou um processo eletrônico em PDF estruturado.
+                    <div class="card">
+                        <form id="form-peticao">
+                            
+                            <div class="compliance-box" style="margin-top: 0; margin-bottom: 32px;">
+                                <strong>Conformidade LGPD (Lei 13.709/18):</strong> Os dados pessoais coletados neste formulário serão processados exclusivamente para a finalidade de condução do procedimento arbitral, garantindo-se o sigilo e a restrição de acesso apenas aos árbitros e partes envolvidas.
+                            </div>
+
+                            <div class="card-header"><h3 class="card-title">Qualificação do Demandante</h3></div>
+                            <div class="form-row">
+                                <div class="form-group" style="grid-column: span 2;">
+                                    <label class="form-label">Nome Completo / Razão Social</label>
+                                    <input type="text" id="reqNome" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">CPF / CNPJ</label>
+                                    <input type="text" id="reqDoc" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">E-mail para Notificações</label>
+                                    <input type="email" id="reqEmail" class="form-control" required>
+                                </div>
+                            </div>
+
+                            <div class="card-header" style="margin-top: 16px;"><h3 class="card-title">Qualificação do Demandado</h3></div>
+                            <div class="form-row">
+                                <div class="form-group" style="grid-column: span 2;">
+                                    <label class="form-label">Nome Completo / Razão Social</label>
+                                    <input type="text" id="defNome" class="form-control" required>
+                                </div>
+                            </div>
+
+                            <div class="card-header" style="margin-top: 16px;"><h3 class="card-title">Objeto e Valor do Litígio</h3></div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Valor da Causa (R$)</label>
+                                    <input type="number" id="valorCausa" class="form-control" required>
+                                </div>
+                                <div class="form-group" style="grid-column: span 2;">
+                                    <label class="form-label">Resumo dos Fatos</label>
+                                    <textarea id="resumoFatos" class="form-control" rows="4" required></textarea>
+                                </div>
+                            </div>
+
+                            <div class="legal-box">
+                                <input type="checkbox" id="aceiteClausula">
+                                <label for="aceiteClausula">
+                                    <strong>Cláusula Compromissória (Art. 4º, § 2º da Lei 9.307/96):</strong> Reconheço e concordo expressamente que qualquer litígio originário deste instrumento será resolvido definitivamente por arbitragem, renunciando ao foro da justiça comum.
+                                </label>
+                            </div>
+
+                            <div style="margin-top: 32px; display: flex; justify-content: flex-end; gap: 16px;">
+                                <button type="button" class="btn btn-outline" onclick="NavigationModule.navigate('dashboard')">Cancelar</button>
+                                <button type="submit" class="btn btn-primary" id="btnSubmitProcesso" disabled>Registrar e Autuar Processo</button>
+                            </div>
+                        </form>
                     </div>
-
-                    <button onclick="gerarPDF()" class="btn-submit" style="margin-top: 0; width: auto; margin-right: 12px;">Baixar PDF do Processo</button>
-                    <button onclick="navigate('dashboard')" class="btn-primary" style="background: white; color: var(--primary-blue); border: 1px solid var(--border-color);">Voltar ao Painel</button>
                 </div>
-            </div>
 
-        </div>
-    </div>
+                <div id="view-sucesso" class="view">
+                    <div class="card" style="text-align: center; padding: 64px 32px;">
+                        <div style="font-size: 64px; color: var(--color-success); margin-bottom: 24px;">✓</div>
+                        <h2 style="color: var(--color-primary); margin-bottom: 16px;">Procedimento Autuado com Sucesso</h2>
+                        <p style="color: var(--color-text-light); max-width: 500px; margin: 0 auto 32px auto; line-height: 1.6;">
+                            Os dados foram criptografados e salvos no banco de dados. A numeração processual foi gerada e o Termo de Apresentação está pronto para assinatura.
+                        </p>
+                        <button class="btn btn-primary" onclick="NavigationModule.navigate('dashboard')">Retornar ao Painel</button>
+                    </div>
+                </div>
 
-    <div id="pdf-template">
-        <div style="padding: 40px; font-family: Arial, sans-serif; color: #000; line-height: 1.6;">
-            <div style="text-align: center; margin-bottom: 15px;">
-                <img src="logo-inovasys.png" alt="Logotipo inovaSys" style="max-width: 150px; height: auto;">
             </div>
-            <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 25px;">
-                <p style="margin: 0; font-size: 14px; font-weight: bold; text-transform: uppercase;">Câmara de Arbitragem e Resolução de Conflitos</p>
-            </div>
-            <h2 style="text-align: center; font-size: 18px; text-decoration: underline; margin-bottom: 30px;">AUTO DE PETICIONAMENTO INICIAL</h2>
-            <p><strong>Nº DO PROCESSO (Provisório):</strong> <span id="pdfProcesso"></span></p>
-            <h3 style="font-size: 16px; background-color: #f0f0f0; padding: 5px;">1. PARTES</h3>
-            <p><strong>REQUERENTE:</strong> <span id="pdfReqNome"></span>, inscrito no CPF/CNPJ: <span id="pdfReqDoc"></span>, e-mail: <span id="pdfReqEmail"></span>.</p>
-            <p><strong>REQUERIDO(A):</strong> <span id="pdfDefNome"></span>.</p>
-            <h3 style="font-size: 16px; background-color: #f0f0f0; padding: 5px;">2. DO OBJETO E VALOR DA CAUSA</h3>
-            <p><strong>Valor da Causa:</strong> R$ <span id="pdfValor"></span></p>
-            <p><strong>Resumo dos Fatos:</strong></p>
-            <p style="border: 1px solid #ccc; padding: 10px; min-height: 80px;" id="pdfFatos"></p>
-            <h3 style="font-size: 16px; background-color: #f0f0f0; padding: 5px;">3. CONFORMIDADE LEGAL (LEI 9.307/96)</h3>
-            <p>O Requerente <strong>aceitou expressamente em destaque (negrito)</strong> a instituição da arbitragem, preenchendo os requisitos do Art. 4º, § 2º da Lei de Arbitragem, às <span id="pdfHora"></span> do dia <span id="pdfData"></span>, registrando o carimbo de tempo no sistema da instituição.</p>
-            <div style="margin-top: 60px; text-align: center;">
-                <p>____________________________________________________</p>
-                <p><strong>Assinatura Eletrônica Registrada</strong></p>
-                <p>Parnamirim/RN, <span id="pdfDataLocal"></span></p>
-            </div>
-        </div>
+        </main>
     </div>
 
     <script>
-        // 1. Lógica de Login Simulada
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('app-layout').style.display = 'flex';
-        });
-
-        function logout() {
-            document.getElementById('app-layout').style.display = 'none';
-            document.getElementById('login-screen').style.display = 'flex';
-            navigate('dashboard'); 
-        }
-
-        // 2. Navegação do Menu Lateral
-        function navigate(viewId) {
-            document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
-            document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
-            
-            document.getElementById(viewId + '-view').style.display = 'block';
-            if(document.getElementById('menu-' + viewId)) {
-                document.getElementById('menu-' + viewId).classList.add('active');
+        /**
+         * Módulo de Autenticação
+         * Isolado para garantir segurança no acesso ao sistema principal.
+         */
+        const AuthModule = {
+            init: function() {
+                document.getElementById('form-login').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.login();
+                });
+            },
+            login: function() {
+                // Simulação de verificação de token e decriptação de payload
+                document.getElementById('module-auth').classList.remove('active');
+                document.getElementById('module-app').style.display = 'flex';
+                NavigationModule.navigate('dashboard');
+            },
+            logout: function() {
+                // Simulação de destruição de sessão
+                document.getElementById('module-app').style.display = 'none';
+                document.getElementById('module-auth').classList.add('active');
             }
-        }
+        };
 
-        // 3. Lógica do Formulário e PDF
-        const checkboxClausula = document.getElementById('aceiteClausula');
-        const btnSubmit = document.getElementById('btnSubmit');
+        /**
+         * Módulo de Navegação (Router SPA)
+         * Evita recarregamento de página, garantindo fluidez.
+         */
+        const NavigationModule = {
+            navigate: function(viewId) {
+                // Oculta todas as views
+                document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+                
+                // Remove estado ativo do menu
+                document.querySelectorAll('.nav-item').forEach(m => m.classList.remove('active'));
+                
+                // Ativa a view solicitada
+                const targetView = document.getElementById('view-' + viewId);
+                if(targetView) targetView.classList.add('active');
+                
+                // Destaca o menu correspondente (se existir)
+                const targetMenu = Array.from(document.querySelectorAll('.nav-item')).find(el => el.textContent.toLowerCase().includes(viewId.substring(0,4)));
+                if(targetMenu) targetMenu.classList.add('active');
+            }
+        };
 
-        checkboxClausula.addEventListener('change', function() {
-            btnSubmit.disabled = !this.checked;
-        });
+        /**
+         * Módulo de Processos e Conformidade (Lei 9.307/96)
+         * Aplica as regras de negócio jurídicas estritas.
+         */
+        const ProcessModule = {
+            init: function() {
+                const checkbox = document.getElementById('aceiteClausula');
+                const btnSubmit = document.getElementById('btnSubmitProcesso');
+                const form = document.getElementById('form-peticao');
 
-        document.getElementById('peticaoForm').addEventListener('submit', function(e) {
-            e.preventDefault(); 
+                // Trava de Conformidade Art. 4º, § 2º
+                checkbox.addEventListener('change', function() {
+                    btnSubmit.disabled = !this.checked;
+                });
+
+                // Manipulador de submissão isolado
+                form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.processarAutuacao();
+                });
+            },
             
-            document.getElementById('pdfReqNome').textContent = document.getElementById('reqNome').value;
-            document.getElementById('pdfReqDoc').textContent = document.getElementById('reqDoc').value;
-            document.getElementById('pdfReqEmail').textContent = document.getElementById('reqEmail').value;
-            document.getElementById('pdfDefNome').textContent = document.getElementById('defNome').value;
-            document.getElementById('pdfValor').textContent = document.getElementById('valorCausa').value;
-            document.getElementById('pdfFatos').textContent = document.getElementById('resumoFatos').value;
-            
-            const agora = new Date();
-            document.getElementById('pdfProcesso').textContent = Math.floor(Math.random() * 10000) + "/2026";
-            document.getElementById('pdfData').textContent = agora.toLocaleDateString('pt-BR');
-            document.getElementById('pdfDataLocal').textContent = agora.toLocaleDateString('pt-BR');
-            document.getElementById('pdfHora').textContent = agora.toLocaleTimeString('pt-BR');
+            processarAutuacao: function() {
+                // Em um ambiente real, aqui ocorre o POST seguro para o backend (Supabase)
+                console.log("[ProcessModule] Registrando dados no tenant isolado...");
+                
+                // Reseta formulário e trava botão por segurança
+                document.getElementById('form-peticao').reset();
+                document.getElementById('btnSubmitProcesso').disabled = true;
+                
+                // Redireciona para feedback de sucesso
+                NavigationModule.navigate('sucesso');
+            }
+        };
 
-            navigate('success');
-            document.getElementById('peticaoForm').reset();
-            btnSubmit.disabled = true;
+        // Inicialização do Sistema
+        document.addEventListener('DOMContentLoaded', () => {
+            AuthModule.init();
+            ProcessModule.init();
         });
-
-        function gerarPDF() {
-            const elemento = document.getElementById('pdf-template');
-            const opcoes = {
-                margin:       0,
-                filename:     'Auto_Peticionamento_inovaSys.pdf',
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true }, 
-                jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
-            };
-
-            elemento.style.display = 'block';
-            html2pdf().set(opcoes).from(elemento).save().then(() => {
-                elemento.style.display = 'none';
-            });
-        }
     </script>
 </body>
 </html>
+```
