@@ -52,8 +52,6 @@
         .btn { padding: 12px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-size: 14px; transition: 0.2s; width: 100%; }
         .btn-primary { background: var(--color-accent); color: white; margin-top: 10px; }
         .btn-link { background: none; color: var(--color-accent); font-size: 13px; margin-top: 15px; text-decoration: underline; padding: 0; width: auto; }
-        
-        .pdf-hidden { position: absolute; left: -9999px; width: 190mm; background: white; color: black; padding: 20mm; font-family: 'Times New Roman', serif; }
     </style>
 </head>
 <body>
@@ -66,26 +64,26 @@
                 <form id="login-form">
                     <div class="form-group"><label class="form-label">E-mail</label><input type="email" id="email" class="form-control" required></div>
                     <div class="form-group"><label class="form-label">Senha</label><input type="password" id="password" class="form-control" required></div>
-                    <button type="submit" class="btn btn-primary">Entrar</button>
+                    <button type="submit" id="btn-login" class="btn btn-primary">Entrar no Sistema</button>
                 </form>
-                <button class="btn btn-link" onclick="switchAuthView('view-forgot')">Esqueci minha senha</button>
+                <button type="button" class="btn btn-link" onclick="switchAuthView('view-forgot')">Esqueci minha senha</button>
             </div>
 
             <div id="view-forgot" class="auth-view">
-                <h3 style="margin-top:0">Recuperar Acesso</h3>
-                <p style="font-size: 13px; color: #64748b;">Enviaremos um link para o seu e-mail.</p>
+                <h3 style="margin-top:0; color: var(--color-primary);">Recuperar Acesso</h3>
+                <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Enviaremos um link de recuperação para o seu e-mail.</p>
                 <form id="forgot-form">
-                    <div class="form-group"><label class="form-label">Seu E-mail</label><input type="email" id="forgot-email" class="form-control" required></div>
-                    <button type="submit" class="btn btn-primary">Enviar Link</button>
+                    <div class="form-group"><label class="form-label">Seu E-mail Cadastrado</label><input type="email" id="forgot-email" class="form-control" required></div>
+                    <button type="submit" id="btn-forgot" class="btn btn-primary">Enviar Link de Recuperação</button>
                 </form>
-                <button class="btn btn-link" onclick="switchAuthView('view-login')">Voltar ao login</button>
+                <button type="button" class="btn btn-link" onclick="switchAuthView('view-login')">Voltar ao login</button>
             </div>
 
             <div id="view-new-password" class="auth-view">
-                <h3 style="margin-top:0">Nova Senha</h3>
+                <h3 style="margin-top:0; color: var(--color-primary);">Definir Nova Senha</h3>
                 <form id="new-password-form">
-                    <div class="form-group"><label class="form-label">Defina a Nova Senha</label><input type="password" id="new-pwd" class="form-control" minlength="6" required></div>
-                    <button type="submit" class="btn btn-primary">Atualizar Senha</button>
+                    <div class="form-group"><label class="form-label">Nova Senha</label><input type="password" id="new-pwd" class="form-control" minlength="6" required></div>
+                    <button type="submit" id="btn-new-pwd" class="btn btn-primary">Salvar Nova Senha</button>
                 </form>
             </div>
         </div>
@@ -96,25 +94,25 @@
             <div class="sidebar-brand"><img src="logo-inovasys.png" alt="inovaSys"></div>
             <div class="nav-item active" onclick="showView('dash')">Processos</div>
             <div class="nav-item" onclick="showView('novo')">Novo Protocolo</div>
-            <div class="nav-item" onclick="logout()" style="margin-top:auto; color: #ef4444;">Sair</div>
+            <div class="nav-item" onclick="logout()" style="margin-top:auto; color: #ef4444;">Sair do Sistema</div>
         </nav>
         <main class="main">
             <div id="view-dash" class="view active">
-                <h2>Processos Arbitrais</h2>
+                <h2 style="color: var(--color-primary);">Processos Arbitrais</h2>
                 <div class="card">
                     <table>
-                        <thead><tr><th>Nº</th><th>Requerido</th><th>Status</th></tr></thead>
+                        <thead><tr><th>Nº do Processo</th><th>Requerido</th><th>Status</th></tr></thead>
                         <tbody id="lista-processos"></tbody>
                     </table>
                 </div>
             </div>
             <div id="view-novo" class="view">
-                <h2>Novo Protocolo</h2>
+                <h2 style="color: var(--color-primary);">Novo Protocolo</h2>
                 <div class="card">
                     <form id="processo-form">
-                        <div class="form-group"><label class="form-label">Nome Requerente</label><input type="text" id="req_nome" class="form-control" required></div>
-                        <div class="form-group"><label class="form-label">Nome Requerido</label><input type="text" id="def_nome" class="form-control" required></div>
-                        <button type="submit" class="btn btn-primary" style="width: auto;">Cadastrar</button>
+                        <div class="form-group"><label class="form-label">Nome do Requerente</label><input type="text" id="req_nome" class="form-control" required></div>
+                        <div class="form-group"><label class="form-label">Nome do Requerido</label><input type="text" id="def_nome" class="form-control" required></div>
+                        <button type="submit" id="btn-protocolar" class="btn btn-primary" style="width: auto;">Cadastrar Processo</button>
                     </form>
                 </div>
             </div>
@@ -122,8 +120,9 @@
     </div>
 
     <script>
+        // CHAVES DO SUPABASE
         const SUPABASE_URL = 'https://tsgbvhfdceyjbyfstjol.supabase.co';
-        const SUPABASE_KEY = 'SUA_KEY_ANON'; // Insira sua chave anon aqui
+        const SUPABASE_KEY = 'sb_secret_Q-5vJirnHy4DipR6PCx3xQ_RVLc8NMD'; // Insira sua chave anon aqui
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         function switchAuthView(viewId) {
@@ -131,55 +130,150 @@
             document.getElementById(viewId).classList.add('active');
         }
 
+        function showView(v) { 
+            document.querySelectorAll('.view').forEach(x => x.classList.remove('active')); 
+            document.getElementById('view-'+v).classList.add('active'); 
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            if(event && event.currentTarget) event.currentTarget.classList.add('active');
+        }
+
         // 1. Login
         document.getElementById('login-form').onsubmit = async (e) => {
             e.preventDefault();
+            const btn = document.getElementById('btn-login');
+            btn.innerText = "Autenticando...";
+            btn.disabled = true;
+
             const { error } = await supabase.auth.signInWithPassword({
-                email: e.target.email.value, password: e.target.password.value
+                email: e.target.email.value, 
+                password: e.target.password.value
             });
-            if (error) alert(error.message); else loadData();
+
+            if (error) {
+                alert("Erro ao entrar: " + error.message);
+                btn.innerText = "Entrar no Sistema";
+                btn.disabled = false;
+            } else {
+                loadData();
+            }
         };
 
-        // 2. Solicitar Reset
+        // 2. Solicitar Reset de Senha
         document.getElementById('forgot-form').onsubmit = async (e) => {
             e.preventDefault();
+            const btn = document.getElementById('btn-forgot');
+            btn.innerText = "Enviando...";
+            btn.disabled = true;
+
             const { error } = await supabase.auth.resetPasswordForEmail(e.target['forgot-email'].value, {
                 redirectTo: 'https://inovasysrn.vercel.app/'
             });
-            if (error) alert(error.message); else alert("Verifique seu e-mail para o link de recuperação!");
+
+            if (error) {
+                alert("Erro ao enviar: " + error.message);
+            } else {
+                alert("Verifique a caixa de entrada do seu e-mail para acessar o link de recuperação.");
+                switchAuthView('view-login');
+            }
+            btn.innerText = "Enviar Link de Recuperação";
+            btn.disabled = false;
         };
 
-        // 3. Atualizar Senha (após clicar no link)
+        // 3. Salvar Nova Senha
         document.getElementById('new-password-form').onsubmit = async (e) => {
             e.preventDefault();
+            const btn = document.getElementById('btn-new-pwd');
+            btn.innerText = "Salvando...";
+            btn.disabled = true;
+
             const { error } = await supabase.auth.updateUser({ password: e.target['new-pwd'].value });
-            if (error) alert(error.message); 
-            else { alert("Senha alterada com sucesso!"); window.location.href = "/"; }
+            
+            if (error) {
+                alert("Erro ao atualizar senha: " + error.message);
+                btn.innerText = "Salvar Nova Senha";
+                btn.disabled = false;
+            } else { 
+                alert("Senha alterada com sucesso!"); 
+                window.location.href = "/"; 
+            }
         };
 
-        // Escuta se o usuário veio de um link de recuperação
+        // 4. Identificar retorno pelo link de e-mail
         supabase.auth.onAuthStateChange(async (event, session) => {
             if (event === "PASSWORD_RECOVERY") {
                 switchAuthView('view-new-password');
             }
         });
 
-        async function logout() { await supabase.auth.signOut(); location.reload(); }
+        // 5. Logout
+        async function logout() { 
+            await supabase.auth.signOut(); 
+            location.reload(); 
+        }
 
+        // 6. Carregar Dados do Sistema
         async function loadData() {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) return;
-            document.getElementById('module-auth').classList.remove('active');
-            document.getElementById('module-app').classList.add('active');
-            const { data } = await supabase.from('processos').select('*');
-            document.getElementById('lista-processos').innerHTML = data.map(p => `<tr><td>${p.numero_processo}</td><td>${p.requerido_nome}</td><td>${p.status}</td></tr>`).join('');
+            try {
+                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                if (sessionError || !session) return;
+                
+                document.getElementById('module-auth').classList.remove('active');
+                document.getElementById('module-app').classList.add('active');
+                
+                const { data, error } = await supabase.from('processos').select('*');
+                
+                if (error) {
+                    document.getElementById('lista-processos').innerHTML = `<tr><td colspan="3" style="text-align:center; color: red;">Erro ao carregar dados do banco.</td></tr>`;
+                    console.error("Erro Supabase:", error);
+                    return;
+                }
+
+                if (data && data.length > 0) {
+                    document.getElementById('lista-processos').innerHTML = data.map(p => `<tr><td><strong>${p.numero_processo}</strong></td><td>${p.requerido_nome}</td><td><span style="background: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">${p.status}</span></td></tr>`).join('');
+                } else {
+                    document.getElementById('lista-processos').innerHTML = `<tr><td colspan="3" style="text-align:center; color: #64748b;">Nenhum processo cadastrado.</td></tr>`;
+                }
+            } catch (err) {
+                console.error("Erro na execução JS:", err);
+            }
         }
 
-        function showView(v) { 
-            document.querySelectorAll('.view').forEach(x => x.classList.remove('active')); 
-            document.getElementById('view-'+v).classList.add('active'); 
-        }
+        // 7. Cadastrar Processo
+        document.getElementById('processo-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-protocolar');
+            btn.innerText = "Salvando...";
+            btn.disabled = true;
 
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                const payload = {
+                    numero_processo: `${new Date().getFullYear()}.AR.${Math.floor(Math.random()*9000 + 1000)}`,
+                    requerente_nome: document.getElementById('req_nome').value,
+                    requerido_nome: document.getElementById('def_nome').value,
+                    resumo_fatos: document.getElementById('fatos').value,
+                    user_id: user.id
+                };
+                
+                const { error } = await supabase.from('processos').insert([payload]);
+                
+                if (error) {
+                    alert("Erro ao cadastrar: " + error.message);
+                } else { 
+                    alert('Processo cadastrado com sucesso!'); 
+                    document.getElementById('processo-form').reset();
+                    showView('dash'); 
+                    loadData(); 
+                }
+            } catch (err) {
+                alert("Erro de comunicação com o servidor.");
+            }
+
+            btn.innerText = "Cadastrar Processo";
+            btn.disabled = false;
+        };
+
+        // Inicia carregamento
         loadData();
     </script>
 </body>
