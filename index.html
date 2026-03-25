@@ -25,21 +25,23 @@
         .view { display: none; }
         .view.active { display: block; }
 
-        /* Login */
+        /* Login Card */
         #module-auth { height: 100vh; justify-content: center; align-items: center; background: var(--color-primary); width: 100%; }
-        .auth-card { background: white; padding: 40px; border-radius: 12px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-        .auth-card img { max-width: 180px; margin-bottom: 25px; }
+        .auth-card { background: white; padding: 40px; border-radius: 12px; width: 100%; max-width: 380px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3); }
+        .auth-card img { max-width: 160px; margin-bottom: 25px; }
+        .auth-view { display: none; }
+        .auth-view.active { display: block; }
 
-        /* Sidebar */
+        /* Sidebar & Layout */
         .sidebar { width: var(--sidebar-width); background: white; border-right: 1px solid var(--color-border); position: fixed; height: 100vh; display: flex; flex-direction: column; }
         .sidebar-brand { padding: 25px; text-align: center; border-bottom: 1px solid var(--color-border); }
-        .sidebar-brand img { max-width: 140px; }
+        .sidebar-brand img { max-width: 130px; }
         .nav-item { padding: 15px 25px; cursor: pointer; font-size: 14px; font-weight: 500; color: #64748b; border-left: 4px solid transparent; }
         .nav-item.active { background: #f1f5f9; color: var(--color-accent); border-left-color: var(--color-accent); }
         .main { flex: 1; margin-left: var(--sidebar-width); padding: 40px; }
 
-        /* Cards e Tabelas */
-        .card { background: white; border-radius: 8px; border: 1px solid var(--color-border); padding: 25px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        /* UI Elements */
+        .card { background: white; border-radius: 8px; border: 1px solid var(--color-border); padding: 25px; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; }
         th { text-align: left; padding: 12px; font-size: 11px; text-transform: uppercase; color: #64748b; background: #f8fafc; }
         td { padding: 12px; border-top: 1px solid var(--color-border); font-size: 14px; }
@@ -47,10 +49,10 @@
         .form-group { margin-bottom: 15px; text-align: left; }
         .form-label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: var(--color-primary); }
         .form-control { width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: 6px; font-family: inherit; box-sizing: border-box; }
-        .btn { padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-size: 14px; }
-        .btn-primary { background: var(--color-accent); color: white; width: 100%; }
-        .btn-outline { background: transparent; border: 1px solid var(--color-border); color: var(--color-text); margin-top: 5px; }
-
+        .btn { padding: 12px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-size: 14px; transition: 0.2s; width: 100%; }
+        .btn-primary { background: var(--color-accent); color: white; margin-top: 10px; }
+        .btn-link { background: none; color: var(--color-accent); font-size: 13px; margin-top: 15px; text-decoration: underline; padding: 0; width: auto; }
+        
         .pdf-hidden { position: absolute; left: -9999px; width: 190mm; background: white; color: black; padding: 20mm; font-family: 'Times New Roman', serif; }
     </style>
 </head>
@@ -60,19 +62,29 @@
         <div class="auth-card">
             <img src="logo-inovasys.png" alt="inovaSys">
             
-            <div id="login-view">
+            <div id="view-login" class="auth-view active">
                 <form id="login-form">
                     <div class="form-group"><label class="form-label">E-mail</label><input type="email" id="email" class="form-control" required></div>
                     <div class="form-group"><label class="form-label">Senha</label><input type="password" id="password" class="form-control" required></div>
                     <button type="submit" class="btn btn-primary">Entrar</button>
                 </form>
-                <button class="btn btn-outline" onclick="toggleAuthMode(true)">Esqueci a senha</button>
+                <button class="btn btn-link" onclick="switchAuthView('view-forgot')">Esqueci minha senha</button>
             </div>
 
-            <div id="reset-view" style="display: none;">
-                <h3>Nova Senha</h3>
-                <form id="update-password-form">
-                    <div class="form-group"><label class="form-label">Nova Senha</label><input type="password" id="new-password" class="form-control" required></div>
+            <div id="view-forgot" class="auth-view">
+                <h3 style="margin-top:0">Recuperar Acesso</h3>
+                <p style="font-size: 13px; color: #64748b;">Enviaremos um link para o seu e-mail.</p>
+                <form id="forgot-form">
+                    <div class="form-group"><label class="form-label">Seu E-mail</label><input type="email" id="forgot-email" class="form-control" required></div>
+                    <button type="submit" class="btn btn-primary">Enviar Link</button>
+                </form>
+                <button class="btn btn-link" onclick="switchAuthView('view-login')">Voltar ao login</button>
+            </div>
+
+            <div id="view-new-password" class="auth-view">
+                <h3 style="margin-top:0">Nova Senha</h3>
+                <form id="new-password-form">
+                    <div class="form-group"><label class="form-label">Defina a Nova Senha</label><input type="password" id="new-pwd" class="form-control" minlength="6" required></div>
                     <button type="submit" class="btn btn-primary">Atualizar Senha</button>
                 </form>
             </div>
@@ -86,26 +98,23 @@
             <div class="nav-item" onclick="showView('novo')">Novo Protocolo</div>
             <div class="nav-item" onclick="logout()" style="margin-top:auto; color: #ef4444;">Sair</div>
         </nav>
-
         <main class="main">
             <div id="view-dash" class="view active">
-                <h2 style="margin-bottom: 20px;">Painel de Gestão</h2>
+                <h2>Processos Arbitrais</h2>
                 <div class="card">
                     <table>
-                        <thead><tr><th>Nº Processo</th><th>Requerido</th><th>Status</th></tr></thead>
+                        <thead><tr><th>Nº</th><th>Requerido</th><th>Status</th></tr></thead>
                         <tbody id="lista-processos"></tbody>
                     </table>
                 </div>
             </div>
-
             <div id="view-novo" class="view">
-                <h2>Novo Procedimento</h2>
+                <h2>Novo Protocolo</h2>
                 <div class="card">
                     <form id="processo-form">
-                        <div class="form-group"><label class="form-label">Requerente</label><input type="text" id="req_nome" class="form-control" required></div>
-                        <div class="form-group"><label class="form-label">Requerido</label><input type="text" id="def_nome" class="form-control" required></div>
-                        <div class="form-group"><label class="form-label">Resumo do Caso</label><textarea id="fatos" class="form-control" rows="3"></textarea></div>
-                        <button type="submit" class="btn btn-primary" style="width: auto;">Salvar Processo</button>
+                        <div class="form-group"><label class="form-label">Nome Requerente</label><input type="text" id="req_nome" class="form-control" required></div>
+                        <div class="form-group"><label class="form-label">Nome Requerido</label><input type="text" id="def_nome" class="form-control" required></div>
+                        <button type="submit" class="btn btn-primary" style="width: auto;">Cadastrar</button>
                     </form>
                 </div>
             </div>
@@ -114,35 +123,46 @@
 
     <script>
         const SUPABASE_URL = 'https://tsgbvhfdceyjbyfstjol.supabase.co';
-        const SUPABASE_KEY = 'SUA_KEY_ANON_AQUI'; // Adicione sua chave anon
+        const SUPABASE_KEY = 'SUA_KEY_ANON'; // Insira sua chave anon aqui
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        function toggleAuthMode(reset) {
-            document.getElementById('login-view').style.display = reset ? 'none' : 'block';
-            document.getElementById('reset-view').style.display = reset ? 'block' : 'none';
+        function switchAuthView(viewId) {
+            document.querySelectorAll('.auth-view').forEach(v => v.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
         }
 
-        // Verifica se veio de um link de recuperação
-        window.addEventListener('hashchange', () => {
-            if (window.location.hash.includes('type=recovery')) {
-                toggleAuthMode(true);
-            }
-        });
-
+        // 1. Login
         document.getElementById('login-form').onsubmit = async (e) => {
             e.preventDefault();
             const { error } = await supabase.auth.signInWithPassword({
-                email: e.target.email.value,
-                password: e.target.password.value
+                email: e.target.email.value, password: e.target.password.value
             });
             if (error) alert(error.message); else loadData();
         };
 
-        document.getElementById('update-password-form').onsubmit = async (e) => {
+        // 2. Solicitar Reset
+        document.getElementById('forgot-form').onsubmit = async (e) => {
             e.preventDefault();
-            const { error } = await supabase.auth.updateUser({ password: e.target['new-password'].value });
-            if (error) alert(error.message); else { alert("Senha atualizada!"); location.reload(); }
+            const { error } = await supabase.auth.resetPasswordForEmail(e.target['forgot-email'].value, {
+                redirectTo: 'https://inovasysrn.vercel.app/'
+            });
+            if (error) alert(error.message); else alert("Verifique seu e-mail para o link de recuperação!");
         };
+
+        // 3. Atualizar Senha (após clicar no link)
+        document.getElementById('new-password-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const { error } = await supabase.auth.updateUser({ password: e.target['new-pwd'].value });
+            if (error) alert(error.message); 
+            else { alert("Senha alterada com sucesso!"); window.location.href = "/"; }
+        };
+
+        // Escuta se o usuário veio de um link de recuperação
+        supabase.auth.onAuthStateChange(async (event, session) => {
+            if (event === "PASSWORD_RECOVERY") {
+                switchAuthView('view-new-password');
+            }
+        });
 
         async function logout() { await supabase.auth.signOut(); location.reload(); }
 
@@ -151,16 +171,13 @@
             if (!session) return;
             document.getElementById('module-auth').classList.remove('active');
             document.getElementById('module-app').classList.add('active');
-
             const { data } = await supabase.from('processos').select('*');
-            document.getElementById('lista-processos').innerHTML = data.map(p => `
-                <tr><td>${p.numero_processo}</td><td>${p.requerido_nome}</td><td>${p.status}</td></tr>
-            `).join('');
+            document.getElementById('lista-processos').innerHTML = data.map(p => `<tr><td>${p.numero_processo}</td><td>${p.requerido_nome}</td><td>${p.status}</td></tr>`).join('');
         }
 
-        function showView(view) {
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.getElementById('view-' + view).classList.add('active');
+        function showView(v) { 
+            document.querySelectorAll('.view').forEach(x => x.classList.remove('active')); 
+            document.getElementById('view-'+v).classList.add('active'); 
         }
 
         loadData();
