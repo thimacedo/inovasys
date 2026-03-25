@@ -17,6 +17,7 @@
             --color-text: #334155;
             --color-border: #e2e8f0;
             --sidebar-width: 260px;
+            --color-error: #ef4444;
         }
 
         body { font-family: 'Inter', sans-serif; background-color: var(--color-bg); color: var(--color-text); margin: 0; display: flex; min-height: 100vh; }
@@ -31,6 +32,9 @@
         .auth-card img { max-width: 160px; margin-bottom: 25px; }
         .auth-view { display: none; }
         .auth-view.active { display: block; }
+
+        /* Error Message Box */
+        .error-message { display: none; background: #fee2e2; color: #b91c1c; padding: 12px; border-radius: 6px; font-size: 13px; margin-bottom: 20px; border: 1px solid #fecaca; text-align: left; line-height: 1.4; }
 
         /* Sidebar & Layout */
         .sidebar { width: var(--sidebar-width); background: white; border-right: 1px solid var(--color-border); position: fixed; height: 100vh; display: flex; flex-direction: column; }
@@ -60,6 +64,8 @@
         <div class="auth-card">
             <img src="logo-inovasys.png" alt="inovaSys">
             
+            <div id="auth-error" class="error-message"></div>
+
             <div id="view-login" class="auth-view active">
                 <form id="login-form">
                     <div class="form-group"><label class="form-label">E-mail</label><input type="email" id="email" class="form-control" autocomplete="email" required></div>
@@ -70,16 +76,16 @@
             </div>
 
             <div id="view-forgot" class="auth-view">
-                <h3 style="margin-top:0; color: var(--color-primary);">Recuperar Acesso</h3>
+                <h3 style="margin-top:0;">Recuperar Senha</h3>
                 <form id="forgot-form">
-                    <div class="form-group"><label class="form-label">E-mail Cadastrado</label><input type="email" id="forgot-email" class="form-control" required></div>
+                    <div class="form-group"><label class="form-label">E-mail</label><input type="email" id="forgot-email" class="form-control" required></div>
                     <button type="submit" id="btn-forgot" class="btn btn-primary">Enviar Link</button>
                 </form>
-                <button type="button" class="btn btn-link" onclick="switchAuthView('view-login')">Voltar ao login</button>
+                <button type="button" class="btn btn-link" onclick="switchAuthView('view-login')">Voltar</button>
             </div>
 
             <div id="view-new-password" class="auth-view">
-                <h3 style="margin-top:0; color: var(--color-primary);">Definir Nova Senha</h3>
+                <h3 style="margin-top:0;">Definir Nova Senha</h3>
                 <form id="new-password-form">
                     <div class="form-group"><label class="form-label">Nova Senha</label><input type="password" id="new-pwd" class="form-control" autocomplete="new-password" minlength="6" required></div>
                     <button type="submit" id="btn-new-pwd" class="btn btn-primary">Salvar Senha</button>
@@ -93,7 +99,7 @@
             <div class="sidebar-brand"><img src="logo-inovasys.png" alt="inovaSys"></div>
             <div class="nav-item active" onclick="showView('dash')">Processos</div>
             <div class="nav-item" onclick="showView('novo')">Novo Protocolo</div>
-            <div class="nav-item" onclick="logout()" style="margin-top:auto; color: #ef4444;">Sair</div>
+            <div class="nav-item" onclick="logout()" style="margin-top:auto; color: var(--color-error);">Sair</div>
         </nav>
         <main class="main">
             <div id="view-dash" class="view active">
@@ -119,97 +125,96 @@
     </div>
 
     <script>
-        // CONFIGURAÇÃO ÚNICA DO SUPABASE
         const SUPABASE_URL = 'https://tsgbvhfdceyjbyfstjol.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzZ2J2aGZkY2V5amJ5ZnN0am9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0NjY3MDEsImV4cCI6MjA5MDA0MjcwMX0.ucDetUUuVKyycACaNtzArQ8YpgybrRpQqYljYYiTgyI';
         
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // Funções de Interface
+        function displayError(msg) {
+            const box = document.getElementById('auth-error');
+            box.innerText = msg;
+            box.style.display = msg ? 'block' : 'none';
+        }
+
         function switchAuthView(viewId) {
+            displayError(''); // Limpa erros ao trocar de tela
             document.querySelectorAll('.auth-view').forEach(v => v.classList.remove('active'));
-            const target = document.getElementById(viewId);
-            if(target) target.classList.add('active');
+            document.getElementById(viewId).classList.add('active');
         }
 
         function showView(v) { 
             document.querySelectorAll('.view').forEach(x => x.classList.remove('active')); 
-            const target = document.getElementById('view-'+v);
-            if(target) target.classList.add('active');
-            
+            document.getElementById('view-'+v).classList.add('active'); 
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             if(event && event.currentTarget) event.currentTarget.classList.add('active');
         }
 
-        // Lógica de Autenticação
+        // Login com Tratamento de Erros Detalhado
         document.getElementById('login-form').onsubmit = async (e) => {
             e.preventDefault();
+            displayError('');
             const btn = document.getElementById('btn-login');
-            btn.innerText = "Entrando...";
+            btn.innerText = "Verificando...";
             btn.disabled = true;
 
-            const { error } = await supabase.auth.signInWithPassword({
-                email: e.target.email.value, 
-                password: e.target.password.value
-            });
+            try {
+                const { error } = await supabase.auth.signInWithPassword({
+                    email: e.target.email.value, 
+                    password: e.target.password.value
+                });
 
-            if (error) {
-                alert("Erro: " + error.message);
+                if (error) {
+                    if (error.message.includes("Invalid login credentials")) {
+                        displayError("E-mail ou senha incorretos. Por favor, verifique seus dados.");
+                    } else if (error.message.includes("Email not confirmed")) {
+                        displayError("Este e-mail ainda não foi confirmado no banco de dados.");
+                    } else if (error.status === 0 || error.message.includes("fetch")) {
+                        displayError("Erro de conexão: Não foi possível alcançar o servidor. Verifique sua internet.");
+                    } else {
+                        displayError("Erro inesperado: " + error.message);
+                    }
+                    btn.innerText = "Entrar no Sistema";
+                    btn.disabled = false;
+                } else {
+                    loadData();
+                }
+            } catch (err) {
+                displayError("Falha crítica ao tentar conectar ao banco.");
                 btn.innerText = "Entrar no Sistema";
                 btn.disabled = false;
-            } else {
-                loadData();
             }
         };
 
-        document.getElementById('forgot-form').onsubmit = async (e) => {
-            e.preventDefault();
-            const { error } = await supabase.auth.resetPasswordForEmail(e.target['forgot-email'].value, {
-                redirectTo: window.location.origin
-            });
-            if (error) alert(error.message); else alert("Link enviado ao e-mail!");
-        };
-
-        document.getElementById('new-password-form').onsubmit = async (e) => {
-            e.preventDefault();
-            const { error } = await supabase.auth.updateUser({ password: e.target['new-pwd'].value });
-            if (error) alert(error.message); else { alert("Senha atualizada!"); window.location.href = "/"; }
-        };
-
-        supabase.auth.onAuthStateChange((event) => {
-            if (event === "PASSWORD_RECOVERY") switchAuthView('view-new-password');
-        });
-
-        async function logout() { await supabase.auth.signOut(); location.reload(); }
-
-        // Carregamento de Dados
         async function loadData() {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) return;
-            
-            document.getElementById('module-auth').classList.remove('active');
-            document.getElementById('module-app').classList.add('active');
-            
-            const { data, error } = await supabase.from('processos').select('*');
-            if (error) {
-                console.error(error);
-                return;
-            }
-
-            const lista = document.getElementById('lista-processos');
-            if (data && data.length > 0) {
-                lista.innerHTML = data.map(p => `
-                    <tr>
-                        <td><strong>${p.numero_processo}</strong></td>
-                        <td>${p.requerido_nome}</td>
-                        <td><span style="background:#e0f2fe; color:#0369a1; padding:4px 8px; border-radius:4px; font-size:12px;">${p.status}</span></td>
-                    </tr>`).join('');
-            } else {
-                lista.innerHTML = '<tr><td colspan="3" style="text-align:center;">Nenhum processo encontrado.</td></tr>';
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session) return;
+                
+                document.getElementById('module-auth').classList.remove('active');
+                document.getElementById('module-app').classList.add('active');
+                
+                const { data, error } = await supabase.from('processos').select('*');
+                
+                const lista = document.getElementById('lista-processos');
+                if (error) {
+                    lista.innerHTML = '<tr><td colspan="3" style="text-align:center; color:red;">Erro ao buscar dados no banco: ' + error.message + '</td></tr>';
+                } else if (data && data.length > 0) {
+                    lista.innerHTML = data.map(p => `
+                        <tr>
+                            <td><strong>${p.numero_processo}</strong></td>
+                            <td>${p.requerido_nome}</td>
+                            <td><span style="background:#e0f2fe; color:#0369a1; padding:4px 8px; border-radius:4px; font-size:12px;">${p.status}</span></td>
+                        </tr>`).join('');
+                } else {
+                    lista.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#64748b;">Nenhum processo cadastrado até o momento.</td></tr>';
+                }
+            } catch (err) {
+                console.error("Erro ao carregar dashboard:", err);
             }
         }
 
-        // Cadastro
+        async function logout() { await supabase.auth.signOut(); location.reload(); }
+
         document.getElementById('processo-form').onsubmit = async (e) => {
             e.preventDefault();
             const { data: { user } } = await supabase.auth.getUser();
@@ -220,10 +225,10 @@
                 user_id: user.id
             };
             const { error } = await supabase.from('processos').insert([payload]);
-            if (error) alert(error.message); else { alert('Cadastrado!'); showView('dash'); loadData(); }
+            if (error) alert("Erro ao salvar: " + error.message); 
+            else { alert('Processo cadastrado!'); showView('dash'); loadData(); }
         };
 
-        // Inicialização
         loadData();
     </script>
 </body>
