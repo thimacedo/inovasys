@@ -69,8 +69,8 @@
     <div id="module-app" class="module">
         <nav class="sidebar">
             <div class="sidebar-brand"><img src="logo-inovasys.png" alt="inovaSys" style="max-width: 130px;"></div>
-            <div class="nav-item active" onclick="showView('dash')">Processos</div>
-            <div class="nav-item" onclick="showView('novo')">Novo Protocolo</div>
+            <div class="nav-item active" onclick="showView('dash', this)">Processos</div>
+            <div class="nav-item" onclick="showView('novo', this)">Novo Protocolo</div>
             <div class="nav-item" onclick="logout()" style="margin-top:auto; color: #ef4444;">Sair</div>
         </nav>
         <main class="main">
@@ -107,11 +107,13 @@
             box.style.display = msg ? 'block' : 'none';
         }
 
-        function showView(v) { 
+        function showView(v, element) { 
             document.querySelectorAll('.view').forEach(x => x.classList.remove('active')); 
             document.getElementById('view-'+v).classList.add('active'); 
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            if(event && event.currentTarget) event.currentTarget.classList.add('active');
+            if(element) {
+                element.classList.add('active');
+            }
         }
 
         document.getElementById('login-form').onsubmit = async (e) => {
@@ -132,10 +134,10 @@
                     btn.innerText = "Acessar Sistema";
                     btn.disabled = false;
                 } else {
-                    loadData();
+                    await loadData();
                 }
             } catch (err) {
-                showError("Erro na conexão com o banco de dados.");
+                showError("Erro na execução do script de login.");
                 btn.innerText = "Acessar Sistema";
                 btn.disabled = false;
             }
@@ -153,14 +155,15 @@
                 const lista = document.getElementById('lista-processos');
                 
                 if (error) {
-                    lista.innerHTML = `<tr><td colspan="3" style="text-align:center; color:red;">Erro: ${error.message}</td></tr>`;
+                    lista.innerHTML = `<tr><td colspan="3" style="text-align:center; color:red;">Erro no banco: ${error.message}</td></tr>`;
                 } else if (data && data.length > 0) {
                     lista.innerHTML = data.map(p => `<tr><td><strong>${p.numero_processo}</strong></td><td>${p.requerido_nome}</td><td><span style="background:#e0f2fe; color:#0369a1; padding:4px 8px; border-radius:4px; font-size:12px;">${p.status}</span></td></tr>`).join('');
                 } else {
-                    lista.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#64748b;">Nenhum registro encontrado.</td></tr>';
+                    lista.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#64748b;">Nenhum registro encontrado na base de dados.</td></tr>';
                 }
             } catch (err) {
-                console.error(err);
+                console.error("Falha ao renderizar dados:", err);
+                document.getElementById('lista-processos').innerHTML = '<tr><td colspan="3" style="text-align:center; color:red;">Erro interno ao processar a lista de processos.</td></tr>';
             }
         }
 
@@ -177,7 +180,7 @@
             };
             const { error } = await supabase.from('processos').insert([payload]);
             if (error) alert("Erro: " + error.message); 
-            else { alert('Cadastrado com sucesso!'); document.getElementById('processo-form').reset(); showView('dash'); loadData(); }
+            else { alert('Cadastrado com sucesso!'); document.getElementById('processo-form').reset(); showView('dash', document.querySelector('.nav-item.active')); loadData(); }
         };
 
         loadData();
