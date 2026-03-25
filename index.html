@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>inovaSys - Gestão Arbitral</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
@@ -15,120 +16,171 @@
             --sidebar-width: 260px;
         }
 
-        body { font-family: 'Inter', sans-serif; background-color: var(--color-bg); margin: 0; display: flex; min-height: 100vh; }
-        .module { display: none; width: 100%; height: 100vh; justify-content: center; align-items: center; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--color-bg); color: #334155; margin: 0; display: flex; min-height: 100vh; }
+        .module { display: none; width: 100%; }
         .module.active { display: flex; }
-        
-        #module-app { justify-content: flex-start; align-items: stretch; }
-        .sidebar { width: var(--sidebar-width); background: white; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; }
-        .main { flex: 1; padding: 40px; }
+        .view { display: none; }
+        .view.active { display: block; }
 
-        .auth-card { background: white; padding: 40px; border-radius: 12px; width: 100%; max-width: 380px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); text-align: center; }
+        /* Login */
+        #module-auth { height: 100vh; justify-content: center; align-items: center; background: var(--color-primary); width: 100%; }
+        .auth-card { background: white; padding: 40px; border-radius: 12px; width: 100%; max-width: 380px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3); }
         .form-group { margin-bottom: 15px; text-align: left; }
-        .form-control { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 6px; box-sizing: border-box; }
-        .btn { padding: 12px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; width: 100%; background: var(--color-accent); color: white; }
+        .form-label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: var(--color-primary); }
+        .form-control { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 6px; box-sizing: border-box; font-family: inherit; }
+        .btn { padding: 12px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; width: 100%; background: var(--color-accent); color: white; transition: 0.2s; }
         
-        #debug-console { 
-            background: #1a1a1a; color: #00ff00; font-family: monospace; font-size: 11px; 
-            padding: 10px; margin-top: 20px; border-radius: 4px; text-align: left; 
-            max-height: 100px; overflow-y: auto; display: none;
-        }
-        .error-alert { background: #fee2e2; color: #b91c1c; padding: 10px; border-radius: 6px; margin-bottom: 15px; display: none; font-size: 13px; }
+        /* Sidebar & App */
+        .sidebar { width: var(--sidebar-width); background: white; border-right: 1px solid #e2e8f0; position: fixed; height: 100vh; display: flex; flex-direction: column; }
+        .sidebar-brand { padding: 25px; text-align: center; border-bottom: 1px solid #e2e8f0; }
+        .nav-item { padding: 15px 25px; cursor: pointer; font-size: 14px; font-weight: 500; color: #64748b; border-left: 4px solid transparent; }
+        .nav-item.active { background: #f1f5f9; color: var(--color-accent); border-left-color: var(--color-accent); }
+        .main { flex: 1; margin-left: var(--sidebar-width); padding: 40px; }
+
+        .card { background: white; border-radius: 8px; border: 1px solid #e2e8f0; padding: 25px; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 12px; font-size: 11px; text-transform: uppercase; color: #64748b; background: #f8fafc; }
+        td { padding: 12px; border-top: 1px solid #e2e8f0; font-size: 14px; }
+        
+        #error-box { display: none; background: #fee2e2; color: #b91c1c; padding: 12px; border-radius: 6px; font-size: 13px; margin-bottom: 20px; text-align: left; border: 1px solid #fecaca; }
     </style>
 </head>
 <body>
 
     <div id="module-auth" class="module active">
         <div class="auth-card">
-            <img src="https://inovasysrn.vercel.app/logo-inovasys.png" alt="inovaSys" style="max-width: 150px; margin-bottom: 20px;">
-            <div id="login-error" class="error-alert"></div>
+            <img src="logo-inovasys.png" alt="inovaSys" style="max-width: 160px; margin-bottom: 25px;">
+            <div id="error-box"></div>
             
             <form id="login-form">
                 <div class="form-group">
-                    <input type="email" id="email" class="form-control" placeholder="E-mail" required>
+                    <label class="form-label">E-mail</label>
+                    <input type="email" id="email" class="form-control" autocomplete="username" required>
                 </div>
                 <div class="form-group">
-                    <input type="password" id="password" class="form-control" placeholder="Senha" required>
+                    <label class="form-label">Senha</label>
+                    <input type="password" id="password" class="form-control" autocomplete="current-password" required>
                 </div>
-                <button type="submit" id="btn-login" class="btn">Entrar</button>
+                <button type="submit" id="btn-login" class="btn">Acessar Sistema</button>
             </form>
-
-            <div id="debug-console">Iniciando diagnóstico...</div>
         </div>
     </div>
 
     <div id="module-app" class="module">
         <nav class="sidebar">
-            <div style="padding: 20px; font-weight: bold; border-bottom: 1px solid #eee;">inovaSys</div>
-            <div style="padding: 20px; cursor: pointer;" onclick="location.reload()">Sair</div>
+            <div class="sidebar-brand"><img src="logo-inovasys.png" alt="inovaSys" style="max-width: 130px;"></div>
+            <div class="nav-item active" onclick="showView('dash')">Processos</div>
+            <div class="nav-item" onclick="showView('novo')">Novo Protocolo</div>
+            <div class="nav-item" onclick="logout()" style="margin-top:auto; color: #ef4444;">Sair</div>
         </nav>
         <main class="main">
-            <h2>Painel de Processos</h2>
-            <div id="lista-container">Carregando dados...</div>
+            <div id="view-dash" class="view active">
+                <h2>Processos Arbitrais</h2>
+                <div class="card">
+                    <table>
+                        <thead><tr><th>Nº do Processo</th><th>Requerido</th><th>Status</th></tr></thead>
+                        <tbody id="lista-processos"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="view-novo" class="view">
+                <h2>Novo Protocolo</h2>
+                <div class="card">
+                    <form id="processo-form">
+                        <div class="form-group"><label class="form-label">Requerente</label><input type="text" id="req_nome" class="form-control" required></div>
+                        <div class="form-group"><label class="form-label">Requerido</label><input type="text" id="def_nome" class="form-control" required></div>
+                        <button type="submit" id="btn-protocolar" class="btn" style="width: auto;">Cadastrar Processo</button>
+                    </form>
+                </div>
+            </div>
         </main>
     </div>
 
     <script>
         const SUPABASE_URL = 'https://tsgbvhfdceyjbyfstjol.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzZ2J2aGZkY2V5amJ5ZnN0am9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0NjY3MDEsImV4cCI6MjA5MDA0MjcwMX0.ucDetUUuVKyycACaNtzArQ8YpgybrRpQqYljYYiTgyI';
-        
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        const debug = (msg) => {
-            const d = document.getElementById('debug-console');
-            d.style.display = 'block';
-            d.innerHTML += `<br>> ${msg}`;
-            console.log(msg);
-        };
+        function showError(msg) {
+            const box = document.getElementById('error-box');
+            box.innerText = msg;
+            box.style.display = msg ? 'block' : 'none';
+        }
+
+        function showView(v) { 
+            document.querySelectorAll('.view').forEach(x => x.classList.remove('active')); 
+            document.getElementById('view-'+v).classList.add('active'); 
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            if(event && event.currentTarget) event.currentTarget.classList.add('active');
+        }
 
         document.getElementById('login-form').onsubmit = async (e) => {
             e.preventDefault();
+            showError('');
             const btn = document.getElementById('btn-login');
-            const errBox = document.getElementById('login-error');
-            
-            btn.innerText = "Processando...";
+            btn.innerText = "Conectando...";
             btn.disabled = true;
-            errBox.style.display = 'none';
-            debug("Tentando autenticação...");
 
             try {
-                const { data, error } = await supabase.auth.signInWithPassword({
+                const { error } = await supabase.auth.signInWithPassword({
                     email: e.target.email.value,
                     password: e.target.password.value
                 });
 
                 if (error) {
-                    debug("Erro retornado pelo Supabase: " + error.message);
-                    errBox.innerText = "Falha: " + error.message;
-                    errBox.style.display = 'block';
-                    btn.innerText = "Entrar";
+                    showError("Erro de acesso: " + error.message);
+                    btn.innerText = "Acessar Sistema";
                     btn.disabled = false;
                 } else {
-                    debug("Sucesso! Token gerado. Redirecionando...");
-                    document.getElementById('module-auth').classList.remove('active');
-                    document.getElementById('module-app').classList.add('active');
                     loadData();
                 }
             } catch (err) {
-                debug("Erro crítico de JS: " + err.message);
+                showError("Erro na conexão com o banco de dados.");
+                btn.innerText = "Acessar Sistema";
                 btn.disabled = false;
             }
         };
 
         async function loadData() {
-            debug("Buscando processos...");
-            const { data, error } = await supabase.from('processos').select('*');
-            
-            if (error) {
-                debug("Erro de Tabela: " + error.message);
-                document.getElementById('lista-container').innerHTML = "Erro ao ler tabela: " + error.message;
-            } else {
-                debug(`Encontrado(s) ${data.length} registro(s).`);
-                document.getElementById('lista-container').innerHTML = data.length > 0 
-                    ? JSON.stringify(data) 
-                    : "Nenhum processo cadastrado.";
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session) return;
+                
+                document.getElementById('module-auth').classList.remove('active');
+                document.getElementById('module-app').classList.add('active');
+                
+                const { data, error } = await supabase.from('processos').select('*');
+                const lista = document.getElementById('lista-processos');
+                
+                if (error) {
+                    lista.innerHTML = `<tr><td colspan="3" style="text-align:center; color:red;">Erro: ${error.message}</td></tr>`;
+                } else if (data && data.length > 0) {
+                    lista.innerHTML = data.map(p => `<tr><td><strong>${p.numero_processo}</strong></td><td>${p.requerido_nome}</td><td><span style="background:#e0f2fe; color:#0369a1; padding:4px 8px; border-radius:4px; font-size:12px;">${p.status}</span></td></tr>`).join('');
+                } else {
+                    lista.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#64748b;">Nenhum registro encontrado.</td></tr>';
+                }
+            } catch (err) {
+                console.error(err);
             }
         }
+
+        async function logout() { await supabase.auth.signOut(); location.reload(); }
+
+        document.getElementById('processo-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const { data: { user } } = await supabase.auth.getUser();
+            const payload = {
+                numero_processo: `${new Date().getFullYear()}.AR.${Math.floor(Math.random()*9000 + 1000)}`,
+                requerente_nome: document.getElementById('req_nome').value,
+                requerido_nome: document.getElementById('def_nome').value,
+                user_id: user.id
+            };
+            const { error } = await supabase.from('processos').insert([payload]);
+            if (error) alert("Erro: " + error.message); 
+            else { alert('Cadastrado com sucesso!'); document.getElementById('processo-form').reset(); showView('dash'); loadData(); }
+        };
+
+        loadData();
     </script>
 </body>
 </html>
