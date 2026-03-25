@@ -49,18 +49,15 @@
         .form-control { width: 100%; padding: 10px; border: 1px solid var(--color-border); border-radius: 6px; font-family: inherit; }
         .btn { padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; transition: 0.2s; }
         .btn-primary { background: var(--color-accent); color: white; }
-        .btn-primary:hover { opacity: 0.9; }
 
-        /* Estilo para a Capa PDF (Invisível no site) */
         #pdf-template { width: 595px; padding: 50px; background: white; color: black; position: absolute; left: -9999px; font-family: 'serif'; text-align: center; }
-        .pdf-header { border: 2px solid black; padding: 20px; margin-bottom: 30px; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div id="module-auth" class="module active">
         <div class="auth-card">
-            <img src="logo-inovasys.png" alt="inovaSys">
+            <img src="logo-inovasys.png" alt="inovaSys" onerror="this.src='https://via.placeholder.com/150?text=inovaSys'">
             <form id="login-form">
                 <div class="form-group">
                     <label class="form-label">E-mail</label>
@@ -88,15 +85,15 @@
         <main class="main">
             <div id="view-dash" class="view active">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2 style="margin:0">Painel de Controle</h2>
-                    <button class="btn btn-primary" onclick="showView('novo')">+ Novo Caso</button>
+                    <h2 style="margin:0">Meus Processos</h2>
+                    <button class="btn btn-primary" onclick="showView('novo')">+ Novo</button>
                 </div>
                 <div class="card">
                     <table>
                         <thead>
                             <tr>
-                                <th>Nº do Processo</th>
-                                <th>Requerido (Demandado)</th>
+                                <th>Nº Processo</th>
+                                <th>Requerido</th>
                                 <th>Status</th>
                                 <th style="text-align: right;">Ações</th>
                             </tr>
@@ -107,33 +104,30 @@
             </div>
 
             <div id="view-novo" class="view">
-                <h2>Novo Procedimento Arbitral</h2>
+                <h2>Novo Procedimento</h2>
                 <div class="card">
                     <form id="processo-form">
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                            <div class="form-group">
-                                <label class="form-label">Nome do Requerente</label>
-                                <input type="text" id="req_nome" class="form-control" placeholder="Ex: João Silva" required>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">CPF/CNPJ do Requerente</label>
-                                <input type="text" id="req_doc" class="form-control" required>
-                            </div>
+                        <div class="form-group">
+                            <label class="form-label">Nome do Requerente</label>
+                            <input type="text" id="req_nome" class="form-control" required>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Nome do Requerido (Demandado)</label>
+                            <label class="form-label">Documento (CPF/CNPJ)</label>
+                            <input type="text" id="req_doc" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Nome do Requerido</label>
                             <input type="text" id="def_nome" class="form-control" required>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Valor da Causa (R$)</label>
-                            <input type="number" step="0.01" id="valor" class="form-control" required>
+                            <label class="form-label">Valor da Causa</label>
+                            <input type="number" id="valor" class="form-control" required>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Resumo do Pedido</label>
-                            <textarea id="fatos" class="form-control" rows="4"></textarea>
+                            <label class="form-label">Relato Breve</label>
+                            <textarea id="fatos" class="form-control" rows="3"></textarea>
                         </div>
-                        <button type="submit" class="btn btn-primary">Protocolar Agora</button>
-                        <button type="button" class="btn" onclick="showView('dash')">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Protocolar</button>
                     </form>
                 </div>
             </div>
@@ -141,27 +135,14 @@
     </div>
 
     <div id="pdf-template">
-        <div class="pdf-header">
-            PROCEDIMENTO Nº <span id="pdf-num"></span>
-        </div>
-        <img src="logo-inovasys.png" style="max-width: 200px; margin-bottom: 20px;">
-        <h3>INOVASYS - CÂMARA DE ARBITRAGEM E CONCILIAÇÃO</h3>
-        <p>AUTOS DE PROCESSO DE MEDIAÇÃO, CONCILIAÇÃO E ARBITRAGEM</p>
-        <br><br>
-        <div style="text-align: left; line-height: 2;">
-            <p><strong>DEMANDANTE:</strong> <span id="pdf-req"></span></p>
-            <p><strong>DEMANDADO:</strong> <span id="pdf-def"></span></p>
-            <p><strong>DATA DA ENTRADA:</strong> <span id="pdf-data"></span></p>
-        </div>
-        <br><br>
-        <div style="border: 1px solid black; padding: 15px;">
-            <h4>AUTUAÇÃO</h4>
-            <p>Nesta data, faço a presente autuação dos presentes autos conforme Lei 9.307/96.</p>
-        </div>
+        <h2 id="pdf-num"></h2>
+        <p><strong>REQUERENTE:</strong> <span id="pdf-req"></span></p>
+        <p><strong>REQUERIDO:</strong> <span id="pdf-def"></span></p>
+        <p><strong>DATA:</strong> <span id="pdf-data"></span></p>
     </div>
 
     <script>
-        // CONFIGURAÇÃO SUPABASE (Substitua pelos seus dados)
+        // SUBSTITUA PELAS SUAS CHAVES DO SUPABASE
         const SUPABASE_URL = 'https://SUA_URL.supabase.co';
         const SUPABASE_KEY = 'SUA_KEY_ANON';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -169,92 +150,64 @@
         function showView(view) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.getElementById('view-' + view).classList.add('active');
-            document.querySelectorAll('.nav-item').forEach(n => {
-                n.classList.remove('active');
-                if(n.innerText.toLowerCase().includes(view === 'dash' ? 'processos' : 'novo')) n.classList.add('active');
-            });
         }
 
-        // Auth
         document.getElementById('login-form').onsubmit = async (e) => {
             e.preventDefault();
             const { error } = await supabase.auth.signInWithPassword({
                 email: e.target.email.value,
                 password: e.target.password.value
             });
-            if (error) alert("Falha no login: " + error.message);
-            else location.reload();
+            if (error) alert(error.message);
+            else loadData();
         };
 
         async function logout() { await supabase.auth.signOut(); location.reload(); }
 
-        // Carregar Processos
         async function loadData() {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) return;
 
-            document.getElementById('module-auth').style.display = 'none';
+            document.getElementById('module-auth').classList.remove('active');
             document.getElementById('module-app').classList.add('active');
 
-            const { data: processos } = await supabase.from('processos').select('*').order('created_at', { ascending: false });
+            const { data: processos } = await supabase.from('processos').select('*');
             const lista = document.getElementById('lista-processos');
-            
-            if (processos && processos.length > 0) {
-                lista.innerHTML = processos.map(p => `
-                    <tr>
-                        <td><strong>${p.numero_processo}</strong></td>
-                        <td>${p.requerido_nome}</td>
-                        <td><span style="padding: 4px 8px; border-radius: 4px; background: #e0f2fe; color: #0369a1; font-size: 12px; font-weight: 600;">${p.status}</span></td>
-                        <td style="text-align: right;">
-                            <button class="btn" style="background: #f1f5f9; color: #475569; font-size: 12px;" onclick="gerarCapa('${p.numero_processo}', '${p.requerente_nome}', '${p.requerido_nome}', '${p.created_at}')">Gerar Capa</button>
-                        </td>
-                    </tr>
-                `).join('');
-            } else {
-                lista.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 40px; color: #94a3b8;">Nenhum processo registrado ainda.</td></tr>`;
-            }
+            lista.innerHTML = processos.map(p => `
+                <tr>
+                    <td>${p.numero_processo}</td>
+                    <td>${p.requerido_nome}</td>
+                    <td>${p.status}</td>
+                    <td style="text-align: right;">
+                        <button onclick="gerarCapa('${p.numero_processo}', '${p.requerente_nome}', '${p.requerido_nome}', '${p.created_at}')">Capa</button>
+                    </td>
+                </tr>
+            `).join('');
         }
 
-        // Salvar Processo
         document.getElementById('processo-form').onsubmit = async (e) => {
             e.preventDefault();
             const { data: { user } } = await supabase.auth.getUser();
-            
             const payload = {
-                numero_processo: `${new Date().getFullYear()}.AR.${Math.floor(Math.random() * 9000 + 1000)}`,
+                numero_processo: `2026.AR.${Math.floor(Math.random()*9000)}`,
                 requerente_nome: document.getElementById('req_nome').value,
                 requerente_doc: document.getElementById('req_doc').value,
                 requerido_nome: document.getElementById('def_nome').value,
-                valor_causa: parseFloat(document.getElementById('valor').value),
+                valor_causa: document.getElementById('valor').value,
                 resumo_fatos: document.getElementById('fatos').value,
                 user_id: user.id
             };
-
             const { error } = await supabase.from('processos').insert([payload]);
             if (error) alert(error.message);
-            else { 
-                alert('Processo Protocolado!'); 
-                showView('dash');
-                loadData();
-            }
+            else { alert('Sucesso!'); showView('dash'); loadData(); }
         };
 
-        // Função PDF
         function gerarCapa(num, req, def, data) {
             document.getElementById('pdf-num').innerText = num;
             document.getElementById('pdf-req').innerText = req;
             document.getElementById('pdf-def').innerText = def;
-            document.getElementById('pdf-data').innerText = new Date(data).toLocaleDateString('pt-BR');
-
-            const element = document.getElementById('pdf-template');
-            const opt = {
-                margin: 0,
-                filename: `Capa_Processo_${num}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2 },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-            html2pdf().set(opt).from(element).save();
+            document.getElementById('pdf-data').innerText = new Date(data).toLocaleDateString();
+            html2pdf().from(document.getElementById('pdf-template')).save(`Capa_${num}.pdf`);
         }
 
         loadData();
