@@ -38,7 +38,7 @@
         .nav-item.active { background: #f1f5f9; color: var(--color-accent); border-left-color: var(--color-accent); }
         .main { flex: 1; margin-left: var(--sidebar-width); padding: 40px; }
 
-        /* Componentes */
+        /* Cards e Tabelas */
         .card { background: white; border-radius: 8px; border: 1px solid var(--color-border); padding: 25px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         table { width: 100%; border-collapse: collapse; }
         th { text-align: left; padding: 12px; font-size: 11px; text-transform: uppercase; color: #64748b; background: #f8fafc; }
@@ -47,26 +47,23 @@
         .form-group { margin-bottom: 15px; }
         .form-label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: var(--color-primary); }
         .form-control { width: 100%; padding: 10px; border: 1px solid var(--color-border); border-radius: 6px; font-family: inherit; }
-        .btn { padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; transition: 0.2s; }
+        .btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-size: 13px; }
         .btn-primary { background: var(--color-accent); color: white; }
+        .btn-outline { background: transparent; border: 1px solid var(--color-border); color: var(--color-text); }
 
-        #pdf-template { width: 595px; padding: 50px; background: white; color: black; position: absolute; left: -9999px; font-family: 'serif'; text-align: center; }
+        /* Estilos PDF (Ocultos no navegador) */
+        .pdf-hidden { position: absolute; left: -9999px; width: 190mm; background: white; color: black; padding: 20mm; font-family: 'Times New Roman', serif; }
+        .pdf-header { text-align: center; font-weight: bold; border: 1px solid black; padding: 10px; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
     <div id="module-auth" class="module active">
         <div class="auth-card">
-            <img src="logo-inovasys.png" alt="inovaSys" onerror="this.src='https://via.placeholder.com/150?text=inovaSys'">
+            <img src="logo-inovasys.png" alt="inovaSys">
             <form id="login-form">
-                <div class="form-group">
-                    <label class="form-label">E-mail</label>
-                    <input type="email" id="email" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Senha</label>
-                    <input type="password" id="password" class="form-control" required>
-                </div>
+                <div class="form-group"><label class="form-label">E-mail</label><input type="email" id="email" class="form-control" required></div>
+                <div class="form-group"><label class="form-label">Senha</label><input type="password" id="password" class="form-control" required></div>
                 <button type="submit" class="btn btn-primary" style="width: 100%;">Entrar</button>
             </form>
         </div>
@@ -74,9 +71,7 @@
 
     <div id="module-app" class="module">
         <nav class="sidebar">
-            <div class="sidebar-brand">
-                <img src="logo-inovasys.png" alt="inovaSys">
-            </div>
+            <div class="sidebar-brand"><img src="logo-inovasys.png" alt="inovaSys"></div>
             <div class="nav-item active" onclick="showView('dash')">Processos</div>
             <div class="nav-item" onclick="showView('novo')">Novo Protocolo</div>
             <div class="nav-item" onclick="logout()" style="margin-top:auto; color: #ef4444;">Sair</div>
@@ -85,18 +80,13 @@
         <main class="main">
             <div id="view-dash" class="view active">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2 style="margin:0">Meus Processos</h2>
-                    <button class="btn btn-primary" onclick="showView('novo')">+ Novo</button>
+                    <h2 style="margin:0">Painel Arbitral</h2>
+                    <button class="btn btn-primary" onclick="showView('novo')">+ Novo Processo</button>
                 </div>
                 <div class="card">
                     <table>
                         <thead>
-                            <tr>
-                                <th>Nº Processo</th>
-                                <th>Requerido</th>
-                                <th>Status</th>
-                                <th style="text-align: right;">Ações</th>
-                            </tr>
+                            <tr><th>Nº Processo</th><th>Demandado</th><th>Status</th><th style="text-align: right;">Documentos</th></tr>
                         </thead>
                         <tbody id="lista-processos"></tbody>
                     </table>
@@ -104,47 +94,52 @@
             </div>
 
             <div id="view-novo" class="view">
-                <h2>Novo Procedimento</h2>
+                <h2>Protocolar Novo Pedido</h2>
                 <div class="card">
                     <form id="processo-form">
-                        <div class="form-group">
-                            <label class="form-label">Nome do Requerente</label>
-                            <input type="text" id="req_nome" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Documento (CPF/CNPJ)</label>
-                            <input type="text" id="req_doc" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Nome do Requerido</label>
-                            <input type="text" id="def_nome" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Valor da Causa</label>
-                            <input type="number" id="valor" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Relato Breve</label>
-                            <textarea id="fatos" class="form-control" rows="3"></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Protocolar</button>
+                        <div class="form-group"><label class="form-label">Nome do Requerente</label><input type="text" id="req_nome" class="form-control" required></div>
+                        <div class="form-group"><label class="form-label">Documento (CPF/CNPJ)</label><input type="text" id="req_doc" class="form-control" required></div>
+                        <div class="form-group"><label class="form-label">Nome do Requerido</label><input type="text" id="def_nome" class="form-control" required></div>
+                        <div class="form-group"><label class="form-label">Valor da Causa (R$)</label><input type="number" step="0.01" id="valor" class="form-control" required></div>
+                        <div class="form-group"><label class="form-label">Descrição do Fato</label><textarea id="fatos" class="form-control" rows="4"></textarea></div>
+                        <button type="submit" class="btn btn-primary">Gerar Protocolo</button>
                     </form>
                 </div>
             </div>
         </main>
     </div>
 
-    <div id="pdf-template">
-        <h2 id="pdf-num"></h2>
-        <p><strong>REQUERENTE:</strong> <span id="pdf-req"></span></p>
-        <p><strong>REQUERIDO:</strong> <span id="pdf-def"></span></p>
-        <p><strong>DATA:</strong> <span id="pdf-data"></span></p>
+    <div id="pdf-capa" class="pdf-hidden">
+        <div class="pdf-header">PROCEDIMENTO Nº <span class="fill-num"></span></div>
+        <div style="text-align: center;">
+            <img src="logo-inovasys.png" style="width: 150px;">
+            <h3>INOVASYS - CÂMARA DE ARBITRAGEM</h3>
+            <p>AUTOS DE PROCESSO DE MEDIAÇÃO E ARBITRAGEM</p>
+        </div>
+        <div style="margin-top: 50px; line-height: 2;">
+            <p><strong>DEMANDANTE:</strong> <span class="fill-req"></span></p>
+            <p><strong>DEMANDADO:</strong> <span class="fill-def"></span></p>
+            <p><strong>DATA DE ENTRADA:</strong> <span class="fill-data"></span></p>
+        </div>
+    </div>
+
+    <div id="pdf-termo" class="pdf-hidden">
+        <div style="text-align: center; font-weight: bold; text-decoration: underline;">TERMO DE APRESENTAÇÃO DO PEDIDO Nº <span class="fill-num"></span></div>
+        <p style="text-align: justify; margin-top: 30px;">
+            Eu, <span class="fill-req"></span>, na qualidade de Demandante, venho requerer que seja objeto de Mediação, Conciliação e/ou Arbitragem o litígio em face de <span class="fill-def"></span>, pelos motivos expostos:
+        </p>
+        <h4>DESCRIÇÃO DOS FATOS:</h4>
+        <div id="fill-fatos" style="text-align: justify; border: 1px solid #eee; padding: 10px; min-height: 100px;"></div>
+        <p><strong>VALOR DA CAUSA:</strong> R$ <span id="fill-valor"></span></p>
+        <div style="margin-top: 100px; text-align: center;">
+            <p>_________________________________________________</p>
+            <p>Assinatura do Demandante</p>
+        </div>
     </div>
 
     <script>
-        // SUBSTITUA PELAS SUAS CHAVES DO SUPABASE
-        const SUPABASE_URL = 'https://SUA_URL.supabase.co';
-        const SUPABASE_KEY = 'SUA_KEY_ANON';
+        const SUPABASE_URL = 'SUA_URL';
+        const SUPABASE_KEY = 'SUA_KEY';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         function showView(view) {
@@ -154,12 +149,8 @@
 
         document.getElementById('login-form').onsubmit = async (e) => {
             e.preventDefault();
-            const { error } = await supabase.auth.signInWithPassword({
-                email: e.target.email.value,
-                password: e.target.password.value
-            });
-            if (error) alert(error.message);
-            else loadData();
+            const { error } = await supabase.auth.signInWithPassword({ email: e.target.email.value, password: e.target.password.value });
+            if (error) alert(error.message); else loadData();
         };
 
         async function logout() { await supabase.auth.signOut(); location.reload(); }
@@ -167,19 +158,19 @@
         async function loadData() {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) return;
-
             document.getElementById('module-auth').classList.remove('active');
             document.getElementById('module-app').classList.add('active');
 
-            const { data: processos } = await supabase.from('processos').select('*');
+            const { data: processos } = await supabase.from('processos').select('*').order('created_at', { ascending: false });
             const lista = document.getElementById('lista-processos');
             lista.innerHTML = processos.map(p => `
                 <tr>
-                    <td>${p.numero_processo}</td>
+                    <td><strong>${p.numero_processo}</strong></td>
                     <td>${p.requerido_nome}</td>
                     <td>${p.status}</td>
-                    <td style="text-align: right;">
-                        <button onclick="gerarCapa('${p.numero_processo}', '${p.requerente_nome}', '${p.requerido_nome}', '${p.created_at}')">Capa</button>
+                    <td style="text-align: right; display: flex; gap: 5px; justify-content: flex-end;">
+                        <button class="btn btn-outline" onclick="gerarPDF('pdf-capa', ${JSON.stringify(p).replace(/"/g, '&quot;')})">Capa</button>
+                        <button class="btn btn-outline" onclick="gerarPDF('pdf-termo', ${JSON.stringify(p).replace(/"/g, '&quot;')})">Termo</button>
                     </td>
                 </tr>
             `).join('');
@@ -189,7 +180,7 @@
             e.preventDefault();
             const { data: { user } } = await supabase.auth.getUser();
             const payload = {
-                numero_processo: `2026.AR.${Math.floor(Math.random()*9000)}`,
+                numero_processo: `${new Date().getFullYear()}.AR.${Math.floor(Math.random()*9000+1000)}`,
                 requerente_nome: document.getElementById('req_nome').value,
                 requerente_doc: document.getElementById('req_doc').value,
                 requerido_nome: document.getElementById('def_nome').value,
@@ -198,16 +189,19 @@
                 user_id: user.id
             };
             const { error } = await supabase.from('processos').insert([payload]);
-            if (error) alert(error.message);
-            else { alert('Sucesso!'); showView('dash'); loadData(); }
+            if (error) alert(error.message); else { alert('Processo Criado!'); showView('dash'); loadData(); }
         };
 
-        function gerarCapa(num, req, def, data) {
-            document.getElementById('pdf-num').innerText = num;
-            document.getElementById('pdf-req').innerText = req;
-            document.getElementById('pdf-def').innerText = def;
-            document.getElementById('pdf-data').innerText = new Date(data).toLocaleDateString();
-            html2pdf().from(document.getElementById('pdf-template')).save(`Capa_${num}.pdf`);
+        function gerarPDF(templateId, p) {
+            const temp = document.getElementById(templateId);
+            temp.querySelectorAll('.fill-num').forEach(el => el.innerText = p.numero_processo);
+            temp.querySelectorAll('.fill-req').forEach(el => el.innerText = p.requerente_nome);
+            temp.querySelectorAll('.fill-def').forEach(el => el.innerText = p.requerido_nome);
+            temp.querySelectorAll('.fill-data').forEach(el => el.innerText = new Date(p.created_at).toLocaleDateString());
+            if(document.getElementById('fill-fatos')) document.getElementById('fill-fatos').innerText = p.resumo_fatos;
+            if(document.getElementById('fill-valor')) document.getElementById('fill-valor').innerText = p.valor_causa;
+
+            html2pdf().from(temp).set({ margin: 10, filename: `${templateId}_${p.numero_processo}.pdf` }).save();
         }
 
         loadData();
