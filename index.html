@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>inovaSys - Gestão Arbitral</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
@@ -13,114 +12,59 @@
             --color-primary: #0a192f;
             --color-accent: #0284c7;
             --color-bg: #f8fafc;
-            --color-surface: #ffffff;
-            --color-text: #334155;
-            --color-border: #e2e8f0;
             --sidebar-width: 260px;
-            --color-error: #ef4444;
         }
 
-        body { font-family: 'Inter', sans-serif; background-color: var(--color-bg); color: var(--color-text); margin: 0; display: flex; min-height: 100vh; }
-        .module { display: none; width: 100%; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--color-bg); margin: 0; display: flex; min-height: 100vh; }
+        .module { display: none; width: 100%; height: 100vh; justify-content: center; align-items: center; }
         .module.active { display: flex; }
-        .view { display: none; }
-        .view.active { display: block; }
-
-        /* Login Card */
-        #module-auth { height: 100vh; justify-content: center; align-items: center; background: var(--color-primary); width: 100%; }
-        .auth-card { background: white; padding: 40px; border-radius: 12px; width: 100%; max-width: 380px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3); }
-        .auth-card img { max-width: 160px; margin-bottom: 25px; }
-        .auth-view { display: none; }
-        .auth-view.active { display: block; }
-
-        /* Error Message Box */
-        .error-message { display: none; background: #fee2e2; color: #b91c1c; padding: 12px; border-radius: 6px; font-size: 13px; margin-bottom: 20px; border: 1px solid #fecaca; text-align: left; line-height: 1.4; }
-
-        /* Sidebar & Layout */
-        .sidebar { width: var(--sidebar-width); background: white; border-right: 1px solid var(--color-border); position: fixed; height: 100vh; display: flex; flex-direction: column; }
-        .sidebar-brand { padding: 25px; text-align: center; border-bottom: 1px solid var(--color-border); }
-        .sidebar-brand img { max-width: 130px; }
-        .nav-item { padding: 15px 25px; cursor: pointer; font-size: 14px; font-weight: 500; color: #64748b; border-left: 4px solid transparent; }
-        .nav-item.active { background: #f1f5f9; color: var(--color-accent); border-left-color: var(--color-accent); }
-        .main { flex: 1; margin-left: var(--sidebar-width); padding: 40px; }
-
-        /* UI Elements */
-        .card { background: white; border-radius: 8px; border: 1px solid var(--color-border); padding: 25px; margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 12px; font-size: 11px; text-transform: uppercase; color: #64748b; background: #f8fafc; }
-        td { padding: 12px; border-top: 1px solid var(--color-border); font-size: 14px; }
         
+        #module-app { justify-content: flex-start; align-items: stretch; }
+        .sidebar { width: var(--sidebar-width); background: white; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; }
+        .main { flex: 1; padding: 40px; }
+
+        .auth-card { background: white; padding: 40px; border-radius: 12px; width: 100%; max-width: 380px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); text-align: center; }
         .form-group { margin-bottom: 15px; text-align: left; }
-        .form-label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: var(--color-primary); }
-        .form-control { width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: 6px; font-family: inherit; box-sizing: border-box; }
-        .btn { padding: 12px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-size: 14px; transition: 0.2s; width: 100%; }
-        .btn-primary { background: var(--color-accent); color: white; margin-top: 10px; }
-        .btn-link { background: none; color: var(--color-accent); font-size: 13px; margin-top: 15px; text-decoration: underline; padding: 0; width: auto; }
+        .form-control { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 6px; box-sizing: border-box; }
+        .btn { padding: 12px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; width: 100%; background: var(--color-accent); color: white; }
+        
+        #debug-console { 
+            background: #1a1a1a; color: #00ff00; font-family: monospace; font-size: 11px; 
+            padding: 10px; margin-top: 20px; border-radius: 4px; text-align: left; 
+            max-height: 100px; overflow-y: auto; display: none;
+        }
+        .error-alert { background: #fee2e2; color: #b91c1c; padding: 10px; border-radius: 6px; margin-bottom: 15px; display: none; font-size: 13px; }
     </style>
 </head>
 <body>
 
     <div id="module-auth" class="module active">
         <div class="auth-card">
-            <img src="logo-inovasys.png" alt="inovaSys">
+            <img src="https://inovasysrn.vercel.app/logo-inovasys.png" alt="inovaSys" style="max-width: 150px; margin-bottom: 20px;">
+            <div id="login-error" class="error-alert"></div>
             
-            <div id="auth-error" class="error-message"></div>
+            <form id="login-form">
+                <div class="form-group">
+                    <input type="email" id="email" class="form-control" placeholder="E-mail" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="password" class="form-control" placeholder="Senha" required>
+                </div>
+                <button type="submit" id="btn-login" class="btn">Entrar</button>
+            </form>
 
-            <div id="view-login" class="auth-view active">
-                <form id="login-form">
-                    <div class="form-group"><label class="form-label">E-mail</label><input type="email" id="email" class="form-control" autocomplete="email" required></div>
-                    <div class="form-group"><label class="form-label">Senha</label><input type="password" id="password" class="form-control" autocomplete="current-password" required></div>
-                    <button type="submit" id="btn-login" class="btn btn-primary">Entrar no Sistema</button>
-                </form>
-                <button type="button" class="btn btn-link" onclick="switchAuthView('view-forgot')">Esqueci minha senha</button>
-            </div>
-
-            <div id="view-forgot" class="auth-view">
-                <h3 style="margin-top:0;">Recuperar Senha</h3>
-                <form id="forgot-form">
-                    <div class="form-group"><label class="form-label">E-mail</label><input type="email" id="forgot-email" class="form-control" required></div>
-                    <button type="submit" id="btn-forgot" class="btn btn-primary">Enviar Link</button>
-                </form>
-                <button type="button" class="btn btn-link" onclick="switchAuthView('view-login')">Voltar</button>
-            </div>
-
-            <div id="view-new-password" class="auth-view">
-                <h3 style="margin-top:0;">Definir Nova Senha</h3>
-                <form id="new-password-form">
-                    <div class="form-group"><label class="form-label">Nova Senha</label><input type="password" id="new-pwd" class="form-control" autocomplete="new-password" minlength="6" required></div>
-                    <button type="submit" id="btn-new-pwd" class="btn btn-primary">Salvar Senha</button>
-                </form>
-            </div>
+            <div id="debug-console">Iniciando diagnóstico...</div>
         </div>
     </div>
 
     <div id="module-app" class="module">
         <nav class="sidebar">
-            <div class="sidebar-brand"><img src="logo-inovasys.png" alt="inovaSys"></div>
-            <div class="nav-item active" onclick="showView('dash')">Processos</div>
-            <div class="nav-item" onclick="showView('novo')">Novo Protocolo</div>
-            <div class="nav-item" onclick="logout()" style="margin-top:auto; color: var(--color-error);">Sair</div>
+            <div style="padding: 20px; font-weight: bold; border-bottom: 1px solid #eee;">inovaSys</div>
+            <div style="padding: 20px; cursor: pointer;" onclick="location.reload()">Sair</div>
         </nav>
         <main class="main">
-            <div id="view-dash" class="view active">
-                <h2>Processos Arbitrais</h2>
-                <div class="card">
-                    <table>
-                        <thead><tr><th>Nº do Processo</th><th>Requerido</th><th>Status</th></tr></thead>
-                        <tbody id="lista-processos"></tbody>
-                    </table>
-                </div>
-            </div>
-            <div id="view-novo" class="view">
-                <h2>Novo Protocolo</h2>
-                <div class="card">
-                    <form id="processo-form">
-                        <div class="form-group"><label class="form-label">Requerente</label><input type="text" id="req_nome" class="form-control" required></div>
-                        <div class="form-group"><label class="form-label">Requerido</label><input type="text" id="def_nome" class="form-control" required></div>
-                        <button type="submit" id="btn-protocolar" class="btn btn-primary" style="width: auto;">Cadastrar</button>
-                    </form>
-                </div>
-            </div>
+            <h2>Painel de Processos</h2>
+            <div id="lista-container">Carregando dados...</div>
         </main>
     </div>
 
@@ -130,106 +74,61 @@
         
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        function displayError(msg) {
-            const box = document.getElementById('auth-error');
-            box.innerText = msg;
-            box.style.display = msg ? 'block' : 'none';
-        }
+        const debug = (msg) => {
+            const d = document.getElementById('debug-console');
+            d.style.display = 'block';
+            d.innerHTML += `<br>> ${msg}`;
+            console.log(msg);
+        };
 
-        function switchAuthView(viewId) {
-            displayError(''); // Limpa erros ao trocar de tela
-            document.querySelectorAll('.auth-view').forEach(v => v.classList.remove('active'));
-            document.getElementById(viewId).classList.add('active');
-        }
-
-        function showView(v) { 
-            document.querySelectorAll('.view').forEach(x => x.classList.remove('active')); 
-            document.getElementById('view-'+v).classList.add('active'); 
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            if(event && event.currentTarget) event.currentTarget.classList.add('active');
-        }
-
-        // Login com Tratamento de Erros Detalhado
         document.getElementById('login-form').onsubmit = async (e) => {
             e.preventDefault();
-            displayError('');
             const btn = document.getElementById('btn-login');
-            btn.innerText = "Verificando...";
+            const errBox = document.getElementById('login-error');
+            
+            btn.innerText = "Processando...";
             btn.disabled = true;
+            errBox.style.display = 'none';
+            debug("Tentando autenticação...");
 
             try {
-                const { error } = await supabase.auth.signInWithPassword({
-                    email: e.target.email.value, 
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: e.target.email.value,
                     password: e.target.password.value
                 });
 
                 if (error) {
-                    if (error.message.includes("Invalid login credentials")) {
-                        displayError("E-mail ou senha incorretos. Por favor, verifique seus dados.");
-                    } else if (error.message.includes("Email not confirmed")) {
-                        displayError("Este e-mail ainda não foi confirmado no banco de dados.");
-                    } else if (error.status === 0 || error.message.includes("fetch")) {
-                        displayError("Erro de conexão: Não foi possível alcançar o servidor. Verifique sua internet.");
-                    } else {
-                        displayError("Erro inesperado: " + error.message);
-                    }
-                    btn.innerText = "Entrar no Sistema";
+                    debug("Erro retornado pelo Supabase: " + error.message);
+                    errBox.innerText = "Falha: " + error.message;
+                    errBox.style.display = 'block';
+                    btn.innerText = "Entrar";
                     btn.disabled = false;
                 } else {
+                    debug("Sucesso! Token gerado. Redirecionando...");
+                    document.getElementById('module-auth').classList.remove('active');
+                    document.getElementById('module-app').classList.add('active');
                     loadData();
                 }
             } catch (err) {
-                displayError("Falha crítica ao tentar conectar ao banco.");
-                btn.innerText = "Entrar no Sistema";
+                debug("Erro crítico de JS: " + err.message);
                 btn.disabled = false;
             }
         };
 
         async function loadData() {
-            try {
-                const { data: { session } } = await supabase.auth.getSession();
-                if (!session) return;
-                
-                document.getElementById('module-auth').classList.remove('active');
-                document.getElementById('module-app').classList.add('active');
-                
-                const { data, error } = await supabase.from('processos').select('*');
-                
-                const lista = document.getElementById('lista-processos');
-                if (error) {
-                    lista.innerHTML = '<tr><td colspan="3" style="text-align:center; color:red;">Erro ao buscar dados no banco: ' + error.message + '</td></tr>';
-                } else if (data && data.length > 0) {
-                    lista.innerHTML = data.map(p => `
-                        <tr>
-                            <td><strong>${p.numero_processo}</strong></td>
-                            <td>${p.requerido_nome}</td>
-                            <td><span style="background:#e0f2fe; color:#0369a1; padding:4px 8px; border-radius:4px; font-size:12px;">${p.status}</span></td>
-                        </tr>`).join('');
-                } else {
-                    lista.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#64748b;">Nenhum processo cadastrado até o momento.</td></tr>';
-                }
-            } catch (err) {
-                console.error("Erro ao carregar dashboard:", err);
+            debug("Buscando processos...");
+            const { data, error } = await supabase.from('processos').select('*');
+            
+            if (error) {
+                debug("Erro de Tabela: " + error.message);
+                document.getElementById('lista-container').innerHTML = "Erro ao ler tabela: " + error.message;
+            } else {
+                debug(`Encontrado(s) ${data.length} registro(s).`);
+                document.getElementById('lista-container').innerHTML = data.length > 0 
+                    ? JSON.stringify(data) 
+                    : "Nenhum processo cadastrado.";
             }
         }
-
-        async function logout() { await supabase.auth.signOut(); location.reload(); }
-
-        document.getElementById('processo-form').onsubmit = async (e) => {
-            e.preventDefault();
-            const { data: { user } } = await supabase.auth.getUser();
-            const payload = {
-                numero_processo: `${new Date().getFullYear()}.AR.${Math.floor(Math.random()*9000 + 1000)}`,
-                requerente_nome: document.getElementById('req_nome').value,
-                requerido_nome: document.getElementById('def_nome').value,
-                user_id: user.id
-            };
-            const { error } = await supabase.from('processos').insert([payload]);
-            if (error) alert("Erro ao salvar: " + error.message); 
-            else { alert('Processo cadastrado!'); showView('dash'); loadData(); }
-        };
-
-        loadData();
     </script>
 </body>
 </html>
