@@ -1,25 +1,3 @@
-**ESTRUTURA DE ARQUITETURA DE SISTEMAS (SaaS - inovaSys)**
-
-**1. Identidade Visual (Extraída do Logotipo)**
-* **Cor Primária (Fundo Escuro/Texto Principal):** `#0a192f` (Azul Marinho Profundo, extraído da borda externa do escudo).
-* **Cor de Destaque (Ações/Circuitos):** `#0284c7` (Azul Ciano, extraído das linhas internas).
-* **Cor de Fundo (Background):** `#f8fafc` (Cinza muito claro para contraste e conforto visual em leituras longas).
-* **Tipografia:** `Inter` (Padrão web clássico, alta legibilidade para documentos jurídicos).
-
-**2. Modularização e Isolamento (Front-end SPA)**
-O sistema foi arquitetado em um único arquivo para facilitar o deploy inicial na Vercel, mas estruturado internamente em módulos isolados:
-* `AuthModule`: Gerencia acesso.
-* `NavigationModule`: Controla a renderização das telas sem recarregar a página.
-* `ProcessModule`: Gerencia a entrada de dados aplicando as travas da Lei 9.307/96.
-* `ComplianceModule`: Garante os aceites da LGPD e os avisos legais.
-
-**3. Conformidade Legal Aplicada**
-* **Lei 9.307/96:** Aplicação da trava do Art. 4º, § 2º (Cláusula compromissória em negrito com aceite expresso) e monitoramento do Art. 23 (Prazo de 6 meses para sentença).
-* **LGPD (Lei 13.709/18):** Checkbox obrigatório de consentimento para tratamento de dados sensíveis na qualificação das partes.
-
-Abaixo está o arquivo completo `index.html` da versão base do sistema em produção.
-
-```html
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -103,7 +81,7 @@ Abaixo está o arquivo completo `index.html` da versão base do sistema em produ
         /* ==========================================================================
            MÓDULO ESTRUTURAL (LAYOUT PRINCIPAL)
            ========================================================================== */
-        #module-app { width: 100%; display: none; } /* Ativado via JS */
+        #module-app { width: 100%; display: none; }
 
         .sidebar {
             width: var(--sidebar-width);
@@ -186,7 +164,8 @@ Abaixo está o arquivo completo `index.html` da versão base do sistema em produ
         .form-control { width: 100%; padding: 12px 16px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-family: 'Inter', sans-serif; font-size: 14px; transition: border-color 0.2s; }
         .form-control:focus { outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1); }
         
-        .btn { padding: 12px 24px; border-radius: var(--radius-md); font-weight: 500; font-size: 14px; cursor: pointer; transition: all 0.2s; border: none; font-family: 'Inter', sans-serif; }
+        .btn { padding: 12px 24px; border-radius: var(--radius-md); font-weight: 500; font-size: 14px; cursor: pointer; transition: all 0.2s; border: none; font-family: 'Inter', sans-serif; display: inline-block; text-align: center; }
+        .btn-sm { padding: 8px 16px; font-size: 13px; }
         .btn-primary { background-color: var(--color-accent); color: white; }
         .btn-primary:hover:not(:disabled) { background-color: var(--color-accent-hover); }
         .btn-primary:disabled { background-color: #94a3b8; cursor: not-allowed; }
@@ -202,11 +181,27 @@ Abaixo está o arquivo completo `index.html` da versão base do sistema em produ
         .table th { background-color: var(--color-bg); padding: 14px 20px; text-align: left; font-size: 12px; text-transform: uppercase; color: var(--color-text-light); border-bottom: 1px solid var(--color-border); font-weight: 600; }
         .table td { padding: 16px 20px; font-size: 14px; border-bottom: 1px solid var(--color-border); vertical-align: middle; }
 
-        /* Componentes Específicos de Compliance (LGPD e Lei 9307) */
         .compliance-box { background-color: #f0fdf4; border-left: 4px solid var(--color-success); padding: 16px; border-radius: 4px; margin-top: 24px; font-size: 13px; line-height: 1.6; }
         .legal-box { background-color: #eff6ff; border-left: 4px solid var(--color-accent); padding: 16px; border-radius: 4px; margin-top: 24px; display: flex; align-items: flex-start; gap: 12px; }
         .legal-box input[type="checkbox"] { margin-top: 4px; width: 18px; height: 18px; cursor: pointer; }
         .legal-box label { margin: 0; font-size: 14px; cursor: pointer; line-height: 1.5; color: var(--color-primary); }
+
+        /* Lista de Documentos */
+        .doc-list { display: grid; grid-template-columns: 1fr; gap: 12px; }
+        .doc-item { display: flex; justify-content: space-between; align-items: center; padding: 16px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-bg); transition: all 0.2s; }
+        .doc-item:hover { border-color: var(--color-accent); box-shadow: var(--shadow-sm); }
+        .doc-info h3 { margin: 0 0 4px 0; font-size: 15px; color: var(--color-primary); }
+        .doc-info p { margin: 0; font-size: 13px; color: var(--color-text-light); }
+
+        /* Ocultação dos Templates PDF para Renderização */
+        #hidden-pdf-templates { display: none; }
+        .pdf-page { width: 800px; padding: 60px; font-family: 'Times New Roman', Times, serif; color: #000; line-height: 1.6; background: white; }
+        .pdf-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 25px; }
+        .pdf-header img { max-width: 120px; margin-bottom: 10px; }
+        .pdf-title { text-align: center; font-size: 16px; font-weight: bold; text-decoration: underline; margin: 20px 0; text-transform: uppercase; }
+        .pdf-text { font-size: 14px; text-align: justify; margin-bottom: 15px; }
+        .pdf-signatures { margin-top: 50px; text-align: center; }
+        .pdf-signature-line { margin-top: 40px; border-top: 1px solid #000; width: 60%; margin-left: auto; margin-right: auto; padding-top: 5px; }
 
     </style>
 </head>
@@ -240,9 +235,9 @@ Abaixo está o arquivo completo `index.html` da versão base do sistema em produ
                 <img src="logo-inovasys.png" alt="inovaSys Logo">
             </div>
             <nav class="sidebar-nav">
-                <div class="nav-item active" onclick="NavigationModule.navigate('dashboard')">Painel Gerencial</div>
-                <div class="nav-item" onclick="NavigationModule.navigate('peticionamento')">Novo Procedimento</div>
-                <div class="nav-item" onclick="NavigationModule.navigate('processos')">Autos e Documentos</div>
+                <div class="nav-item active" id="nav-dashboard" onclick="NavigationModule.navigate('dashboard')">Painel Gerencial</div>
+                <div class="nav-item" id="nav-peticionamento" onclick="NavigationModule.navigate('peticionamento')">Novo Procedimento</div>
+                <div class="nav-item" id="nav-autos" onclick="NavigationModule.navigate('autos')">Autos e Documentos</div>
             </nav>
             <div class="nav-item" onclick="AuthModule.logout()" style="color: var(--color-danger); border-top: 1px solid var(--color-border);">Sair (Logoff Seguro)</div>
         </aside>
@@ -291,21 +286,15 @@ Abaixo está o arquivo completo `index.html` da versão base do sistema em produ
                                         <th>Procedimento</th>
                                         <th>Partes</th>
                                         <th>Status Legal</th>
-                                        <th>Prazo Restante</th>
+                                        <th>Ação</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr>
                                         <td style="font-weight: 600; color: var(--color-primary);">2026.001.000.586</td>
-                                        <td>Construtora Alpha S.A. x Fornecedor XYZ</td>
+                                        <td>João Silva x Empresa XYZ Ltda</td>
                                         <td><span class="badge badge-warning">Aguardando Árbitro</span></td>
-                                        <td>145 dias</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="font-weight: 600; color: var(--color-primary);">2026.001.000.585</td>
-                                        <td>Maria Silva x João Santos</td>
-                                        <td><span class="badge badge-success">Fase Instrutória</span></td>
-                                        <td>92 dias</td>
+                                        <td><button class="btn btn-primary btn-sm" onclick="NavigationModule.navigate('autos')">Acessar Autos</button></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -318,7 +307,6 @@ Abaixo está o arquivo completo `index.html` da versão base do sistema em produ
                     
                     <div class="card">
                         <form id="form-peticao">
-                            
                             <div class="compliance-box" style="margin-top: 0; margin-bottom: 32px;">
                                 <strong>Conformidade LGPD (Lei 13.709/18):</strong> Os dados pessoais coletados neste formulário serão processados exclusivamente para a finalidade de condução do procedimento arbitral, garantindo-se o sigilo e a restrição de acesso apenas aos árbitros e partes envolvidas.
                             </div>
@@ -379,9 +367,94 @@ Abaixo está o arquivo completo `index.html` da versão base do sistema em produ
                         <div style="font-size: 64px; color: var(--color-success); margin-bottom: 24px;">✓</div>
                         <h2 style="color: var(--color-primary); margin-bottom: 16px;">Procedimento Autuado com Sucesso</h2>
                         <p style="color: var(--color-text-light); max-width: 500px; margin: 0 auto 32px auto; line-height: 1.6;">
-                            Os dados foram criptografados e salvos no banco de dados. A numeração processual foi gerada e o Termo de Apresentação está pronto para assinatura.
+                            Os dados foram criptografados e salvos no banco de dados. A numeração processual foi gerada.
                         </p>
-                        <button class="btn btn-primary" onclick="NavigationModule.navigate('dashboard')">Retornar ao Painel</button>
+                        <button class="btn btn-primary" onclick="NavigationModule.navigate('autos')">Ir para os Autos (Gerar Documentos)</button>
+                    </div>
+                </div>
+
+                <div id="view-autos" class="view">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px;">
+                        <div>
+                            <button class="btn btn-outline btn-sm" onclick="NavigationModule.navigate('dashboard')" style="margin-bottom: 12px;">&larr; Voltar</button>
+                            <h2 style="margin: 0; color: var(--color-primary);">Autos do Processo nº 2026.001.000.586</h2>
+                            <p style="color: var(--color-text-light); margin: 4px 0 0 0;">Gerador Automático de Documentos Legais Integrados</p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="doc-list">
+                            <div class="doc-item">
+                                <div class="doc-info">
+                                    <h3>01. Capa do Processo</h3>
+                                    <p>Folha de rosto padrão com autuação do procedimento.</p>
+                                </div>
+                                <button class="btn btn-outline" onclick="window.gerarDocumento('doc-1', '01_Capa_Processo')">Gerar PDF</button>
+                            </div>
+                            <div class="doc-item">
+                                <div class="doc-info">
+                                    <h3>02. Termo de Apresentação</h3>
+                                    <p>Qualificação das partes, descrição do fato e do pedido.</p>
+                                </div>
+                                <button class="btn btn-outline" onclick="window.gerarDocumento('doc-2', '02_Termo_Apresentacao')">Gerar PDF</button>
+                            </div>
+                            <div class="doc-item">
+                                <div class="doc-info">
+                                    <h3>03. Notificação Extrajudicial</h3>
+                                    <p>Convocação do demandado para instituir a arbitragem.</p>
+                                </div>
+                                <button class="btn btn-outline" onclick="window.gerarDocumento('doc-3', '03_Notificacao')">Gerar PDF</button>
+                            </div>
+                            <div class="doc-item">
+                                <div class="doc-info">
+                                    <h3>04. Portaria de Nomeação do Árbitro</h3>
+                                    <p>Ato formal de designação do Juiz Arbitral Ad hoc.</p>
+                                </div>
+                                <button class="btn btn-outline" onclick="window.gerarDocumento('doc-4', '04_Nomeacao_Arbitro')">Gerar PDF</button>
+                            </div>
+                            <div class="doc-item">
+                                <div class="doc-info">
+                                    <h3>05. Termo de Compromisso do Árbitro</h3>
+                                    <p>Aceite do encargo, dever de imparcialidade e sigilo.</p>
+                                </div>
+                                <button class="btn btn-outline" onclick="window.gerarDocumento('doc-5', '05_Compromisso_Arbitro')">Gerar PDF</button>
+                            </div>
+                            <div class="doc-item">
+                                <div class="doc-info">
+                                    <h3>06. Termo de Compromisso Arbitral</h3>
+                                    <p>A convenção de arbitragem assinada pelas partes (Art. 9º).</p>
+                                </div>
+                                <button class="btn btn-outline" onclick="window.gerarDocumento('doc-6', '06_Compromisso_Arbitral')">Gerar PDF</button>
+                            </div>
+                            <div class="doc-item">
+                                <div class="doc-info">
+                                    <h3>07. Ata de Audiência Arbitral</h3>
+                                    <p>Registro do comparecimento, tratativas e acordos.</p>
+                                </div>
+                                <button class="btn btn-outline" onclick="window.gerarDocumento('doc-7', '07_Ata_Audiencia')">Gerar PDF</button>
+                            </div>
+                            <div class="doc-item">
+                                <div class="doc-info">
+                                    <h3>08. Sentença Arbitral</h3>
+                                    <p>Decisão final com força de título executivo (Art. 31).</p>
+                                </div>
+                                <button class="btn btn-outline" onclick="window.gerarDocumento('doc-8', '08_Sentenca_Arbitral')">Gerar PDF</button>
+                            </div>
+                            <div class="doc-item">
+                                <div class="doc-info">
+                                    <h3>09. Termo de Entrega de Sentença</h3>
+                                    <p>Comprovação de ciência da decisão pelas partes (Art. 29).</p>
+                                </div>
+                                <button class="btn btn-outline" onclick="window.gerarDocumento('doc-9', '09_Entrega_Sentenca')">Gerar PDF</button>
+                            </div>
+                            <div class="doc-item">
+                                <div class="doc-info">
+                                    <h3>10. Recibo de Valores de Acordo</h3>
+                                    <p>Comprovante padrão de quitação de obrigações/parcelas.</p>
+                                </div>
+                                <button class="btn btn-outline" onclick="window.gerarDocumento('doc-10', '10_Recibo_Valores')">Gerar PDF</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -389,11 +462,170 @@ Abaixo está o arquivo completo `index.html` da versão base do sistema em produ
         </main>
     </div>
 
+    <div id="hidden-pdf-templates">
+
+        <div id="doc-1" class="pdf-page">
+            <div class="pdf-header">
+                <img src="logo-inovasys.png" alt="Logo">
+                <p style="margin:0; font-weight:bold; font-size:18px;">CÂMARA DE ARBITRAGEM E RESOLUÇÃO DE CONFLITOS INOVASYS</p>
+                <p style="margin:0; font-size:14px;">Lei Federal 9.307/1996</p>
+            </div>
+            <div style="text-align:center; font-size:24px; font-weight:bold; margin: 40px 0;">
+                PROCEDIMENTO Nº <span class="sys-numProcesso"></span>
+            </div>
+            <div style="border: 2px solid #000; padding: 20px; margin-bottom: 40px;">
+                <h2 style="text-align:center; font-size: 18px; margin-top:0;">AUTOS DE PROCESSO DE MEDIAÇÃO, CONCILIAÇÃO E ARBITRAGEM</h2>
+                <p><strong>DEMANDANTE:</strong> <span class="sys-reqNome"></span></p>
+                <p><strong>DEMANDADO:</strong> <span class="sys-defNome"></span></p>
+                <p><strong>DATA DA ENTRADA:</strong> <span class="sys-dataEntrada"></span></p>
+            </div>
+            <div class="pdf-title">AUTUAÇÃO</div>
+            <p class="pdf-text">No dia <span class="sys-dataEntrada"></span>, nesta cidade, nesta CÂMARA DE ARBITRAGEM E RESOLUÇÃO DE CONFLITOS INOVASYS fiz a presente autuação dos presentes autos.</p>
+        </div>
+
+        <div id="doc-2" class="pdf-page">
+            <div class="pdf-header"><img src="logo-inovasys.png" alt="Logo"><p>CÂMARA DE ARBITRAGEM INOVASYS</p></div>
+            <div class="pdf-title">TERMO DE APRESENTAÇÃO DO PEDIDO Nº <span class="sys-numProcesso"></span></div>
+            <p class="pdf-text" style="text-align: right;"><span class="sys-cidade"></span>, <span class="sys-dataEntrada"></span>.</p>
+            <p class="pdf-text">Eu, abaixo qualificado, na qualidade de Demandante, venho mui respeitosamente, requerer que seja objeto de Mediação, Conciliação e/ou Arbitragem, o litígio descrito abaixo, em face do demandado, pelos motivos de fato e de direito que passo a expor:</p>
+            <p class="pdf-text"><strong>DEMANDANTE:</strong> <span class="sys-reqNome"></span>, CPF: <span class="sys-reqDoc"></span>, residente em <span class="sys-cidade"></span>.</p>
+            <p class="pdf-text"><strong>DEMANDADO:</strong> <span class="sys-defNome"></span>, CPF/CNPJ: <span class="sys-defDoc"></span>.</p>
+            <h3 style="font-size: 14px; text-decoration:underline;">DESCRIÇÃO DO FATO, DO OBJETO E DO PEDIDO</h3>
+            <p class="pdf-text"><span class="sys-resumoFatos"></span></p>
+            <p class="pdf-text"><strong>Valor da causa:</strong> <span class="sys-valorCausa"></span>.</p>
+            <p class="pdf-text">Pelo exposto, requer a notificação do Demandado para administração e instauração do procedimento na forma da Lei Federal nº 9.307/96. O Demandante assume o compromisso de apresentar documentos quando solicitado.</p>
+            <p class="pdf-text"><strong>AGENDADA PARA 1ª AUDIÊNCIA:</strong> <span class="sys-dataAudiencia"></span></p>
+            <div class="pdf-signatures">
+                <div class="pdf-signature-line"></div>
+                <p>Demandante: <span class="sys-reqNome"></span></p>
+            </div>
+        </div>
+
+        <div id="doc-3" class="pdf-page">
+            <div class="pdf-header"><img src="logo-inovasys.png" alt="Logo"><p>CÂMARA DE ARBITRAGEM INOVASYS</p></div>
+            <div class="pdf-title">1ª NOTIFICAÇÃO EXTRAJUDICIAL</div>
+            <p class="pdf-text"><strong>Requerido(a):</strong> <span class="sys-defNome"></span></p>
+            <p class="pdf-text">Prezado(a) Senhor(a),</p>
+            <p class="pdf-text">Solicitamos o comparecimento de Vossa Senhoria no próximo dia <strong><span class="sys-dataAudiencia"></span></strong>, na sala de Audiências da Câmara inovaSys, a fim de instituir Arbitragem (resolver conflitos de maneira amigável), bem como firmar o competente Compromisso Arbitral, com fundamento na Lei Federal n. 9.307/1996 e atualizações.</p>
+            <p class="pdf-text">Cientificamos Vossa Senhoria que foi instituído o <strong>PROCEDIMENTO ARBITRAL n° <span class="sys-numProcesso"></span></strong> nesta Câmara.</p>
+            <p class="pdf-text">Sem mais para o momento, colocamo-nos ao inteiro dispor para quaisquer esclarecimentos.</p>
+            <p class="pdf-text" style="text-align:right;"><span class="sys-cidade"></span>, <span class="sys-dataHoje"></span>.</p>
+            <div class="pdf-signatures">
+                <div class="pdf-signature-line"></div>
+                <p>Recebido em ____/____/____ às ____:____</p>
+                <p>Assinatura do Demandado</p>
+            </div>
+        </div>
+
+        <div id="doc-4" class="pdf-page">
+            <div class="pdf-header"><img src="logo-inovasys.png" alt="Logo"><p>CÂMARA DE ARBITRAGEM INOVASYS</p></div>
+            <div class="pdf-title">PORTARIA ARBITRAL Nº <span class="sys-numProcesso"></span></div>
+            <p class="pdf-text">O Presidente da Câmara inovaSys, usando de suas atribuições legais conferidas pelo Regimento Interno, RESOLVE:</p>
+            <p class="pdf-text"><strong>Art. 1º</strong> NOMEAR, na forma da Lei 9.307/96 e CPC/2015, o Sr(a). <strong><span class="sys-arbitroNome"></span></strong>, como Juiz Arbitral Ad hoc para atuar no Procedimento Arbitral de nº <span class="sys-numProcesso"></span>, constando como partes <span class="sys-reqNome"></span> e <span class="sys-defNome"></span>, para, sob compromisso, desempenhar a função, ficando à disposição até o encerramento do feito.</p>
+            <p class="pdf-text"><strong>Art. 2º</strong> Esta Portaria entra em vigor na data de sua publicação.</p>
+            <p class="pdf-text" style="text-align:right;"><span class="sys-cidade"></span>, <span class="sys-dataHoje"></span>.</p>
+            <div class="pdf-signatures">
+                <div class="pdf-signature-line"></div>
+                <p><span class="sys-presidenteCamara"></span><br>Presidente da Câmara inovaSys</p>
+            </div>
+        </div>
+
+        <div id="doc-5" class="pdf-page">
+            <div class="pdf-header"><img src="logo-inovasys.png" alt="Logo"><p>CÂMARA DE ARBITRAGEM INOVASYS</p></div>
+            <div class="pdf-title">TERMO DE COMPROMISSO DO ÁRBITRO</div>
+            <p class="pdf-text">Aos dias <span class="sys-dataHoje"></span>, na forma do CPC/2015, perante a presidência da Câmara, compareceu o Sr. <strong><span class="sys-arbitroNome"></span></strong>, para formalmente assumir a função de Árbitro, junto ao Procedimento Arbitral de nº <span class="sys-numProcesso"></span>, constando como partes <span class="sys-reqNome"></span> e <span class="sys-defNome"></span>.</p>
+            <p class="pdf-text">Ocasião em que presta o compromisso do fiel cumprimento das tarefas, zelando pela guarda dos documentos, ciente de que deverá seguir as normas da Lei Federal nº 9.307/96, Princípios Constitucionais da Ampla Defesa, Contraditório, Imparcialidade e Confidencialidade.</p>
+            <p class="pdf-text">Do que, para constar, lavro o Presente Termo.</p>
+            <div class="pdf-signatures">
+                <div class="pdf-signature-line"></div>
+                <p><span class="sys-arbitroNome"></span><br>Árbitro - Ad hoc</p>
+            </div>
+        </div>
+
+        <div id="doc-6" class="pdf-page">
+            <div class="pdf-header"><img src="logo-inovasys.png" alt="Logo"><p>CÂMARA DE ARBITRAGEM INOVASYS</p></div>
+            <div class="pdf-title">TERMO DE COMPROMISSO ARBITRAL</div>
+            <p class="pdf-text">Procedimento nº <span class="sys-numProcesso"></span>. Pelo presente instrumento, as partes firmam Compromisso Arbitral.</p>
+            <p class="pdf-text"><strong>1. DEMANDANTE:</strong> <span class="sys-reqNome"></span>.</p>
+            <p class="pdf-text"><strong>2. DEMANDADO:</strong> <span class="sys-defNome"></span>.</p>
+            <p class="pdf-text"><strong>3. OBJETO E VALOR:</strong> <span class="sys-resumoFatos"></span> Valor Estimado: <span class="sys-valorCausa"></span>.</p>
+            <p class="pdf-text"><strong>4. DO ÁRBITRO:</strong> De comum acordo, as partes escolhem como árbitro <span class="sys-arbitroNome"></span>, outorgando plenos poderes à Câmara inovaSys onde será proferida a Sentença.</p>
+            <p class="pdf-text"><strong>5. CLÁUSULAS:</strong> A Sentença Arbitral será apresentada nos prazos da Lei nº 9.307/96. As partes declaram cientes das regras, honorários e que o não cumprimento ensejará execução judicial.</p>
+            <div class="pdf-signatures" style="margin-top:30px;">
+                <div class="pdf-signature-line" style="width: 45%; display:inline-block; margin: 10px;"></div>
+                <div class="pdf-signature-line" style="width: 45%; display:inline-block; margin: 10px;"></div>
+                <div style="display:flex; justify-content:space-around;">
+                    <p>Demandante</p>
+                    <p>Demandado</p>
+                </div>
+                <div class="pdf-signature-line"></div>
+                <p>Árbitro Ad-hoc</p>
+            </div>
+        </div>
+
+        <div id="doc-7" class="pdf-page">
+            <div class="pdf-header"><img src="logo-inovasys.png" alt="Logo"><p>CÂMARA DE ARBITRAGEM INOVASYS</p></div>
+            <div class="pdf-title">ATA DA AUDIÊNCIA DO PROCEDIMENTO ARBITRAL</div>
+            <p class="pdf-text">Processo nº <span class="sys-numProcesso"></span>. Realizada aos <span class="sys-dataAudiencia"></span>. Presentes o Demandante <span class="sys-reqNome"></span> e Demandado <span class="sys-defNome"></span>. Como Juiz Arbitral: <span class="sys-arbitroNome"></span>.</p>
+            <p class="pdf-text"><strong>TERMO DE AUDIÊNCIA:</strong> Compareceram as partes submetendo o litígio a esta Câmara, no intuito de homologar acordo, garantido o direito de Ampla Defesa (CF/88).</p>
+            <p class="pdf-text"><strong>ACORDO:</strong> As partes comprometem-se à resolução do conflito, estabelecendo o pagamento/obrigação referente a <span class="sys-valorCausa"></span>. Ficando homologado o presente acordo, não havendo mais pendências.</p>
+            <p class="pdf-text"><strong>SENTENÇA HOMOLOGATÓRIA:</strong> Homologo o acordo entre as partes, extinguindo a relação obrigacional. O descumprimento permite execução nos termos do art. 31 da Lei 9.307/96. Honorários fixados e aceitos.</p>
+            <p class="pdf-text">Nada mais a ser tratado, dou por encerrada a audiência.</p>
+            <div class="pdf-signatures">
+                <div class="pdf-signature-line"></div><p>Árbitro</p>
+                <div class="pdf-signature-line"></div><p>Demandante</p>
+                <div class="pdf-signature-line"></div><p>Demandado</p>
+            </div>
+        </div>
+
+        <div id="doc-8" class="pdf-page">
+            <div class="pdf-header"><img src="logo-inovasys.png" alt="Logo"><p>CÂMARA DE ARBITRAGEM INOVASYS</p></div>
+            <div class="pdf-title">SENTENÇA ARBITRAL</div>
+            <p class="pdf-text"><strong>Processo Arbitral nº:</strong> <span class="sys-numProcesso"></span></p>
+            <p class="pdf-text"><strong>I - RELATÓRIO:</strong> Demandante: <span class="sys-reqNome"></span>. Demandado: <span class="sys-defNome"></span>. O litígio envolve a quantia de <span class="sys-valorCausa"></span> referente a <span class="sys-resumoFatos"></span>. Concluída a instrução por <span class="sys-arbitroNome"></span>.</p>
+            <p class="pdf-text"><strong>II - FUNDAMENTAÇÃO:</strong> Arbitragem regida pela Lei 9.307/96. As partes firmaram convenção arbitral de livre vontade. Respeitados o contraditório e ampla defesa.</p>
+            <p class="pdf-text"><strong>III - DISPOSITIVO:</strong> Isto posto, diante da análise dos autos, CONDENO / HOMOLOGO a resolução do litígio, determinando o cumprimento da obrigação acordada. Em caso de mora, incidirá multa de 10% e juros.</p>
+            <p class="pdf-text">A sentença ora proferida possui força de Título Executivo Judicial conforme Art. 515, VII, do NCPC e Art. 31 da Lei da Arbitragem. Não sujeita a recurso ou homologação judicial (Art. 18).</p>
+            <div class="pdf-signatures" style="margin-top: 60px;">
+                <div class="pdf-signature-line"></div>
+                <p><span class="sys-arbitroNome"></span><br>Juiz Arbitral</p>
+            </div>
+        </div>
+
+        <div id="doc-9" class="pdf-page">
+            <div class="pdf-header"><img src="logo-inovasys.png" alt="Logo"><p>CÂMARA DE ARBITRAGEM INOVASYS</p></div>
+            <div class="pdf-title">TERMO DE RECEBIMENTO DE SENTENÇA ARBITRAL</div>
+            <p class="pdf-text">Conforme o artigo 29 da Lei 9.307/96 - Proferida a sentença, dá-se por finda a arbitragem, devendo o árbitro enviar cópia às partes, mediante comprovação de recebimento.</p>
+            <p class="pdf-text">Certifico que nesta data, foi entregue a via original da <strong>SENTENÇA ARBITRAL nº <span class="sys-numProcesso"></span></strong> às partes <span class="sys-reqNome"></span> e <span class="sys-defNome"></span>.</p>
+            <p class="pdf-text">Do que para constar lavro o presente Termo, cientificado pelo Árbitro.</p>
+            <p class="pdf-text" style="text-align:right;"><span class="sys-cidade"></span>, <span class="sys-dataHoje"></span>.</p>
+            <div class="pdf-signatures">
+                <div class="pdf-signature-line" style="width: 45%; display:inline-block; margin: 10px;"></div>
+                <div class="pdf-signature-line" style="width: 45%; display:inline-block; margin: 10px;"></div>
+                <div style="display:flex; justify-content:space-around;">
+                    <p>Demandante</p>
+                    <p>Demandado</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="doc-10" class="pdf-page">
+            <div class="pdf-header"><img src="logo-inovasys.png" alt="Logo"><p>CÂMARA DE ARBITRAGEM INOVASYS</p></div>
+            <div class="pdf-title">RECIBO DE VALORES DE ACORDO</div>
+            <p class="pdf-text" style="text-align: right;">Data: <span class="sys-dataHoje"></span> | Recibo nº: 001</p>
+            <p class="pdf-text">EU, <strong><span class="sys-reqNome"></span></strong> (Demandante), inscrito no CPF <span class="sys-reqDoc"></span>.</p>
+            <p class="pdf-text">RECEBI de <strong><span class="sys-defNome"></span></strong> (Demandado).</p>
+            <p class="pdf-text">O Valor de <strong><span class="sys-valorCausa"></span></strong>, referente a parcela de pagamento acordado entre as partes mediante TERMO DE ACORDO com Sentença Arbitral do processo Nº <span class="sys-numProcesso"></span>.</p>
+            <p class="pdf-text">Forma de pagamento: ( ) Dinheiro ( ) Cheque ( ) Cartão (X) Transferência</p>
+            <div class="pdf-signatures" style="margin-top: 80px;">
+                <div class="pdf-signature-line"></div>
+                <p><span class="sys-reqNome"></span><br>Demandante (Credor)</p>
+            </div>
+        </div>
+
+    </div>
+
     <script>
-        /**
-         * Módulo de Autenticação
-         * Isolado para garantir segurança no acesso ao sistema principal.
-         */
         const AuthModule = {
             init: function() {
                 document.getElementById('form-login').addEventListener('submit', (e) => {
@@ -402,56 +634,39 @@ Abaixo está o arquivo completo `index.html` da versão base do sistema em produ
                 });
             },
             login: function() {
-                // Simulação de verificação de token e decriptação de payload
-                document.getElementById('module-auth').classList.remove('active');
+                document.getElementById('module-auth').style.display = 'none';
                 document.getElementById('module-app').style.display = 'flex';
                 NavigationModule.navigate('dashboard');
             },
             logout: function() {
-                // Simulação de destruição de sessão
                 document.getElementById('module-app').style.display = 'none';
-                document.getElementById('module-auth').classList.add('active');
+                document.getElementById('module-auth').style.display = 'flex';
             }
         };
 
-        /**
-         * Módulo de Navegação (Router SPA)
-         * Evita recarregamento de página, garantindo fluidez.
-         */
         const NavigationModule = {
             navigate: function(viewId) {
-                // Oculta todas as views
                 document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-                
-                // Remove estado ativo do menu
                 document.querySelectorAll('.nav-item').forEach(m => m.classList.remove('active'));
                 
-                // Ativa a view solicitada
                 const targetView = document.getElementById('view-' + viewId);
                 if(targetView) targetView.classList.add('active');
                 
-                // Destaca o menu correspondente (se existir)
-                const targetMenu = Array.from(document.querySelectorAll('.nav-item')).find(el => el.textContent.toLowerCase().includes(viewId.substring(0,4)));
+                const targetMenu = document.getElementById('nav-' + viewId);
                 if(targetMenu) targetMenu.classList.add('active');
             }
         };
 
-        /**
-         * Módulo de Processos e Conformidade (Lei 9.307/96)
-         * Aplica as regras de negócio jurídicas estritas.
-         */
         const ProcessModule = {
             init: function() {
                 const checkbox = document.getElementById('aceiteClausula');
                 const btnSubmit = document.getElementById('btnSubmitProcesso');
                 const form = document.getElementById('form-peticao');
 
-                // Trava de Conformidade Art. 4º, § 2º
                 checkbox.addEventListener('change', function() {
                     btnSubmit.disabled = !this.checked;
                 });
 
-                // Manipulador de submissão isolado
                 form.addEventListener('submit', (e) => {
                     e.preventDefault();
                     this.processarAutuacao();
@@ -459,19 +674,58 @@ Abaixo está o arquivo completo `index.html` da versão base do sistema em produ
             },
             
             processarAutuacao: function() {
-                // Em um ambiente real, aqui ocorre o POST seguro para o backend (Supabase)
-                console.log("[ProcessModule] Registrando dados no tenant isolado...");
-                
-                // Reseta formulário e trava botão por segurança
                 document.getElementById('form-peticao').reset();
                 document.getElementById('btnSubmitProcesso').disabled = true;
-                
-                // Redireciona para feedback de sucesso
                 NavigationModule.navigate('sucesso');
             }
         };
 
-        // Inicialização do Sistema
+        const DocumentModule = {
+            mockData: {
+                numProcesso: "2026.001.000.586",
+                dataEntrada: new Date().toLocaleDateString('pt-BR'),
+                dataHoje: new Date().toLocaleDateString('pt-BR'),
+                dataAudiencia: "15/04/2026 às 14:00h",
+                cidade: "Parnamirim/RN",
+                reqNome: "João Silva",
+                reqDoc: "111.222.333-44",
+                defNome: "Empresa XYZ Ltda",
+                defDoc: "00.000.000/0001-00",
+                valorCausa: "R$ 5.400,00",
+                resumoFatos: "Inadimplência de prestação de serviços referente ao contrato de manutenção de software, acumulado desde o ano passado.",
+                arbitroNome: "Dr. Carlos Mendes",
+                presidenteCamara: "Diretoria inovaSys"
+            },
+            
+            gerarDocumento: function(docId, fileNamePrefix) {
+                const elemento = document.getElementById(docId);
+                
+                for (const key in this.mockData) {
+                    const spans = elemento.querySelectorAll('.sys-' + key);
+                    spans.forEach(span => {
+                        span.textContent = this.mockData[key];
+                    });
+                }
+
+                const opcoes = {
+                    margin:       [0.5, 0.5, 0.5, 0.5],
+                    filename:     fileNamePrefix + '_' + this.mockData.numProcesso + '.pdf',
+                    image:        { type: 'jpeg', quality: 0.98 },
+                    html2canvas:  { scale: 2, useCORS: true }, 
+                    jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+                };
+
+                elemento.style.display = 'block';
+                html2pdf().set(opcoes).from(elemento).save().then(() => {
+                    elemento.style.display = 'none';
+                });
+            }
+        };
+
+        window.gerarDocumento = function(docId, fileNamePrefix) {
+            DocumentModule.gerarDocumento(docId, fileNamePrefix);
+        };
+
         document.addEventListener('DOMContentLoaded', () => {
             AuthModule.init();
             ProcessModule.init();
@@ -479,4 +733,3 @@ Abaixo está o arquivo completo `index.html` da versão base do sistema em produ
     </script>
 </body>
 </html>
-```
