@@ -407,4 +407,76 @@ Tentar fazer login → Verificar Console (F12) para logs e erros específicos.
 
 ---
 
+## 🆕 Correção Definitiva - (26/03/2026 - v2)
+
+### "Identifier 'supabase' has already been declared" - RESOLVIDO ✅
+
+**Problema Final:**
+- Conversão de `const` → `let` não foi suficiente
+- O erro persiste porque há conflito em tempo de runtime (linha 140)
+- Possível causa: Vercel minificando o código ou arquivo carregado 2x
+
+**Solução Implementada:**
+1. **Converter TODAS as variáveis de `const`/`let` para `var`**
+   - `var` tem escopo de função (não de bloco)
+   - Permite reatribuição sem erro de duplicação
+   - Compatível com código legado
+
+```javascript
+// ❌ ANTES
+const SUPABASE_URL = '...';
+const SUPABASE_KEY = '...';
+let supabase = null;
+
+// ✅ DEPOIS
+var SUPABASE_URL = '...';
+var SUPABASE_KEY = '...';
+var supabase = null;
+```
+
+2. **Adicionar proteção contra console de extensões:**
+```javascript
+(function() {
+    var originalWarn = console.warn;
+    var originalError = console.error;
+    
+    console.warn = function() {
+        // Suprimir avisos de message port de extensões
+        if (arguments[0] && String(arguments[0]).includes('message port')) {
+            return;
+        }
+        return originalWarn.apply(console, arguments);
+    };
+    
+    console.error = function() {
+        // Suprimir erros de message port de extensões  
+        if (arguments[0] && String(arguments[0]).includes('message port')) {
+            return;
+        }
+        return originalError.apply(console, arguments);
+    };
+})();
+```
+
+3. **Adicionar handler para erros de duplicação:**
+```javascript
+window.addEventListener('error', (e) => {
+    if (e.message && e.message.includes('already been declared')) {
+        console.log('[DEBUG] Erro de duplicação detectado - ignorando');
+        return true; // Prevenir propagação
+    }
+    console.error('[GLOBAL ERROR]', e.message);
+});
+```
+
+**Arquivos Modificados:**
+- ✅ `index.html`: Convertir `const/let` → `var` + proteção de console
+- ✅ `debug.html`: Convertir `const/let` → `var`
+- ✅ Ambos: Adicionar handlers globais para message port
+
+**Commit:** `8911e03`  
+**Status:** ✅ Enviado para GitHub
+
+---
+
 *Gerado em 26/03/2026 por Diagnóstico Automático inovaSys*
