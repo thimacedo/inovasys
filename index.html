@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>inovaSys - Gestão Arbitral</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖️</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -97,6 +98,8 @@
             <div id="view-new-password" class="auth-view">
                 <h3 style="margin-top:0; color: var(--color-primary);">Nova Senha</h3>
                 <form id="new-password-form">
+                    <!-- Campo oculto de username para acessibilidade e autocomplete -->
+                    <input type="text" id="username-hidden" style="display:none;" autocomplete="username" aria-hidden="true">
                     <div class="form-group"><label class="form-label">Nova Senha</label><input type="password" id="new-pwd" class="form-control" autocomplete="new-password" minlength="6" required></div>
                     <button type="submit" id="btn-new-pwd" class="btn">Salvar Senha</button>
                 </form>
@@ -135,6 +138,19 @@
     </div>
 
     <script>
+        // Handler global para erros não capturados
+        window.addEventListener('error', (e) => {
+            console.error('[GLOBAL ERROR]', e.message);
+        });
+        
+        // Suprimir erros de extensões do Chrome
+        window.addEventListener('unhandledrejection', (event) => {
+            if (event.reason && event.reason.message && event.reason.message.includes('message port')) {
+                console.warn('[EXTENSÃO] Ignorando erro de message port de extensão:', event.reason.message);
+                event.preventDefault();
+            }
+        });
+        
         const SUPABASE_URL = 'https://tsgbvhfdceyjbyfstjol.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzZ2J2aGZkY2V5amJ5ZnN0am9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0NjY3MDEsImV4cCI6MjA5MDA0MjcwMX0.ucDetUUuVKyycACaNtzArQ8YpgybrRpQqYljYYiTgyI';
         

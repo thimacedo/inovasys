@@ -10,6 +10,14 @@
     <div id="log" style="border: 1px solid #ccc; padding: 10px; height: 400px; overflow-y: auto; background: #f5f5f5; font-family: monospace; font-size: 12px;"></div>
     
     <script>
+        // Suprimir erros de extensões do Chrome que causam "message port closed"
+        window.addEventListener('unhandledrejection', (event) => {
+            if (event.reason && event.reason.message && event.reason.message.includes('message port')) {
+                console.warn('[EXTENSÃO] Ignorando erro de message port:', event.reason.message);
+                event.preventDefault();
+            }
+        });
+        
         const logDiv = document.getElementById('log');
         
         function log(msg) {
@@ -35,7 +43,8 @@
         log(`   KEY: ${SUPABASE_KEY.substring(0, 20)}...`);
         
         try {
-            const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            // Usar let para evitar erro de duplicação de declaração
+            let supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             log('✓ Cliente Supabase criado com sucesso');
             
             // Teste 3: Verificar sessão
