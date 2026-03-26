@@ -23,15 +23,23 @@
         .view.active { display: block; }
 
         /* Login */
-        #module-auth { height: 100vh; justify-content: center; align-items: center; background: var(--color-primary); width: 100%; }
-        .auth-card { background: white; padding: 40px; border-radius: 12px; width: 100%; max-width: 380px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3); }
+        #module-auth { height: 100vh; justify-content: center; align-items: center; background: #ffffff; width: 100%; }
+        .auth-card { background: white; padding: 40px; border-radius: 12px; width: 100%; max-width: 380px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
         .form-group { margin-bottom: 15px; text-align: left; }
         .form-label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: var(--color-primary); }
         .form-control { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 6px; box-sizing: border-box; font-family: inherit; }
         .btn { padding: 12px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; width: 100%; background: var(--color-accent); color: white; transition: 0.2s; }
+        .btn-outline { background: transparent; border: 1px solid #e2e8f0; color: #334155; margin-bottom: 10px; }
+        .btn-outline:hover { background: #f8fafc; }
+        .btn-link { background: none; color: var(--color-accent); font-size: 13px; margin-top: 15px; text-decoration: underline; padding: 0; width: auto; }
         
+        /* Divisor OAuth */
+        .oauth-divider { display: flex; align-items: center; text-align: center; margin: 20px 0; color: #94a3b8; font-size: 12px; }
+        .oauth-divider::before, .oauth-divider::after { content: ''; flex: 1; border-bottom: 1px solid #e2e8f0; }
+        .oauth-divider span { padding: 0 10px; }
+
         /* Sidebar & App */
-        .sidebar { width: var(--sidebar-width); background: white; border-right: 1px solid #e2e8f0; position: fixed; height: 100vh; display: flex; flex-direction: column; }
+        .sidebar { width: var(--sidebar-width); background: white; border-right: 1px solid #e2e8f0; position: fixed; height: 100vh; display: flex; flex-direction: column; z-index: 10; }
         .sidebar-brand { padding: 25px; text-align: center; border-bottom: 1px solid #e2e8f0; }
         .nav-item { padding: 15px 25px; cursor: pointer; font-size: 14px; font-weight: 500; color: #64748b; border-left: 4px solid transparent; }
         .nav-item.active { background: #f1f5f9; color: var(--color-accent); border-left-color: var(--color-accent); }
@@ -43,6 +51,9 @@
         td { padding: 12px; border-top: 1px solid #e2e8f0; font-size: 14px; }
         
         #error-box { display: none; background: #fee2e2; color: #b91c1c; padding: 12px; border-radius: 6px; font-size: 13px; margin-bottom: 20px; text-align: left; border: 1px solid #fecaca; }
+        
+        .auth-view { display: none; }
+        .auth-view.active { display: block; }
     </style>
 </head>
 <body>
@@ -52,17 +63,44 @@
             <img src="logo-inovasys.png" alt="inovaSys" style="max-width: 160px; margin-bottom: 25px;">
             <div id="error-box"></div>
             
-            <form id="login-form">
-                <div class="form-group">
-                    <label class="form-label">E-mail</label>
-                    <input type="email" id="email" class="form-control" autocomplete="username" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Senha</label>
-                    <input type="password" id="password" class="form-control" autocomplete="current-password" required>
-                </div>
-                <button type="submit" id="btn-login" class="btn">Acessar Sistema</button>
-            </form>
+            <div id="view-login" class="auth-view active">
+                <form id="login-form">
+                    <div class="form-group">
+                        <label class="form-label">E-mail de Acesso</label>
+                        <input type="email" id="email" class="form-control" autocomplete="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Senha</label>
+                        <input type="password" id="password" class="form-control" autocomplete="current-password" required>
+                    </div>
+                    <button type="submit" id="btn-login" class="btn">Autenticar</button>
+                </form>
+
+                <div class="oauth-divider"><span>ou acesse com</span></div>
+                
+                <button type="button" class="btn btn-outline" onclick="loginWithProvider('google')">Google</button>
+                <button type="button" class="btn btn-outline" onclick="loginWithProvider('apple')">Apple</button>
+                <button type="button" class="btn btn-outline" onclick="loginWithProvider('github')">GitHub</button>
+
+                <button type="button" class="btn btn-link" onclick="switchAuthView('view-forgot')">Esqueci minha senha</button>
+            </div>
+
+            <div id="view-forgot" class="auth-view">
+                <h3 style="margin-top:0; color: var(--color-primary);">Recuperar Acesso</h3>
+                <form id="forgot-form">
+                    <div class="form-group"><label class="form-label">E-mail Cadastrado</label><input type="email" id="forgot-email" class="form-control" required></div>
+                    <button type="submit" id="btn-forgot" class="btn">Enviar Link</button>
+                </form>
+                <button type="button" class="btn btn-link" onclick="switchAuthView('view-login')">Voltar ao login</button>
+            </div>
+
+            <div id="view-new-password" class="auth-view">
+                <h3 style="margin-top:0; color: var(--color-primary);">Nova Senha</h3>
+                <form id="new-password-form">
+                    <div class="form-group"><label class="form-label">Nova Senha</label><input type="password" id="new-pwd" class="form-control" autocomplete="new-password" minlength="6" required></div>
+                    <button type="submit" id="btn-new-pwd" class="btn">Salvar Senha</button>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -107,15 +145,20 @@
             box.style.display = msg ? 'block' : 'none';
         }
 
+        function switchAuthView(viewId) {
+            document.querySelectorAll('.auth-view').forEach(v => v.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            showError('');
+        }
+
         function showView(v, element) { 
             document.querySelectorAll('.view').forEach(x => x.classList.remove('active')); 
             document.getElementById('view-'+v).classList.add('active'); 
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            if(element) {
-                element.classList.add('active');
-            }
+            if(element) element.classList.add('active');
         }
 
+        // Login Email/Senha
         document.getElementById('login-form').onsubmit = async (e) => {
             e.preventDefault();
             showError('');
@@ -131,18 +174,55 @@
 
                 if (error) {
                     showError("Erro de acesso: " + error.message);
-                    btn.innerText = "Acessar Sistema";
+                    btn.innerText = "Autenticar";
                     btn.disabled = false;
                 } else {
                     await loadData();
                 }
             } catch (err) {
-                showError("Erro na execução do script de login.");
-                btn.innerText = "Acessar Sistema";
+                showError("Erro de conexão.");
+                btn.innerText = "Autenticar";
                 btn.disabled = false;
             }
         };
 
+        // Login OAuth (Google, Apple, GitHub)
+        async function loginWithProvider(provider) {
+            showError('');
+            try {
+                const { error } = await supabase.auth.signInWithOAuth({
+                    provider: provider,
+                    options: {
+                        redirectTo: window.location.origin
+                    }
+                });
+                if (error) showError("Erro ao conectar com " + provider + ": " + error.message);
+            } catch (err) {
+                showError("Erro na conexão com o provedor.");
+            }
+        }
+
+        // Esqueci Senha
+        document.getElementById('forgot-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const { error } = await supabase.auth.resetPasswordForEmail(e.target['forgot-email'].value, {
+                redirectTo: window.location.origin
+            });
+            if (error) showError(error.message); else alert("Link enviado ao e-mail!");
+        };
+
+        // Nova Senha
+        document.getElementById('new-password-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const { error } = await supabase.auth.updateUser({ password: e.target['new-pwd'].value });
+            if (error) showError(error.message); else { alert("Senha atualizada!"); location.reload(); }
+        };
+
+        supabase.auth.onAuthStateChange((event) => {
+            if (event === "PASSWORD_RECOVERY") switchAuthView('view-new-password');
+        });
+
+        // Carregar Dados
         async function loadData() {
             try {
                 const { data: { session } } = await supabase.auth.getSession();
@@ -155,20 +235,20 @@
                 const lista = document.getElementById('lista-processos');
                 
                 if (error) {
-                    lista.innerHTML = `<tr><td colspan="3" style="text-align:center; color:red;">Erro no banco: ${error.message}</td></tr>`;
+                    lista.innerHTML = `<tr><td colspan="3" style="text-align:center; color:red;">Erro: ${error.message}</td></tr>`;
                 } else if (data && data.length > 0) {
                     lista.innerHTML = data.map(p => `<tr><td><strong>${p.numero_processo}</strong></td><td>${p.requerido_nome}</td><td><span style="background:#e0f2fe; color:#0369a1; padding:4px 8px; border-radius:4px; font-size:12px;">${p.status}</span></td></tr>`).join('');
                 } else {
-                    lista.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#64748b;">Nenhum registro encontrado na base de dados.</td></tr>';
+                    lista.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#64748b;">Nenhum registro encontrado.</td></tr>';
                 }
             } catch (err) {
-                console.error("Falha ao renderizar dados:", err);
-                document.getElementById('lista-processos').innerHTML = '<tr><td colspan="3" style="text-align:center; color:red;">Erro interno ao processar a lista de processos.</td></tr>';
+                console.error(err);
             }
         }
 
         async function logout() { await supabase.auth.signOut(); location.reload(); }
 
+        // Novo Processo
         document.getElementById('processo-form').onsubmit = async (e) => {
             e.preventDefault();
             const { data: { user } } = await supabase.auth.getUser();
