@@ -143,12 +143,10 @@
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/+esm';
 
-        // 1. Configuração do Cliente Supabase
         const SUPABASE_URL = 'https://tsgbvhfdceyjbyfstjol.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzZ2J2aGZkY2V5amJ5ZnN0am9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0NjY3MDEsImV4cCI6MjA5MDA0MjcwMX0.ucDetUUuVKyycACaNtzArQ8YpgybrRpQqYljYYiTgyI';
         const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // 2. Controladores de Interface
         const displayError = (msg) => {
             const box = document.getElementById('error-box');
             if (box) {
@@ -190,7 +188,6 @@
             }
         };
 
-        // 3. Carregamento de Dados da Tabela
         const loadData = async () => {
             try {
                 const lista = document.getElementById('lista-processos');
@@ -219,11 +216,9 @@
             }
         };
 
-        // 4. Mapeamento de Eventos (Navegação Autenticação)
         document.getElementById('btn-to-forgot')?.addEventListener('click', () => showAuthView('view-forgot'));
         document.getElementById('btn-to-login')?.addEventListener('click', () => showAuthView('view-login'));
         
-        // 5. Mapeamento de Eventos (Navegação Principal)
         document.getElementById('nav-dash')?.addEventListener('click', () => showAppView('dash'));
         document.getElementById('nav-novo')?.addEventListener('click', () => showAppView('novo'));
         document.getElementById('nav-logout')?.addEventListener('click', async () => {
@@ -231,7 +226,6 @@
             window.location.reload();
         });
 
-        // 6. Submissão do Formulário de Login
         document.getElementById('login-form')?.addEventListener('submit', async (e) => {
             e.preventDefault();
             displayError('');
@@ -258,7 +252,6 @@
             }
         });
 
-        // 7. Funções OAuth
         const handleOAuth = async (provider) => {
             displayError('');
             const { error } = await supabase.auth.signInWithOAuth({
@@ -271,7 +264,6 @@
         document.getElementById('btn-apple')?.addEventListener('click', () => handleOAuth('apple'));
         document.getElementById('btn-github')?.addEventListener('click', () => handleOAuth('github'));
 
-        // 8. Solicitar Redefinição de Senha
         document.getElementById('forgot-form')?.addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('forgot-email').value;
@@ -286,7 +278,6 @@
             }
         });
 
-        // 9. Processar Nova Senha
         document.getElementById('new-password-form')?.addEventListener('submit', async (e) => {
             e.preventDefault();
             const password = document.getElementById('new-pwd').value;
@@ -299,7 +290,6 @@
             }
         });
 
-        // 10. Cadastrar Novo Processo
         document.getElementById('processo-form')?.addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btn-protocolar');
@@ -331,7 +321,6 @@
             }
         });
 
-        // 11. Inicialização de Estado da Sessão
         supabase.auth.onAuthStateChange((event, session) => {
             if (event === 'PASSWORD_RECOVERY') {
                 showAuthView('view-new-password');
@@ -342,7 +331,6 @@
             }
         });
 
-        // Checagem primária para inicializar a tela correta na abertura da página
         supabase.auth.getSession().then(({ data: { session } }) => {
             toggleMainModules(!!session);
         });
