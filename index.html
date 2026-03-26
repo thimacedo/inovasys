@@ -22,6 +22,7 @@
         .view { display: none; }
         .view.active { display: block; }
 
+        /* Login */
         #module-auth { height: 100vh; justify-content: center; align-items: center; background: #ffffff; width: 100%; }
         .auth-card { background: white; padding: 40px; border-radius: 12px; width: 100%; max-width: 380px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
         .form-group { margin-bottom: 15px; text-align: left; }
@@ -32,10 +33,7 @@
         .btn-outline:hover { background: #f8fafc; }
         .btn-link { background: none; color: var(--color-accent); font-size: 13px; margin-top: 15px; text-decoration: underline; padding: 0; width: auto; cursor: pointer; }
         
-        .oauth-divider { display: flex; align-items: center; text-align: center; margin: 20px 0; color: #94a3b8; font-size: 12px; }
-        .oauth-divider::before, .oauth-divider::after { content: ''; flex: 1; border-bottom: 1px solid #e2e8f0; }
-        .oauth-divider span { padding: 0 10px; }
-
+        /* Sidebar & App */
         .sidebar { width: var(--sidebar-width); background: white; border-right: 1px solid #e2e8f0; position: fixed; height: 100vh; display: flex; flex-direction: column; z-index: 10; }
         .sidebar-brand { padding: 25px; text-align: center; border-bottom: 1px solid #e2e8f0; }
         .nav-item { padding: 15px 25px; cursor: pointer; font-size: 14px; font-weight: 500; color: #64748b; border-left: 4px solid transparent; }
@@ -48,9 +46,11 @@
         td { padding: 12px; border-top: 1px solid #e2e8f0; font-size: 14px; }
         
         #error-box { display: none; background: #fee2e2; color: #b91c1c; padding: 12px; border-radius: 6px; font-size: 13px; margin-bottom: 20px; text-align: left; border: 1px solid #fecaca; }
-        
         .auth-view { display: none; }
         .auth-view.active { display: block; }
+
+        /* Grid Layout para o formulário */
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
     </style>
 </head>
 <body>
@@ -72,37 +72,24 @@
                     </div>
                     <button type="submit" id="btn-login" class="btn">Autenticar</button>
                 </form>
-
-                <div class="oauth-divider"><span>ou acesse com</span></div>
-                
-                <button type="button" class="btn btn-outline" id="btn-google">Google</button>
-                <button type="button" class="btn btn-outline" id="btn-apple">Apple</button>
-                <button type="button" class="btn btn-outline" id="btn-github">GitHub</button>
-
                 <button type="button" class="btn btn-link" id="btn-to-forgot">Esqueci minha senha</button>
             </div>
 
             <div id="view-forgot" class="auth-view">
-                <h3 style="margin-top:0; color: var(--color-primary);">Recuperar Acesso</h3>
+                <h3 style="margin-top:0;">Recuperar Acesso</h3>
                 <form id="forgot-form">
-                    <div class="form-group">
-                        <label class="form-label">E-mail Cadastrado</label>
-                        <input type="email" id="forgot-email" class="form-control" required>
-                    </div>
+                    <div class="form-group"><label class="form-label">E-mail</label><input type="email" id="forgot-email" class="form-control" required></div>
                     <button type="submit" id="btn-forgot" class="btn">Enviar Link</button>
                 </form>
-                <button type="button" class="btn btn-link" id="btn-to-login">Voltar ao login</button>
+                <button type="button" class="btn btn-link" id="btn-to-login">Voltar</button>
             </div>
 
             <div id="view-new-password" class="auth-view">
-                <h3 style="margin-top:0; color: var(--color-primary);">Nova Senha</h3>
+                <h3>Nova Senha</h3>
                 <form id="new-password-form">
-                    <input type="text" id="username-hidden" style="display:none;" autocomplete="username" aria-hidden="true">
-                    <div class="form-group">
-                        <label class="form-label">Nova Senha</label>
-                        <input type="password" id="new-pwd" class="form-control" autocomplete="new-password" minlength="6" required>
-                    </div>
-                    <button type="submit" id="btn-new-pwd" class="btn">Salvar Senha</button>
+                    <input type="text" style="display:none;" autocomplete="username">
+                    <div class="form-group"><label class="form-label">Senha</label><input type="password" id="new-pwd" class="form-control" minlength="6" required></div>
+                    <button type="submit" id="btn-new-pwd" class="btn">Salvar</button>
                 </form>
             </div>
         </div>
@@ -125,12 +112,26 @@
                     </table>
                 </div>
             </div>
+
             <div id="view-novo" class="view">
                 <h2>Novo Protocolo</h2>
                 <div class="card">
                     <form id="processo-form">
-                        <div class="form-group"><label class="form-label">Requerente</label><input type="text" id="req_nome" class="form-control" required></div>
-                        <div class="form-group"><label class="form-label">Requerido</label><input type="text" id="def_nome" class="form-control" required></div>
+                        <h4 style="margin-top:0;">Dados do Requerente</h4>
+                        <div class="form-grid">
+                            <div class="form-group"><label class="form-label">Nome Completo</label><input type="text" id="req_nome" class="form-control" required></div>
+                            <div class="form-group"><label class="form-label">CPF/CNPJ</label><input type="text" id="req_doc" class="form-control" required></div>
+                        </div>
+
+                        <h4>Dados do Requerido</h4>
+                        <div class="form-grid">
+                            <div class="form-group"><label class="form-label">Nome Completo</label><input type="text" id="def_nome" class="form-control" required></div>
+                            <div class="form-group"><label class="form-label">CPF/CNPJ</label><input type="text" id="def_doc" class="form-control" required></div>
+                        </div>
+
+                        <h4>Objeto do Litígio</h4>
+                        <div class="form-group"><label class="form-label">Resumo dos Fatos</label><textarea id="fatos" class="form-control" rows="4"></textarea></div>
+                        
                         <button type="submit" id="btn-protocolar" class="btn" style="width: auto;">Cadastrar Processo</button>
                     </form>
                 </div>
@@ -147,148 +148,49 @@
 
         const displayError = (msg) => {
             const box = document.getElementById('error-box');
-            if (box) {
-                box.innerText = msg;
-                box.style.display = msg ? 'block' : 'none';
-            }
+            if (box) { box.innerText = msg; box.style.display = msg ? 'block' : 'none'; }
         };
 
         const showAuthView = (viewId) => {
-            displayError('');
             document.querySelectorAll('.auth-view').forEach(v => v.classList.remove('active'));
-            const view = document.getElementById(viewId);
-            if (view) view.classList.add('active');
+            document.getElementById(viewId).classList.add('active');
         };
 
         const showAppView = (viewId) => {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            
-            const view = document.getElementById('view-' + viewId);
-            const nav = document.getElementById('nav-' + viewId);
-            
-            if (view) view.classList.add('active');
-            if (nav) nav.classList.add('active');
+            document.getElementById('view-' + viewId).classList.add('active');
+            document.getElementById('nav-' + viewId).classList.add('active');
         };
 
         const toggleMainModules = (isAuthenticated) => {
-            const authModule = document.getElementById('module-auth');
-            const appModule = document.getElementById('module-app');
-            
-            if (isAuthenticated) {
-                authModule.classList.remove('active');
-                appModule.classList.add('active');
-                loadData();
-            } else {
-                appModule.classList.remove('active');
-                authModule.classList.add('active');
-                showAuthView('view-login');
-            }
+            document.getElementById('module-auth').classList.toggle('active', !isAuthenticated);
+            document.getElementById('module-app').classList.toggle('active', isAuthenticated);
+            if (isAuthenticated) loadData();
         };
 
         const loadData = async () => {
-            try {
-                const lista = document.getElementById('lista-processos');
-                lista.innerHTML = '<tr><td colspan="3" style="text-align:center;">Carregando dados...</td></tr>';
-
-                const { data, error } = await supabase.from('processos').select('*');
-                
-                if (error) {
-                    lista.innerHTML = `<tr><td colspan="3" style="text-align:center; color:red;">Erro ao acessar processos: ${error.message}</td></tr>`;
-                    return;
-                }
-                
-                if (data && data.length > 0) {
-                    lista.innerHTML = data.map(p => `
-                        <tr>
-                            <td><strong>${p.numero_processo}</strong></td>
-                            <td>${p.requerido_nome}</td>
-                            <td><span style="background:#e0f2fe; color:#0369a1; padding:4px 8px; border-radius:4px; font-size:12px;">${p.status || 'Ativo'}</span></td>
-                        </tr>
-                    `).join('');
-                } else {
-                    lista.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#64748b;">Nenhum registro encontrado no sistema.</td></tr>';
-                }
-            } catch (err) {
-                displayError('Falha estrutural ao carregar o painel.');
+            const { data, error } = await supabase.from('processos').select('*');
+            const lista = document.getElementById('lista-processos');
+            if (error) {
+                lista.innerHTML = `<tr><td colspan="3">Erro: ${error.message}</td></tr>`;
+                return;
             }
+            lista.innerHTML = data.length > 0 ? data.map(p => `<tr><td><strong>${p.numero_processo}</strong></td><td>${p.requerido_nome}</td><td>${p.status || 'Ativo'}</td></tr>`).join('') : '<tr><td colspan="3">Nenhum registro.</td></tr>';
         };
 
-        document.getElementById('btn-to-forgot')?.addEventListener('click', () => showAuthView('view-forgot'));
-        document.getElementById('btn-to-login')?.addEventListener('click', () => showAuthView('view-login'));
-        
-        document.getElementById('nav-dash')?.addEventListener('click', () => showAppView('dash'));
-        document.getElementById('nav-novo')?.addEventListener('click', () => showAppView('novo'));
-        document.getElementById('nav-logout')?.addEventListener('click', async () => {
-            await supabase.auth.signOut();
-            window.location.reload();
-        });
-
-        document.getElementById('login-form')?.addEventListener('submit', async (e) => {
+        document.getElementById('login-form').onsubmit = async (e) => {
             e.preventDefault();
-            displayError('');
-            const btn = document.getElementById('btn-login');
-            btn.innerText = "Autenticando...";
-            btn.disabled = true;
-
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-
-            const { error } = await supabase.auth.signInWithPassword({ email, password });
-
-            if (error) {
-                let msg = error.message;
-                if (msg.includes('Invalid login credentials')) msg = 'E-mail ou senha incorretos.';
-                else if (msg.includes('network') || msg.includes('fetch')) msg = 'Erro de comunicação com o servidor.';
-                displayError('❌ ' + msg);
-                btn.innerText = "Autenticar";
-                btn.disabled = false;
-            } else {
-                btn.innerText = "Autenticar";
-                btn.disabled = false;
-                toggleMainModules(true);
-            }
-        });
-
-        const handleOAuth = async (provider) => {
-            displayError('');
-            const { error } = await supabase.auth.signInWithOAuth({
-                provider,
-                options: { redirectTo: window.location.origin }
-            });
-            if (error) displayError('❌ Falha ao processar provedor externo: ' + error.message);
+            const { error } = await supabase.auth.signInWithPassword({ email: e.target.email.value, password: e.target.password.value });
+            if (error) displayError('Erro: ' + error.message);
         };
-        document.getElementById('btn-google')?.addEventListener('click', () => handleOAuth('google'));
-        document.getElementById('btn-apple')?.addEventListener('click', () => handleOAuth('apple'));
-        document.getElementById('btn-github')?.addEventListener('click', () => handleOAuth('github'));
 
-        document.getElementById('forgot-form')?.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('forgot-email').value;
-            const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: window.location.origin
-            });
-            if (error) {
-                displayError('❌ ' + error.message);
-            } else {
-                alert('O link de recuperação foi enviado ao e-mail informado.');
-                showAuthView('view-login');
-            }
-        });
+        document.getElementById('nav-dash').onclick = () => showAppView('dash');
+        document.getElementById('nav-novo').onclick = () => showAppView('novo');
+        document.getElementById('nav-logout').onclick = async () => { await supabase.auth.signOut(); window.location.reload(); };
 
-        document.getElementById('new-password-form')?.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const password = document.getElementById('new-pwd').value;
-            const { error } = await supabase.auth.updateUser({ password });
-            if (error) {
-                displayError('❌ ' + error.message);
-            } else {
-                alert('Sua senha foi atualizada com sucesso!');
-                window.location.reload();
-            }
-        });
-
-        document.getElementById('processo-form')?.addEventListener('submit', async (e) => {
+        // Cadastro com os NOVOS CAMPOS
+        document.getElementById('processo-form').onsubmit = async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btn-protocolar');
             btn.innerText = "Processando...";
@@ -299,7 +201,10 @@
             const payload = {
                 numero_processo: `${new Date().getFullYear()}.AR.${Math.floor(Math.random()*9000 + 1000)}`,
                 requerente_nome: document.getElementById('req_nome').value,
+                requerente_doc: document.getElementById('req_doc').value,
                 requerido_nome: document.getElementById('def_nome').value,
+                requerido_doc: document.getElementById('def_doc').value,
+                resumo_fatos: document.getElementById('fatos').value,
                 user_id: user.id,
                 status: 'Ativo'
             };
@@ -312,27 +217,20 @@
             if (error) {
                 alert('Erro ao protocolar: ' + error.message);
             } else {
-                alert('Processo protocolado com sucesso.');
+                alert('Processo protocolado!');
                 document.getElementById('processo-form').reset();
                 showAppView('dash');
                 loadData();
             }
-        });
+        };
 
         supabase.auth.onAuthStateChange((event, session) => {
-            if (event === 'PASSWORD_RECOVERY') {
-                showAuthView('view-new-password');
-            } else if (event === 'SIGNED_IN') {
-                toggleMainModules(true);
-            } else if (event === 'SIGNED_OUT') {
-                toggleMainModules(false);
-            }
+            toggleMainModules(!!session);
         });
 
         supabase.auth.getSession().then(({ data: { session } }) => {
             toggleMainModules(!!session);
         });
-
     </script>
 </body>
 </html>
