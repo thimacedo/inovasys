@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>inovaSys - Debug</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Teste de Conexão Supabase</h1>
+    <div id="log" style="border: 1px solid #ccc; padding: 10px; height: 400px; overflow-y: auto; background: #f5f5f5; font-family: monospace; font-size: 12px;"></div>
+    
+    <script>
+        const logDiv = document.getElementById('log');
+        
+        function log(msg) {
+            const time = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `<div>[${time}] ${msg}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        // Teste 1: Verificar se a biblioteca está carregada
+        log('1. Verificando se supabase está disponível...');
+        if (window.supabase) {
+            log('✓ Biblioteca Supabase carregada com sucesso');
+        } else {
+            log('✗ ERRO: Biblioteca Supabase não está disponível');
+        }
+        
+        // Teste 2: Tentar criar cliente
+        const SUPABASE_URL = 'https://tsgbvhfdceyjbyfstjol.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzZ2J2aGZkY2V5amJ5ZnN0am9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0NjY3MDEsImV4cCI6MjA5MDA0MjcwMX0.ucDetUUuVKyycACaNtzArQ8YpgybrRpQqYljYYiTgyI';
+        
+        log('2. Criando cliente Supabase...');
+        log(`   URL: ${SUPABASE_URL}`);
+        log(`   KEY: ${SUPABASE_KEY.substring(0, 20)}...`);
+        
+        try {
+            const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            log('✓ Cliente Supabase criado com sucesso');
+            
+            // Teste 3: Verificar sessão
+            log('3. Verificando sessão atual...');
+            supabase.auth.getSession().then(({ data: { session } }) => {
+                if (session) {
+                    log(`✓ Sessão ativa: ${session.user.email}`);
+                } else {
+                    log('ℹ Nenhuma sessão ativa (esperado para novo login)');
+                }
+            }).catch(err => {
+                log(`✗ ERRO ao verificar sessão: ${err.message}`);
+            });
+            
+            // Teste 4: Tentar consultar tabela de processos
+            log('4. Consultando tabela "processos"...');
+            supabase.from('processos').select('count()', { count: 'exact' }).then(({ data, error }) => {
+                if (error) {
+                    log(`✗ ERRO ao consultar tabela: ${error.code} - ${error.message}`);
+                    log(`   Detalhes: ${JSON.stringify(error)}`);
+                } else {
+                    log(`✓ Tabela "processos" acessível (${data} registros)`);
+                }
+            }).catch(err => {
+                log(`✗ ERRO: ${err.message}`);
+            });
+            
+            // Teste 5: CORS
+            log('5. Testando CORS com GET simples...');
+            fetch('https://tsgbvhfdceyjbyfstjol.supabase.co/auth/v1/health', {
+                headers: {
+                    'apikey': SUPABASE_KEY
+                }
+            }).then(r => {
+                log(`✓ CORS OK - Status: ${r.status}`);
+            }).catch(err => {
+                log(`✗ ERRO CORS: ${err.message}`);
+            });
+            
+        } catch (err) {
+            log(`✗ ERRO ao criar cliente: ${err.message}`);
+        }
+        
+        // Teste 6: Verificar Network
+        log('6. Aguardando testes...');
+    </script>
+</body>
+</html>

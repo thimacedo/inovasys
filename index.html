@@ -137,7 +137,32 @@
     <script>
         const SUPABASE_URL = 'https://tsgbvhfdceyjbyfstjol.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzZ2J2aGZkY2V5amJ5ZnN0am9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0NjY3MDEsImV4cCI6MjA5MDA0MjcwMX0.ucDetUUuVKyycACaNtzArQ8YpgybrRpQqYljYYiTgyI';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        let supabase = null;
+        
+        // Inicializar Supabase e verificar conexão
+        function initSupabase() {
+            if (!window.supabase) {
+                console.error('[ERRO] Biblioteca Supabase não foi carregada do CDN');
+                showError('Erro ao carregar biblioteca de autenticação. Tente recarregar a página.');
+                return false;
+            }
+            
+            try {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                console.log('[OK] Cliente Supabase inicializado');
+                return true;
+            } catch (err) {
+                console.error('[ERRO] Falha ao criar cliente Supabase:', err);
+                showError('Erro ao inicializar conexão: ' + err.message);
+                return false;
+            }
+        }
+        
+        // Tentar inicializar imediatamente
+        if (!initSupabase()) {
+            document.addEventListener('load', initSupabase);
+        }
 
         function showError(msg) {
             const box = document.getElementById('error-box');
@@ -162,25 +187,51 @@
         document.getElementById('login-form').onsubmit = async (e) => {
             e.preventDefault();
             showError('');
+            
+            if (!supabase) {
+                showError('Sistema não está pronto. Tente recarregar a página.');
+                console.error('[ERRO] Supabase não foi inicializado');
+                return;
+            }
+            
             const btn = document.getElementById('btn-login');
+            const email = e.target.email.value;
+            const password = e.target.password.value;
+            
             btn.innerText = "Conectando...";
             btn.disabled = true;
+            console.log(`[LOGIN] Tentando autenticar: ${email}`);
 
             try {
-                const { error } = await supabase.auth.signInWithPassword({
-                    email: e.target.email.value,
-                    password: e.target.password.value
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
                 });
 
                 if (error) {
-                    showError("Erro de acesso: " + error.message);
+                    console.error('[ERRO LOGIN]', error);
+                    let mensagem = error.message;
+                    
+                    // Mensagens mais amigáveis
+                    if (error.message.includes('Invalid login credentials')) 
+                        mensagem = 'E-mail ou senha inválidos';
+                    else if (error.message.includes('User not found'))
+                        mensagem = 'Usuário não encontrado';
+                    else if (error.message.includes('network'))
+                        mensagem = 'Erro de conexão - verifique sua internet';
+                    else if (error.message.includes('CORS'))
+                        mensagem = 'Erro de CORS - contate o administrador';
+                    
+                    showError('❌ ' + mensagem);
                     btn.innerText = "Autenticar";
                     btn.disabled = false;
                 } else {
+                    console.log('[OK] Login bem-sucedido:', data.user?.email);
                     await loadData();
                 }
             } catch (err) {
-                showError("Erro de conexão.");
+                console.error('[ERRO CONEXÃO]', err);
+                showError('❌ Erro de conexão: ' + err.message);
                 btn.innerText = "Autenticar";
                 btn.disabled = false;
             }
@@ -205,65 +256,169 @@
         // Esqueci Senha
         document.getElementById('forgot-form').onsubmit = async (e) => {
             e.preventDefault();
+            if (!supabase) {
+                showError('Sistema não está pronto');
+                return;
+            }
+            console.log('[FORGOT] Enviando link de recuperação');
             const { error } = await supabase.auth.resetPasswordForEmail(e.target['forgot-email'].value, {
                 redirectTo: window.location.origin
             });
-            if (error) showError(error.message); else alert("Link enviado ao e-mail!");
+            if (error) {
+                console.error('[ERRO FORGOT]', error);
+                showError('Erro: ' + error.message);
+            } else {
+                alert("Link enviado ao e-mail!");
+                switchAuthView('view-login');
+            }
         };
 
         // Nova Senha
         document.getElementById('new-password-form').onsubmit = async (e) => {
             e.preventDefault();
+            if (!supabase) {
+                showError('Sistema não está pronto');
+                return;
+            }
+            console.log('[NEW PWD] Atualizando senha');
             const { error } = await supabase.auth.updateUser({ password: e.target['new-pwd'].value });
-            if (error) showError(error.message); else { alert("Senha atualizada!"); location.reload(); }
+            if (error) {
+                console.error('[ERRO NEW PWD]', error);
+                showError('Erro: ' + error.message);
+            } else { 
+                alert("Senha atualizada com sucesso!"); 
+                location.reload(); 
+            }
         };
 
-        supabase.auth.onAuthStateChange((event) => {
-            if (event === "PASSWORD_RECOVERY") switchAuthView('view-new-password');
-        });
+        if (supabase) {
+            supabase.auth.onAuthStateChange((event) => {
+                console.log('[AUTH EVENT]', event);
+                if (event === "PASSWORD_RECOVERY") switchAuthView('view-new-password');
+            });
+        }
 
         // Carregar Dados
         async function loadData() {
             try {
-                const { data: { session } } = await supabase.auth.getSession();
-                if (!session) return;
+                if (!supabase) {
+                    console.error('[ERRO] Supabase não inicializado');
+                    showError('Erro: Sistema não está pronto');
+                    return;
+                }
+                
+                console.log('[LOAD] Verificando sessão...');
+                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                
+                if (sessionError) {
+                    console.error('[ERRO SESSÃO]', sessionError);
+                    showError('Erro ao verificar sessão: ' + sessionError.message);
+                    return;
+                }
+                
+                if (!session) {
+                    console.log('[INFO] Sem sessão ativa');
+                    return;
+                }
+                
+                console.log('[OK] Sessão ativa para:', session.user.email);
                 
                 document.getElementById('module-auth').classList.remove('active');
                 document.getElementById('module-app').classList.add('active');
                 
+                console.log('[LOAD] Buscando processos...');
                 const { data, error } = await supabase.from('processos').select('*');
                 const lista = document.getElementById('lista-processos');
                 
                 if (error) {
-                    lista.innerHTML = `<tr><td colspan="3" style="text-align:center; color:red;">Erro: ${error.message}</td></tr>`;
+                    console.error('[ERRO TABELA]', error);
+                    let msg = error.message;
+                    if (error.code === '42P01') 
+                        msg = 'Tabela "processos" não existe no banco de dados';
+                    else if (error.message.includes('permission denied'))
+                        msg = 'Sem permissão para acessar a tabela "processos"';
+                    
+                    lista.innerHTML = `<tr><td colspan="3" style="text-align:center; color:red;">Erro: ${msg}</td></tr>`;
+                    console.error('[ERRO COMPLETO]', JSON.stringify(error));
                 } else if (data && data.length > 0) {
-                    lista.innerHTML = data.map(p => `<tr><td><strong>${p.numero_processo}</strong></td><td>${p.requerido_nome}</td><td><span style="background:#e0f2fe; color:#0369a1; padding:4px 8px; border-radius:4px; font-size:12px;">${p.status}</span></td></tr>`).join('');
+                    console.log('[OK] Carregados', data.length, 'processos');
+                    lista.innerHTML = data.map(p => `<tr><td><strong>${p.numero_processo}</strong></td><td>${p.requerido_nome}</td><td><span style="background:#e0f2fe; color:#0369a1; padding:4px 8px; border-radius:4px; font-size:12px;">${p.status || 'Ativo'}</span></td></tr>`).join('');
                 } else {
                     lista.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#64748b;">Nenhum registro encontrado.</td></tr>';
                 }
             } catch (err) {
-                console.error(err);
+                console.error('[ERRO LOAD]', err);
+                showError('Erro ao carregar dados: ' + err.message);
             }
         }
 
-        async function logout() { await supabase.auth.signOut(); location.reload(); }
+        async function logout() { 
+            if (!supabase) {
+                location.reload();
+                return;
+            }
+            try {
+                await supabase.auth.signOut(); 
+            } catch (err) {
+                console.error('[ERRO LOGOUT]', err);
+            }
+            location.reload(); 
+        }
 
         // Novo Processo
         document.getElementById('processo-form').onsubmit = async (e) => {
             e.preventDefault();
-            const { data: { user } } = await supabase.auth.getUser();
-            const payload = {
-                numero_processo: `${new Date().getFullYear()}.AR.${Math.floor(Math.random()*9000 + 1000)}`,
-                requerente_nome: document.getElementById('req_nome').value,
-                requerido_nome: document.getElementById('def_nome').value,
-                user_id: user.id
-            };
-            const { error } = await supabase.from('processos').insert([payload]);
-            if (error) alert("Erro: " + error.message); 
-            else { alert('Cadastrado com sucesso!'); document.getElementById('processo-form').reset(); showView('dash', document.querySelector('.nav-item.active')); loadData(); }
+            if (!supabase) {
+                alert('Erro: Sistema não está pronto');
+                return;
+            }
+            
+            try {
+                const { data: { user }, error: userError } = await supabase.auth.getUser();
+                if (userError || !user) {
+                    console.error('[ERRO] Falha ao obter usuário:', userError);
+                    alert('Erro: Falha ao identificar usuário');
+                    return;
+                }
+                
+                const payload = {
+                    numero_processo: `${new Date().getFullYear()}.AR.${Math.floor(Math.random()*9000 + 1000)}`,
+                    requerente_nome: document.getElementById('req_nome').value,
+                    requerido_nome: document.getElementById('def_nome').value,
+                    user_id: user.id,
+                    status: 'Ativo'
+                };
+                
+                console.log('[NOVO PROCESSO] Inserindo:', payload);
+                const { error } = await supabase.from('processos').insert([payload]);
+                
+                if (error) {
+                    console.error('[ERRO INSERT]', error);
+                    alert("Erro ao cadastrar: " + error.message); 
+                } else { 
+                    alert('Cadastrado com sucesso!'); 
+                    document.getElementById('processo-form').reset(); 
+                    showView('dash', document.querySelector('.nav-item'));
+                    await loadData(); 
+                }
+            } catch (err) {
+                console.error('[ERRO PROCESSO]', err);
+                alert('Erro: ' + err.message);
+            }
         };
 
-        loadData();
+        // Inicializar na carga do documento
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('[INIT] Documento carregado');
+            if (!supabase) initSupabase();
+            loadData();
+        });
+        
+        // Se o documento já está pronto
+        if (document.readyState === 'interactive' || document.readyState === 'complete') {
+            console.log('[INIT] Documento já está pronto');
+            loadData();
+        }
     </script>
 </body>
 </html>
