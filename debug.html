@@ -35,8 +35,8 @@
         }
         
         // Teste 2: Tentar criar cliente
-        const SUPABASE_URL = 'https://tsgbvhfdceyjbyfstjol.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzZ2J2aGZkY2V5amJ5ZnN0am9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0NjY3MDEsImV4cCI6MjA5MDA0MjcwMX0.ucDetUUuVKyycACaNtzArQ8YpgybrRpQqYljYYiTgyI';
+        var SUPABASE_URL = 'https://tsgbvhfdceyjbyfstjol.supabase.co';
+        var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzZ2J2aGZkY2V5amJ5ZnN0am9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0NjY3MDEsImV4cCI6MjA5MDA0MjcwMX0.ucDetUUuVKyycACaNtzArQ8YpgybrRpQqYljYYiTgyI';
         
         log('2. Criando cliente Supabase...');
         log(`   URL: ${SUPABASE_URL}`);
@@ -44,7 +44,7 @@
         
         try {
             // Usar let para evitar erro de duplicação de declaração
-            let supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             log('✓ Cliente Supabase criado com sucesso');
             
             // Teste 3: Verificar sessão
