@@ -187,6 +187,147 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
 
 ---
 
+## 🆕 Erros Reportados (26/03/2026)
+
+### **ERRO 1: "Identifier 'supabase' has already been declared"** ❌
+**Local:** (índice):137  
+**Tipo:** SyntaxError (Uncaught)  
+**Severidade:** CRITICA
+
+**Causa Identificada:**
+- No arquivo `debug.html`, há uma declaração: `const supabase = window.supabase.createClient(...)`
+- No arquivo `index.html`, há também: `let supabase = null;` + `supabase = window.supabase.createClient(...)`
+- Se ambos os arquivos forem carregados no contexto de uma página HTML (ex: iframe, incluídos dinamicamente), pode haver conflito de escopo
+
+**Solução:**
+```javascript
+// debug.html linha 38 - USAR let ao invés de const
+let supabase; // Declaração sem atribuição
+try {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    log('✓ Cliente Supabase criado com sucesso');
+    
+    // ... resto do código
+} catch (err) {
+    log(`✗ ERRO ao criar cliente: ${err.message}`);
+}
+```
+
+**Ação Recomendada:**
+- Separar `debug.html` em arquivo de testes isolado
+- Nunca incluir múltiplas declarações de `supabase` no mesmo escopo
+
+---
+
+### **ERRO 2: "The message port closed before a response was received"** ⚠️
+**Local:** (índice):1  
+**Tipo:** runtime.lastError  
+**Severidade:** ALTA (intermitente)
+
+**Causa Identificada:**
+- Erro de comunicação entre content script e background script (Chrome Extension API)
+- Bibliotecas externas ou extensões tentam comunicação que é interrompida
+- Timing: Message port fechado antes de receber resposta
+
+**Possíveis Causas:**
+1. **Extensões do Chrome:** Ad-blockers, LastPass, Google Workspace
+2. **Service Workers:** Mensagens perdidas durante inicialização
+3. **Content Security Policy (CSP):** Bloqueando comunicação entre scripts
+4. **Supabase Auth:** Trocas de tokens podem estar sendo bloqueadas
+
+**Soluções:**
+
+a) **Aumentar timeout de mensagens:**
+```javascript
+// No debug.html - adicione retry logic
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const maxRetries = 3;
+let attempts = 0;
+
+supabase.auth.getSession().then(({ data: { session } }) => {
+    console.log('✓ Sessão obtida');
+}).catch(err => {
+    if (attempts < maxRetries) {
+        attempts++;
+        console.log(`Tentativa ${attempts}/${maxRetries}...`);
+        setTimeout(() => loadData(), 1000 * attempts);
+    }
+});
+```
+
+b) **Remover or validar extensões problemáticas:**
+```javascript
+// No index.html - detectar bloqueios
+window.addEventListener('beforeunload', () => {
+    console.log('[DEBUG] Página sendo descarregada normalmente');
+});
+
+// Monitorar erros silenciosos
+window.addEventListener('error', (e) => {
+    console.error('[GLOBAL ERROR]', e.message);
+});
+```
+
+---
+
+### **ERRO 3: "GET favicon.ico 404 (Not Found)"** ℹ️
+**Local:** favicon.ico:1  
+**Tipo:** HTTP 404  
+**Severidade:** BAIXA (apenas aviso)
+
+**Causa:** Arquivo `favicon.ico` não existe no repositório
+
+**Solução:**
+```html
+<!-- Adicione no <head> do index.html -->
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖️</text></svg>">
+```
+
+Ou:
+```bash
+# Criar um favicon.ico simples (16x16 pixels)
+# Usando ferramenta online: https://icoconvert.com/
+# Salvar em /workspaces/inovasys/favicon.ico
+```
+
+---
+
+### **ERRO 4: "Password forms should have username fields"** ♿
+**Severidade:** BAIXA (acessibilidade)
+
+**Causa:** Form `#new-password-form` está faltando um campo de username para autocomplete
+
+**Solução (adicionar ao HTML):**
+```html
+<div id="view-new-password" class="auth-view">
+    <h3 style="margin-top:0; color: var(--color-primary);">Nova Senha</h3>
+    <form id="new-password-form">
+        <!-- Campo oculto de username para acessibilidade -->
+        <input type="text" id="username-hidden" style="display:none;" autocomplete="username">
+        
+        <div class="form-group">
+            <label class="form-label">Nova Senha</label>
+            <input type="password" id="new-pwd" class="form-control" 
+                   autocomplete="new-password" minlength="6" required>
+        </div>
+        <button type="submit" id="btn-new-pwd" class="btn">Salvar Senha</button>
+    </form>
+</div>
+```
+
+---
+
+## Resumo de Erros
+
+| Erro | Severidade | Tipo | Status |
+|------|-----------|------|--------|
+| Identifier 'supabase' duplicada | 🔴 CRITICA | SyntaxError | Investigado |
+| Message port fechado | 🟠 ALTA | runtime.lastError | Intermitente |
+| favicon.ico 404 | 🟢 BAIXA | HTTP 404 | Aviso |
+| Password form acessibilidade | 🟡 BAIXA | Warning | Facilmente corrigível |
+
+---
+
 ## 🔧 Como Testar
 
 ### **1. Abrir Console do Navegador**
