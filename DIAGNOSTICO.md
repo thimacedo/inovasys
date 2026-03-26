@@ -1,4 +1,4 @@
-# 🔍 Relatório de Diagnóstico - Problemas de Conexão inovaSys
+git pull origin main# 🔍 Relatório de Diagnóstico - Problemas de Conexão inovaSys
 
 **Data:** 26/03/2026  
 **Projeto:** inovaSys - Gestão Arbitral  
