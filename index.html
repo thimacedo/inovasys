@@ -29,7 +29,7 @@
         .form-label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: var(--color-primary); }
         .form-control { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 6px; box-sizing: border-box; font-family: inherit; }
         .btn { padding: 12px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; width: 100%; background: var(--color-accent); color: white; transition: 0.2s; }
-        .btn-link { background: none; color: var(--color-accent); font-size: 13px; margin-top: 15px; text-decoration: underline; padding: 0; width: auto; cursor: pointer; }
+        .btn-secondary { background: #64748b; margin-top: 10px; }
         
         /* Sidebar & App */
         .sidebar { width: var(--sidebar-width); background: white; border-right: 1px solid #e2e8f0; position: fixed; height: 100vh; display: flex; flex-direction: column; z-index: 10; }
@@ -42,11 +42,15 @@
         table { width: 100%; border-collapse: collapse; }
         th { text-align: left; padding: 12px; font-size: 11px; text-transform: uppercase; color: #64748b; background: #f8fafc; }
         td { padding: 12px; border-top: 1px solid #e2e8f0; font-size: 14px; }
+        tr.clickable { cursor: pointer; transition: 0.2s; }
+        tr.clickable:hover { background: #f1f5f9; }
         
         #error-box { display: none; background: #fee2e2; color: #b91c1c; padding: 12px; border-radius: 6px; font-size: 13px; margin-bottom: 20px; text-align: left; border: 1px solid #fecaca; }
-        .auth-view { display: none; }
-        .auth-view.active { display: block; }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+        /* Estilo do Documento PDF */
+        #pdf-template { padding: 50px; color: #000; line-height: 1.6; font-family: 'Times New Roman', serif; display: none; }
+        .pdf-header { text-align: center; margin-bottom: 40px; font-weight: bold; text-transform: uppercase; }
     </style>
 </head>
 <body>
@@ -55,20 +59,11 @@
         <div class="auth-card">
             <img src="logo-inovasys.png" alt="inovaSys" style="max-width: 160px; margin-bottom: 25px;">
             <div id="error-box"></div>
-            
-            <div id="view-login" class="auth-view active">
-                <form id="login-form">
-                    <div class="form-group">
-                        <label class="form-label">E-mail de Acesso</label>
-                        <input type="email" id="email" class="form-control" autocomplete="username" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Senha</label>
-                        <input type="password" id="password" class="form-control" autocomplete="current-password" required>
-                    </div>
-                    <button type="submit" id="btn-login" class="btn">Autenticar</button>
-                </form>
-            </div>
+            <form id="login-form">
+                <div class="form-group"><label class="form-label">E-mail</label><input type="email" id="email" class="form-control" required></div>
+                <div class="form-group"><label class="form-label">Senha</label><input type="password" id="password" class="form-control" required></div>
+                <button type="submit" id="btn-login" class="btn">Acessar</button>
+            </form>
         </div>
     </div>
 
@@ -81,12 +76,35 @@
         </nav>
         <main class="main">
             <div id="view-dash" class="view active">
-                <h2>Processos Arbitrais</h2>
+                <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="margin:0;">Processos Arbitrais</h2>
+                    <div style="width: 300px;">
+                        <input type="text" id="search-input" class="form-control" placeholder="Buscar por nº ou requerido...">
+                    </div>
+                </div>
                 <div class="card">
                     <table>
-                        <thead><tr><th>Nº do Processo</th><th>Requerido</th><th>Valor</th><th>Status</th></tr></thead>
+                        <thead><tr><th>Nº Processo</th><th>Requerido</th><th>Valor</th><th>Ações</th></tr></thead>
                         <tbody id="lista-processos"></tbody>
                     </table>
+                </div>
+            </div>
+
+            <div id="view-detalhes" class="view">
+                <div style="display:flex; justify-content: space-between; align-items: center;">
+                    <h2 id="det-numero">Processo</h2>
+                    <button class="btn" style="width: auto; background: #10b981;" id="btn-pdf">Gerar Termo (PDF)</button>
+                </div>
+                <div class="card">
+                    <div class="form-grid">
+                        <div><strong>Requerente:</strong> <span id="det-req-nome"></span> (<span id="det-req-doc"></span>)</div>
+                        <div><strong>Requerido:</strong> <span id="det-def-nome"></span> (<span id="det-def-doc"></span>)</div>
+                        <div><strong>Valor da Causa:</strong> R$ <span id="det-valor"></span></div>
+                        <div><strong>Status:</strong> <span id="det-status"></span></div>
+                    </div>
+                    <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+                    <div><strong>Resumo dos Fatos:</strong><p id="det-fatos"></p></div>
+                    <button class="btn btn-secondary" style="width: auto;" onclick="document.getElementById('nav-dash').click()">Voltar</button>
                 </div>
             </div>
 
@@ -94,33 +112,36 @@
                 <h2>Novo Protocolo</h2>
                 <div class="card">
                     <form id="processo-form">
-                        <h4>Partes do Processo</h4>
                         <div class="form-grid">
-                            <div class="form-group"><label class="form-label">Nome do Requerente</label><input type="text" id="req_nome" class="form-control" required></div>
-                            <div class="form-group"><label class="form-label">Doc. Requerente (CPF/CNPJ)</label><input type="text" id="req_doc" class="form-control" required></div>
+                            <div class="form-group"><label class="form-label">Requerente</label><input type="text" id="req_nome" class="form-control" required></div>
+                            <div class="form-group"><label class="form-label">CPF/CNPJ Requerente</label><input type="text" id="req_doc" class="form-control doc-mask" maxlength="18" required></div>
                         </div>
                         <div class="form-grid">
-                            <div class="form-group"><label class="form-label">Nome do Requerido</label><input type="text" id="def_nome" class="form-control" required></div>
-                            <div class="form-group"><label class="form-label">Doc. Requerido (CPF/CNPJ)</label><input type="text" id="def_doc" class="form-control" required></div>
+                            <div class="form-group"><label class="form-label">Requerido</label><input type="text" id="def_nome" class="form-control" required></div>
+                            <div class="form-group"><label class="form-label">CPF/CNPJ Requerido</label><input type="text" id="def_doc" class="form-control doc-mask" maxlength="18" required></div>
                         </div>
-
-                        <h4>Informações Adicionais</h4>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label class="form-label">Valor da Causa (R$)</label>
-                                <input type="number" id="valor_causa" class="form-control" step="0.01" placeholder="0,00" required>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Resumo dos Fatos</label>
-                            <textarea id="fatos" class="form-control" rows="4"></textarea>
-                        </div>
-                        
-                        <button type="submit" id="btn-protocolar" class="btn" style="width: auto;">Cadastrar Processo</button>
+                        <div class="form-group"><label class="form-label">Valor (R$)</label><input type="number" id="valor_causa" class="form-control" step="0.01" required></div>
+                        <div class="form-group"><label class="form-label">Fatos</label><textarea id="fatos" class="form-control" rows="4"></textarea></div>
+                        <button type="submit" id="btn-protocolar" class="btn" style="width: auto;">Cadastrar</button>
                     </form>
                 </div>
             </div>
         </main>
+    </div>
+
+    <div id="pdf-template">
+        <div class="pdf-header">Termo de Instituição de Arbitragem</div>
+        <p><strong>Número do Processo:</strong> <span id="pdf-num"></span></p>
+        <p><strong>Requerente:</strong> <span id="pdf-req"></span> - Doc: <span id="pdf-req-doc"></span></p>
+        <p><strong>Requerido:</strong> <span id="pdf-def"></span> - Doc: <span id="pdf-def-doc"></span></p>
+        <p><strong>Valor da Causa:</strong> R$ <span id="pdf-val"></span></p>
+        <div style="margin-top: 30px;">
+            <strong>Descrição do Litígio:</strong>
+            <p id="pdf-fatos"></p>
+        </div>
+        <div style="margin-top: 100px; text-align: center;">
+            ________________________________________________<br>Assinatura do Árbitro
+        </div>
     </div>
 
     <script type="module">
@@ -130,60 +151,105 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzZ2J2aGZkY2V5amJ5ZnN0am9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0NjY3MDEsImV4cCI6MjA5MDA0MjcwMX0.ucDetUUuVKyycACaNtzArQ8YpgybrRpQqYljYYiTgyI';
         const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        // FORMATAÇÃO DINÂMICA CPF/CNPJ
+        const applyMask = (value) => {
+            const digits = value.replace(/\D/g, "");
+            if (digits.length <= 11) {
+                return digits.replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+            } else {
+                return digits.replace(/(\d{2})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1/$2").replace(/(\d{4})(\d{1,2})$/, "$1-$2");
+            }
+        };
+
+        document.querySelectorAll('.doc-mask').forEach(input => {
+            input.addEventListener('input', (e) => { e.target.value = applyMask(e.target.value); });
+        });
+
+        // BUSCA EM TEMPO REAL
+        document.getElementById('search-input').addEventListener('keyup', function() {
+            const term = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#lista-processos tr');
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(term) ? '' : 'none';
+            });
+        });
+
+        // NAVEGAÇÃO
         const showAppView = (viewId) => {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById('view-' + viewId).classList.add('active');
-            document.getElementById('nav-' + viewId).classList.add('active');
+            const nav = document.getElementById('nav-' + viewId);
+            if (nav) nav.classList.add('active');
         };
 
-        const toggleMainModules = (isAuthenticated) => {
-            document.getElementById('module-auth').classList.toggle('active', !isAuthenticated);
-            document.getElementById('module-app').classList.toggle('active', isAuthenticated);
-            if (isAuthenticated) loadData();
-        };
-
+        // CARREGAR LISTA
         const loadData = async () => {
             const { data, error } = await supabase.from('processos').select('*').order('created_at', { ascending: false });
             const lista = document.getElementById('lista-processos');
-            if (error) {
-                lista.innerHTML = `<tr><td colspan="4">Erro: ${error.message}</td></tr>`;
-                return;
-            }
-            lista.innerHTML = data.length > 0 ? data.map(p => `
-                <tr>
+            if (error) return;
+            
+            lista.innerHTML = data.map(p => `
+                <tr class="clickable" data-id="${p.id}">
                     <td><strong>${p.numero_processo}</strong></td>
                     <td>${p.requerido_nome}</td>
-                    <td>R$ ${Number(p.valor_causa || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                    <td>${p.status || 'Ativo'}</td>
+                    <td>R$ ${Number(p.valor_causa).toLocaleString('pt-BR')}</td>
+                    <td><button class="btn-view" style="background:none; border:none; color:#0284c7; cursor:pointer; font-weight:bold;">Ver Detalhes</button></td>
                 </tr>
-            `).join('') : '<tr><td colspan="4" style="text-align:center;">Nenhum registro encontrado.</td></tr>';
+            `).join('');
+
+            document.querySelectorAll('.clickable').forEach(row => {
+                row.onclick = () => openDetails(data.find(x => x.id == row.dataset.id));
+            });
         };
 
+        // CONSULTA DETALHADA
+        const openDetails = (p) => {
+            document.getElementById('det-numero').innerText = 'Processo ' + p.numero_processo;
+            document.getElementById('det-req-nome').innerText = p.requerente_nome;
+            document.getElementById('det-req-doc').innerText = p.requerente_doc;
+            document.getElementById('det-def-nome').innerText = p.requerido_nome;
+            document.getElementById('det-def-doc').innerText = p.requerido_doc;
+            document.getElementById('det-valor').innerText = Number(p.valor_causa).toLocaleString('pt-BR');
+            document.getElementById('det-status').innerText = p.status;
+            document.getElementById('det-fatos').innerText = p.resumo_fatos;
+            
+            // Preparar PDF Template
+            document.getElementById('pdf-num').innerText = p.numero_processo;
+            document.getElementById('pdf-req').innerText = p.requerente_nome;
+            document.getElementById('pdf-req-doc').innerText = p.requerente_doc;
+            document.getElementById('pdf-def').innerText = p.requerido_nome;
+            document.getElementById('pdf-def-doc').innerText = p.requerido_doc;
+            document.getElementById('pdf-val').innerText = Number(p.valor_causa).toLocaleString('pt-BR');
+            document.getElementById('pdf-fatos').innerText = p.resumo_fatos;
+
+            showAppView('detalhes');
+        };
+
+        // GERAÇÃO DE PDF
+        document.getElementById('btn-pdf').onclick = () => {
+            const element = document.getElementById('pdf-template');
+            element.style.display = 'block';
+            html2pdf().from(element).set({ margin: 10, filename: 'Termo_Arbitragem.pdf' }).save().then(() => {
+                element.style.display = 'none';
+            });
+        };
+
+        // LOGIN E CADASTRO
         document.getElementById('login-form').onsubmit = async (e) => {
             e.preventDefault();
-            const { error } = await supabase.auth.signInWithPassword({ 
-                email: e.target.email.value, 
-                password: e.target.password.value 
-            });
-            if (error) alert('Erro: ' + error.message);
+            const { error } = await supabase.auth.signInWithPassword({ email: e.target.email.value, password: e.target.password.value });
+            if (error) alert(error.message);
         };
 
         document.getElementById('nav-dash').onclick = () => showAppView('dash');
         document.getElementById('nav-novo').onclick = () => showAppView('novo');
-        document.getElementById('nav-logout').onclick = async () => { 
-            await supabase.auth.signOut(); 
-            window.location.reload(); 
-        };
+        document.getElementById('nav-logout').onclick = async () => { await supabase.auth.signOut(); window.location.reload(); };
 
         document.getElementById('processo-form').onsubmit = async (e) => {
             e.preventDefault();
-            const btn = document.getElementById('btn-protocolar');
-            btn.innerText = "Processando...";
-            btn.disabled = true;
-
             const { data: { user } } = await supabase.auth.getUser();
-            
             const payload = {
                 numero_processo: `${new Date().getFullYear()}.AR.${Math.floor(Math.random()*9000 + 1000)}`,
                 requerente_nome: document.getElementById('req_nome').value,
@@ -192,31 +258,16 @@
                 requerido_doc: document.getElementById('def_doc').value,
                 valor_causa: parseFloat(document.getElementById('valor_causa').value),
                 resumo_fatos: document.getElementById('fatos').value,
-                user_id: user.id,
-                status: 'Ativo'
+                user_id: user.id
             };
-
             const { error } = await supabase.from('processos').insert([payload]);
-            
-            btn.innerText = "Cadastrar Processo";
-            btn.disabled = false;
-
-            if (error) {
-                alert('Erro ao protocolar: ' + error.message);
-            } else {
-                alert('Processo protocolado com sucesso!');
-                document.getElementById('processo-form').reset();
-                showAppView('dash');
-                loadData();
-            }
+            if (error) alert(error.message); else { alert('Sucesso!'); showAppView('dash'); loadData(); }
         };
 
         supabase.auth.onAuthStateChange((event, session) => {
-            toggleMainModules(!!session);
-        });
-
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            toggleMainModules(!!session);
+            document.getElementById('module-auth').classList.toggle('active', !session);
+            document.getElementById('module-app').classList.toggle('active', !!session);
+            if (session) loadData();
         });
     </script>
 </body>
