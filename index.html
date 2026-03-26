@@ -42,8 +42,8 @@
         table { width: 100%; border-collapse: collapse; }
         th { text-align: left; padding: 12px; font-size: 11px; text-transform: uppercase; color: #64748b; background: #f8fafc; }
         td { padding: 12px; border-top: 1px solid #e2e8f0; font-size: 14px; }
-        tr.clickable { cursor: pointer; transition: 0.2s; }
-        tr.clickable:hover { background: #f1f5f9; }
+        
+        .link-processo { color: var(--color-accent); font-weight: bold; text-decoration: underline; cursor: pointer; }
         
         #error-box { display: none; background: #fee2e2; color: #b91c1c; padding: 12px; border-radius: 6px; font-size: 13px; margin-bottom: 20px; text-align: left; border: 1px solid #fecaca; }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
@@ -99,12 +99,12 @@
                     <div class="form-grid">
                         <div><strong>Requerente:</strong> <span id="det-req-nome"></span> (<span id="det-req-doc"></span>)</div>
                         <div><strong>Requerido:</strong> <span id="det-def-nome"></span> (<span id="det-def-doc"></span>)</div>
-                        <div><strong>Valor da Causa:</strong> R$ <span id="det-valor"></span></div>
+                        <div><strong>Valor da Causa:</strong> <span id="det-valor"></span></div>
                         <div><strong>Status:</strong> <span id="det-status"></span></div>
                     </div>
                     <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
                     <div><strong>Resumo dos Fatos:</strong><p id="det-fatos"></p></div>
-                    <button class="btn btn-secondary" style="width: auto;" onclick="document.getElementById('nav-dash').click()">Voltar</button>
+                    <button class="btn btn-secondary" style="width: auto;" id="btn-voltar">Voltar</button>
                 </div>
             </div>
 
@@ -120,7 +120,7 @@
                             <div class="form-group"><label class="form-label">Requerido</label><input type="text" id="def_nome" class="form-control" required></div>
                             <div class="form-group"><label class="form-label">CPF/CNPJ Requerido</label><input type="text" id="def_doc" class="form-control doc-mask" maxlength="18" required></div>
                         </div>
-                        <div class="form-group"><label class="form-label">Valor (R$)</label><input type="number" id="valor_causa" class="form-control" step="0.01" required></div>
+                        <div class="form-group"><label class="form-label">Valor (R$)</label><input type="text" id="valor_causa" class="form-control money-mask" placeholder="R$ 0,00" required></div>
                         <div class="form-group"><label class="form-label">Fatos</label><textarea id="fatos" class="form-control" rows="4"></textarea></div>
                         <button type="submit" id="btn-protocolar" class="btn" style="width: auto;">Cadastrar</button>
                     </form>
@@ -134,7 +134,7 @@
         <p><strong>Número do Processo:</strong> <span id="pdf-num"></span></p>
         <p><strong>Requerente:</strong> <span id="pdf-req"></span> - Doc: <span id="pdf-req-doc"></span></p>
         <p><strong>Requerido:</strong> <span id="pdf-def"></span> - Doc: <span id="pdf-def-doc"></span></p>
-        <p><strong>Valor da Causa:</strong> R$ <span id="pdf-val"></span></p>
+        <p><strong>Valor da Causa:</strong> <span id="pdf-val"></span></p>
         <div style="margin-top: 30px;">
             <strong>Descrição do Litígio:</strong>
             <p id="pdf-fatos"></p>
@@ -151,7 +151,7 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzZ2J2aGZkY2V5amJ5ZnN0am9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0NjY3MDEsImV4cCI6MjA5MDA0MjcwMX0.ucDetUUuVKyycACaNtzArQ8YpgybrRpQqYljYYiTgyI';
         const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // FORMATAÇÃO DINÂMICA CPF/CNPJ
+        // MÁSCARAS DE ENTRADA
         const applyMask = (value) => {
             const digits = value.replace(/\D/g, "");
             if (digits.length <= 11) {
@@ -161,9 +161,19 @@
             }
         };
 
+        const formatCurrency = (value) => {
+            let v = value.replace(/\D/g, "");
+            v = (v / 100).toFixed(2).replace(".", ",");
+            v = v.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
+            return "R$ " + v;
+        };
+
         document.querySelectorAll('.doc-mask').forEach(input => {
             input.addEventListener('input', (e) => { e.target.value = applyMask(e.target.value); });
         });
+
+        const moneyInput = document.getElementById('valor_causa');
+        moneyInput.addEventListener('input', (e) => { e.target.value = formatCurrency(e.target.value); });
 
         // BUSCA EM TEMPO REAL
         document.getElementById('search-input').addEventListener('keyup', function() {
@@ -184,6 +194,10 @@
             if (nav) nav.classList.add('active');
         };
 
+        document.getElementById('nav-dash').onclick = () => showAppView('dash');
+        document.getElementById('nav-novo').onclick = () => showAppView('novo');
+        document.getElementById('btn-voltar').onclick = () => showAppView('dash');
+
         // CARREGAR LISTA
         const loadData = async () => {
             const { data, error } = await supabase.from('processos').select('*').order('created_at', { ascending: false });
@@ -191,37 +205,37 @@
             if (error) return;
             
             lista.innerHTML = data.map(p => `
-                <tr class="clickable" data-id="${p.id}">
-                    <td><strong>${p.numero_processo}</strong></td>
+                <tr>
+                    <td><span class="link-processo" data-id="${p.id}">${p.numero_processo}</span></td>
                     <td>${p.requerido_nome}</td>
-                    <td>R$ ${Number(p.valor_causa).toLocaleString('pt-BR')}</td>
-                    <td><button class="btn-view" style="background:none; border:none; color:#0284c7; cursor:pointer; font-weight:bold;">Ver Detalhes</button></td>
+                    <td>R$ ${Number(p.valor_causa).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                    <td><button class="link-processo" data-id="${p.id}" style="text-decoration:none;">Ver Detalhes</button></td>
                 </tr>
             `).join('');
 
-            document.querySelectorAll('.clickable').forEach(row => {
-                row.onclick = () => openDetails(data.find(x => x.id == row.dataset.id));
+            document.querySelectorAll('.link-processo').forEach(el => {
+                el.onclick = () => openDetails(data.find(x => x.id == el.dataset.id));
             });
         };
 
         // CONSULTA DETALHADA
         const openDetails = (p) => {
+            const valorFormatado = Number(p.valor_causa).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
             document.getElementById('det-numero').innerText = 'Processo ' + p.numero_processo;
             document.getElementById('det-req-nome').innerText = p.requerente_nome;
             document.getElementById('det-req-doc').innerText = p.requerente_doc;
             document.getElementById('det-def-nome').innerText = p.requerido_nome;
             document.getElementById('det-def-doc').innerText = p.requerido_doc;
-            document.getElementById('det-valor').innerText = Number(p.valor_causa).toLocaleString('pt-BR');
+            document.getElementById('det-valor').innerText = valorFormatado;
             document.getElementById('det-status').innerText = p.status;
             document.getElementById('det-fatos').innerText = p.resumo_fatos;
             
-            // Preparar PDF Template
             document.getElementById('pdf-num').innerText = p.numero_processo;
             document.getElementById('pdf-req').innerText = p.requerente_nome;
             document.getElementById('pdf-req-doc').innerText = p.requerente_doc;
             document.getElementById('pdf-def').innerText = p.requerido_nome;
             document.getElementById('pdf-def-doc').innerText = p.requerido_doc;
-            document.getElementById('pdf-val').innerText = Number(p.valor_causa).toLocaleString('pt-BR');
+            document.getElementById('pdf-val').innerText = valorFormatado;
             document.getElementById('pdf-fatos').innerText = p.resumo_fatos;
 
             showAppView('detalhes');
@@ -243,25 +257,42 @@
             if (error) alert(error.message);
         };
 
-        document.getElementById('nav-dash').onclick = () => showAppView('dash');
-        document.getElementById('nav-novo').onclick = () => showAppView('novo');
         document.getElementById('nav-logout').onclick = async () => { await supabase.auth.signOut(); window.location.reload(); };
 
         document.getElementById('processo-form').onsubmit = async (e) => {
             e.preventDefault();
+            const btn = document.getElementById('btn-protocolar');
+            btn.innerText = "Processando...";
+            btn.disabled = true;
+
             const { data: { user } } = await supabase.auth.getUser();
+            
+            // Converte R$ 1.234,56 -> 1234.56
+            const rawValue = document.getElementById('valor_causa').value.replace(/[^\d,]/g, '').replace(',', '.');
+            
             const payload = {
                 numero_processo: `${new Date().getFullYear()}.AR.${Math.floor(Math.random()*9000 + 1000)}`,
                 requerente_nome: document.getElementById('req_nome').value,
                 requerente_doc: document.getElementById('req_doc').value,
                 requerido_nome: document.getElementById('def_nome').value,
                 requerido_doc: document.getElementById('def_doc').value,
-                valor_causa: parseFloat(document.getElementById('valor_causa').value),
+                valor_causa: parseFloat(rawValue),
                 resumo_fatos: document.getElementById('fatos').value,
-                user_id: user.id
+                user_id: user.id,
+                status: 'Ativo'
             };
+
             const { error } = await supabase.from('processos').insert([payload]);
-            if (error) alert(error.message); else { alert('Sucesso!'); showAppView('dash'); loadData(); }
+            if (error) {
+                alert(error.message);
+                btn.innerText = "Cadastrar";
+                btn.disabled = false;
+            } else { 
+                alert('Sucesso!'); 
+                document.getElementById('processo-form').reset();
+                showAppView('dash'); 
+                loadData(); 
+            }
         };
 
         supabase.auth.onAuthStateChange((event, session) => {
