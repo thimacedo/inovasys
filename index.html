@@ -7,7 +7,6 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖️</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
         :root {
@@ -32,9 +31,8 @@
         .btn { padding: 12px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; width: 100%; background: var(--color-accent); color: white; transition: 0.2s; }
         .btn-outline { background: transparent; border: 1px solid #e2e8f0; color: #334155; margin-bottom: 10px; }
         .btn-outline:hover { background: #f8fafc; }
-        .btn-link { background: none; color: var(--color-accent); font-size: 13px; margin-top: 15px; text-decoration: underline; padding: 0; width: auto; }
+        .btn-link { background: none; color: var(--color-accent); font-size: 13px; margin-top: 15px; text-decoration: underline; padding: 0; width: auto; cursor: pointer; }
         
-        /* Divisor OAuth */
         .oauth-divider { display: flex; align-items: center; text-align: center; margin: 20px 0; color: #94a3b8; font-size: 12px; }
         .oauth-divider::before, .oauth-divider::after { content: ''; flex: 1; border-bottom: 1px solid #e2e8f0; }
         .oauth-divider span { padding: 0 10px; }
@@ -79,28 +77,33 @@
 
                 <div class="oauth-divider"><span>ou acesse com</span></div>
                 
-                <button type="button" class="btn btn-outline" onclick="loginWithProvider('google')">Google</button>
-                <button type="button" class="btn btn-outline" onclick="loginWithProvider('apple')">Apple</button>
-                <button type="button" class="btn btn-outline" onclick="loginWithProvider('github')">GitHub</button>
+                <button type="button" class="btn btn-outline" id="btn-google">Google</button>
+                <button type="button" class="btn btn-outline" id="btn-apple">Apple</button>
+                <button type="button" class="btn btn-outline" id="btn-github">GitHub</button>
 
-                <button type="button" class="btn btn-link" onclick="switchAuthView('view-forgot')">Esqueci minha senha</button>
+                <button type="button" class="btn btn-link" id="btn-to-forgot">Esqueci minha senha</button>
             </div>
 
             <div id="view-forgot" class="auth-view">
                 <h3 style="margin-top:0; color: var(--color-primary);">Recuperar Acesso</h3>
                 <form id="forgot-form">
-                    <div class="form-group"><label class="form-label">E-mail Cadastrado</label><input type="email" id="forgot-email" class="form-control" required></div>
+                    <div class="form-group">
+                        <label class="form-label">E-mail Cadastrado</label>
+                        <input type="email" id="forgot-email" class="form-control" required>
+                    </div>
                     <button type="submit" id="btn-forgot" class="btn">Enviar Link</button>
                 </form>
-                <button type="button" class="btn btn-link" onclick="switchAuthView('view-login')">Voltar ao login</button>
+                <button type="button" class="btn btn-link" id="btn-to-login">Voltar ao login</button>
             </div>
 
             <div id="view-new-password" class="auth-view">
                 <h3 style="margin-top:0; color: var(--color-primary);">Nova Senha</h3>
                 <form id="new-password-form">
-                    <!-- Campo oculto de username para acessibilidade e autocomplete -->
                     <input type="text" id="username-hidden" style="display:none;" autocomplete="username" aria-hidden="true">
-                    <div class="form-group"><label class="form-label">Nova Senha</label><input type="password" id="new-pwd" class="form-control" autocomplete="new-password" minlength="6" required></div>
+                    <div class="form-group">
+                        <label class="form-label">Nova Senha</label>
+                        <input type="password" id="new-pwd" class="form-control" autocomplete="new-password" minlength="6" required>
+                    </div>
                     <button type="submit" id="btn-new-pwd" class="btn">Salvar Senha</button>
                 </form>
             </div>
@@ -110,9 +113,9 @@
     <div id="module-app" class="module">
         <nav class="sidebar">
             <div class="sidebar-brand"><img src="logo-inovasys.png" alt="inovaSys" style="max-width: 130px;"></div>
-            <div class="nav-item active" onclick="showView('dash', this)">Processos</div>
-            <div class="nav-item" onclick="showView('novo', this)">Novo Protocolo</div>
-            <div class="nav-item" onclick="logout()" style="margin-top:auto; color: #ef4444;">Sair</div>
+            <div class="nav-item active" id="nav-dash">Processos</div>
+            <div class="nav-item" id="nav-novo">Novo Protocolo</div>
+            <div class="nav-item" id="nav-logout" style="margin-top:auto; color: #ef4444;">Sair</div>
         </nav>
         <main class="main">
             <div id="view-dash" class="view active">
@@ -137,330 +140,213 @@
         </main>
     </div>
 
-    <script>
-        // Prevenir mensagens de erro do console que causam rastreamento irritante
-        (function() {
-            var originalWarn = console.warn;
-            var originalError = console.error;
-            
-            console.warn = function() {
-                // Suprimir avisos de message port de extensões
-                if (arguments[0] && String(arguments[0]).includes('message port')) {
-                    return;
-                }
-                return originalWarn.apply(console, arguments);
-            };
-            
-            console.error = function() {
-                // Suprimir erros de message port de extensões  
-                if (arguments[0] && String(arguments[0]).includes('message port')) {
-                    return;
-                }
-                return originalError.apply(console, arguments);
-            };
-        })();
-        
-        // Handler global para erros não capturados
-        window.addEventListener('error', (e) => {
-            if (e.message && e.message.includes('already been declared')) {
-                console.log('[DEBUG] Erro de duplicação detectado - ignorando:', e.message);
-                return true; // Prevenir propagação
-            }
-            console.error('[GLOBAL ERROR]', e.message);
-        });
-        
-        // Suprimir erros de extensões do Chrome
-        window.addEventListener('unhandledrejection', (event) => {
-            if (event.reason && event.reason.message && event.reason.message.includes('message port')) {
-                console.warn('[EXTENSÃO] Ignorando erro de message port de extensão:', event.reason.message);
-                event.preventDefault();
-            }
-        });
-        
-        var SUPABASE_URL = 'https://tsgbvhfdceyjbyfstjol.supabase.co';
-        var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzZ2J2aGZkY2V5amJ5ZnN0am9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0NjY3MDEsImV4cCI6MjA5MDA0MjcwMX0.ucDetUUuVKyycACaNtzArQ8YpgybrRpQqYljYYiTgyI';
-        
-        var supabase = null;
-        
-        // Inicializar Supabase e verificar conexão
-        function initSupabase() {
-            if (!window.supabase) {
-                console.error('[ERRO] Biblioteca Supabase não foi carregada do CDN');
-                showError('Erro ao carregar biblioteca de autenticação. Tente recarregar a página.');
-                return false;
-            }
-            
-            try {
-                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                console.log('[OK] Cliente Supabase inicializado');
-                return true;
-            } catch (err) {
-                console.error('[ERRO] Falha ao criar cliente Supabase:', err);
-                showError('Erro ao inicializar conexão: ' + err.message);
-                return false;
-            }
-        }
-        
-        // Tentar inicializar imediatamente
-        if (!initSupabase()) {
-            document.addEventListener('load', initSupabase);
-        }
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/+esm';
 
-        function showError(msg) {
+        // 1. Configuração do Cliente Supabase
+        const SUPABASE_URL = 'https://tsgbvhfdceyjbyfstjol.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzZ2J2aGZkY2V5amJ5ZnN0am9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0NjY3MDEsImV4cCI6MjA5MDA0MjcwMX0.ucDetUUuVKyycACaNtzArQ8YpgybrRpQqYljYYiTgyI';
+        const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // 2. Controladores de Interface
+        const displayError = (msg) => {
             const box = document.getElementById('error-box');
-            box.innerText = msg;
-            box.style.display = msg ? 'block' : 'none';
-        }
-
-        function switchAuthView(viewId) {
-            document.querySelectorAll('.auth-view').forEach(v => v.classList.remove('active'));
-            document.getElementById(viewId).classList.add('active');
-            showError('');
-        }
-
-        function showView(v, element) { 
-            document.querySelectorAll('.view').forEach(x => x.classList.remove('active')); 
-            document.getElementById('view-'+v).classList.add('active'); 
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            if(element) element.classList.add('active');
-        }
-
-        // Login Email/Senha
-        document.getElementById('login-form').onsubmit = async (e) => {
-            e.preventDefault();
-            showError('');
-            
-            if (!supabase) {
-                showError('Sistema não está pronto. Tente recarregar a página.');
-                console.error('[ERRO] Supabase não foi inicializado');
-                return;
-            }
-            
-            const btn = document.getElementById('btn-login');
-            const email = e.target.email.value;
-            const password = e.target.password.value;
-            
-            btn.innerText = "Conectando...";
-            btn.disabled = true;
-            console.log(`[LOGIN] Tentando autenticar: ${email}`);
-
-            try {
-                const { data, error } = await supabase.auth.signInWithPassword({
-                    email: email,
-                    password: password
-                });
-
-                if (error) {
-                    console.error('[ERRO LOGIN]', error);
-                    let mensagem = error.message;
-                    
-                    // Mensagens mais amigáveis
-                    if (error.message.includes('Invalid login credentials')) 
-                        mensagem = 'E-mail ou senha inválidos';
-                    else if (error.message.includes('User not found'))
-                        mensagem = 'Usuário não encontrado';
-                    else if (error.message.includes('network'))
-                        mensagem = 'Erro de conexão - verifique sua internet';
-                    else if (error.message.includes('CORS'))
-                        mensagem = 'Erro de CORS - contate o administrador';
-                    
-                    showError('❌ ' + mensagem);
-                    btn.innerText = "Autenticar";
-                    btn.disabled = false;
-                } else {
-                    console.log('[OK] Login bem-sucedido:', data.user?.email);
-                    await loadData();
-                }
-            } catch (err) {
-                console.error('[ERRO CONEXÃO]', err);
-                showError('❌ Erro de conexão: ' + err.message);
-                btn.innerText = "Autenticar";
-                btn.disabled = false;
+            if (box) {
+                box.innerText = msg;
+                box.style.display = msg ? 'block' : 'none';
             }
         };
 
-        // Login OAuth (Google, Apple, GitHub)
-        async function loginWithProvider(provider) {
-            showError('');
-            try {
-                const { error } = await supabase.auth.signInWithOAuth({
-                    provider: provider,
-                    options: {
-                        redirectTo: window.location.origin
-                    }
-                });
-                if (error) showError("Erro ao conectar com " + provider + ": " + error.message);
-            } catch (err) {
-                showError("Erro na conexão com o provedor.");
-            }
-        }
+        const showAuthView = (viewId) => {
+            displayError('');
+            document.querySelectorAll('.auth-view').forEach(v => v.classList.remove('active'));
+            const view = document.getElementById(viewId);
+            if (view) view.classList.add('active');
+        };
 
-        // Esqueci Senha
-        document.getElementById('forgot-form').onsubmit = async (e) => {
-            e.preventDefault();
-            if (!supabase) {
-                showError('Sistema não está pronto');
-                return;
+        const showAppView = (viewId) => {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            const view = document.getElementById('view-' + viewId);
+            const nav = document.getElementById('nav-' + viewId);
+            
+            if (view) view.classList.add('active');
+            if (nav) nav.classList.add('active');
+        };
+
+        const toggleMainModules = (isAuthenticated) => {
+            const authModule = document.getElementById('module-auth');
+            const appModule = document.getElementById('module-app');
+            
+            if (isAuthenticated) {
+                authModule.classList.remove('active');
+                appModule.classList.add('active');
+                loadData();
+            } else {
+                appModule.classList.remove('active');
+                authModule.classList.add('active');
+                showAuthView('view-login');
             }
-            console.log('[FORGOT] Enviando link de recuperação');
-            const { error } = await supabase.auth.resetPasswordForEmail(e.target['forgot-email'].value, {
+        };
+
+        // 3. Carregamento de Dados da Tabela
+        const loadData = async () => {
+            try {
+                const lista = document.getElementById('lista-processos');
+                lista.innerHTML = '<tr><td colspan="3" style="text-align:center;">Carregando dados...</td></tr>';
+
+                const { data, error } = await supabase.from('processos').select('*');
+                
+                if (error) {
+                    lista.innerHTML = `<tr><td colspan="3" style="text-align:center; color:red;">Erro ao acessar processos: ${error.message}</td></tr>`;
+                    return;
+                }
+                
+                if (data && data.length > 0) {
+                    lista.innerHTML = data.map(p => `
+                        <tr>
+                            <td><strong>${p.numero_processo}</strong></td>
+                            <td>${p.requerido_nome}</td>
+                            <td><span style="background:#e0f2fe; color:#0369a1; padding:4px 8px; border-radius:4px; font-size:12px;">${p.status || 'Ativo'}</span></td>
+                        </tr>
+                    `).join('');
+                } else {
+                    lista.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#64748b;">Nenhum registro encontrado no sistema.</td></tr>';
+                }
+            } catch (err) {
+                displayError('Falha estrutural ao carregar o painel.');
+            }
+        };
+
+        // 4. Mapeamento de Eventos (Navegação Autenticação)
+        document.getElementById('btn-to-forgot')?.addEventListener('click', () => showAuthView('view-forgot'));
+        document.getElementById('btn-to-login')?.addEventListener('click', () => showAuthView('view-login'));
+        
+        // 5. Mapeamento de Eventos (Navegação Principal)
+        document.getElementById('nav-dash')?.addEventListener('click', () => showAppView('dash'));
+        document.getElementById('nav-novo')?.addEventListener('click', () => showAppView('novo'));
+        document.getElementById('nav-logout')?.addEventListener('click', async () => {
+            await supabase.auth.signOut();
+            window.location.reload();
+        });
+
+        // 6. Submissão do Formulário de Login
+        document.getElementById('login-form')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            displayError('');
+            const btn = document.getElementById('btn-login');
+            btn.innerText = "Autenticando...";
+            btn.disabled = true;
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+            if (error) {
+                let msg = error.message;
+                if (msg.includes('Invalid login credentials')) msg = 'E-mail ou senha incorretos.';
+                else if (msg.includes('network') || msg.includes('fetch')) msg = 'Erro de comunicação com o servidor.';
+                displayError('❌ ' + msg);
+                btn.innerText = "Autenticar";
+                btn.disabled = false;
+            } else {
+                btn.innerText = "Autenticar";
+                btn.disabled = false;
+                toggleMainModules(true);
+            }
+        });
+
+        // 7. Funções OAuth
+        const handleOAuth = async (provider) => {
+            displayError('');
+            const { error } = await supabase.auth.signInWithOAuth({
+                provider,
+                options: { redirectTo: window.location.origin }
+            });
+            if (error) displayError('❌ Falha ao processar provedor externo: ' + error.message);
+        };
+        document.getElementById('btn-google')?.addEventListener('click', () => handleOAuth('google'));
+        document.getElementById('btn-apple')?.addEventListener('click', () => handleOAuth('apple'));
+        document.getElementById('btn-github')?.addEventListener('click', () => handleOAuth('github'));
+
+        // 8. Solicitar Redefinição de Senha
+        document.getElementById('forgot-form')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('forgot-email').value;
+            const { error } = await supabase.auth.resetPasswordForEmail(email, {
                 redirectTo: window.location.origin
             });
             if (error) {
-                console.error('[ERRO FORGOT]', error);
-                showError('Erro: ' + error.message);
+                displayError('❌ ' + error.message);
             } else {
-                alert("Link enviado ao e-mail!");
-                switchAuthView('view-login');
+                alert('O link de recuperação foi enviado ao e-mail informado.');
+                showAuthView('view-login');
             }
-        };
-
-        // Nova Senha
-        document.getElementById('new-password-form').onsubmit = async (e) => {
-            e.preventDefault();
-            if (!supabase) {
-                showError('Sistema não está pronto');
-                return;
-            }
-            console.log('[NEW PWD] Atualizando senha');
-            const { error } = await supabase.auth.updateUser({ password: e.target['new-pwd'].value });
-            if (error) {
-                console.error('[ERRO NEW PWD]', error);
-                showError('Erro: ' + error.message);
-            } else { 
-                alert("Senha atualizada com sucesso!"); 
-                location.reload(); 
-            }
-        };
-
-        if (supabase) {
-            supabase.auth.onAuthStateChange((event) => {
-                console.log('[AUTH EVENT]', event);
-                if (event === "PASSWORD_RECOVERY") switchAuthView('view-new-password');
-            });
-        }
-
-        // Carregar Dados
-        async function loadData() {
-            try {
-                if (!supabase) {
-                    console.error('[ERRO] Supabase não inicializado');
-                    showError('Erro: Sistema não está pronto');
-                    return;
-                }
-                
-                console.log('[LOAD] Verificando sessão...');
-                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-                
-                if (sessionError) {
-                    console.error('[ERRO SESSÃO]', sessionError);
-                    showError('Erro ao verificar sessão: ' + sessionError.message);
-                    return;
-                }
-                
-                if (!session) {
-                    console.log('[INFO] Sem sessão ativa');
-                    return;
-                }
-                
-                console.log('[OK] Sessão ativa para:', session.user.email);
-                
-                document.getElementById('module-auth').classList.remove('active');
-                document.getElementById('module-app').classList.add('active');
-                
-                console.log('[LOAD] Buscando processos...');
-                const { data, error } = await supabase.from('processos').select('*');
-                const lista = document.getElementById('lista-processos');
-                
-                if (error) {
-                    console.error('[ERRO TABELA]', error);
-                    let msg = error.message;
-                    if (error.code === '42P01') 
-                        msg = 'Tabela "processos" não existe no banco de dados';
-                    else if (error.message.includes('permission denied'))
-                        msg = 'Sem permissão para acessar a tabela "processos"';
-                    
-                    lista.innerHTML = `<tr><td colspan="3" style="text-align:center; color:red;">Erro: ${msg}</td></tr>`;
-                    console.error('[ERRO COMPLETO]', JSON.stringify(error));
-                } else if (data && data.length > 0) {
-                    console.log('[OK] Carregados', data.length, 'processos');
-                    lista.innerHTML = data.map(p => `<tr><td><strong>${p.numero_processo}</strong></td><td>${p.requerido_nome}</td><td><span style="background:#e0f2fe; color:#0369a1; padding:4px 8px; border-radius:4px; font-size:12px;">${p.status || 'Ativo'}</span></td></tr>`).join('');
-                } else {
-                    lista.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#64748b;">Nenhum registro encontrado.</td></tr>';
-                }
-            } catch (err) {
-                console.error('[ERRO LOAD]', err);
-                showError('Erro ao carregar dados: ' + err.message);
-            }
-        }
-
-        async function logout() { 
-            if (!supabase) {
-                location.reload();
-                return;
-            }
-            try {
-                await supabase.auth.signOut(); 
-            } catch (err) {
-                console.error('[ERRO LOGOUT]', err);
-            }
-            location.reload(); 
-        }
-
-        // Novo Processo
-        document.getElementById('processo-form').onsubmit = async (e) => {
-            e.preventDefault();
-            if (!supabase) {
-                alert('Erro: Sistema não está pronto');
-                return;
-            }
-            
-            try {
-                const { data: { user }, error: userError } = await supabase.auth.getUser();
-                if (userError || !user) {
-                    console.error('[ERRO] Falha ao obter usuário:', userError);
-                    alert('Erro: Falha ao identificar usuário');
-                    return;
-                }
-                
-                const payload = {
-                    numero_processo: `${new Date().getFullYear()}.AR.${Math.floor(Math.random()*9000 + 1000)}`,
-                    requerente_nome: document.getElementById('req_nome').value,
-                    requerido_nome: document.getElementById('def_nome').value,
-                    user_id: user.id,
-                    status: 'Ativo'
-                };
-                
-                console.log('[NOVO PROCESSO] Inserindo:', payload);
-                const { error } = await supabase.from('processos').insert([payload]);
-                
-                if (error) {
-                    console.error('[ERRO INSERT]', error);
-                    alert("Erro ao cadastrar: " + error.message); 
-                } else { 
-                    alert('Cadastrado com sucesso!'); 
-                    document.getElementById('processo-form').reset(); 
-                    showView('dash', document.querySelector('.nav-item'));
-                    await loadData(); 
-                }
-            } catch (err) {
-                console.error('[ERRO PROCESSO]', err);
-                alert('Erro: ' + err.message);
-            }
-        };
-
-        // Inicializar na carga do documento
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log('[INIT] Documento carregado');
-            if (!supabase) initSupabase();
-            loadData();
         });
-        
-        // Se o documento já está pronto
-        if (document.readyState === 'interactive' || document.readyState === 'complete') {
-            console.log('[INIT] Documento já está pronto');
-            loadData();
-        }
+
+        // 9. Processar Nova Senha
+        document.getElementById('new-password-form')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const password = document.getElementById('new-pwd').value;
+            const { error } = await supabase.auth.updateUser({ password });
+            if (error) {
+                displayError('❌ ' + error.message);
+            } else {
+                alert('Sua senha foi atualizada com sucesso!');
+                window.location.reload();
+            }
+        });
+
+        // 10. Cadastrar Novo Processo
+        document.getElementById('processo-form')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-protocolar');
+            btn.innerText = "Processando...";
+            btn.disabled = true;
+
+            const { data: { user } } = await supabase.auth.getUser();
+            
+            const payload = {
+                numero_processo: `${new Date().getFullYear()}.AR.${Math.floor(Math.random()*9000 + 1000)}`,
+                requerente_nome: document.getElementById('req_nome').value,
+                requerido_nome: document.getElementById('def_nome').value,
+                user_id: user.id,
+                status: 'Ativo'
+            };
+
+            const { error } = await supabase.from('processos').insert([payload]);
+            
+            btn.innerText = "Cadastrar Processo";
+            btn.disabled = false;
+
+            if (error) {
+                alert('Erro ao protocolar: ' + error.message);
+            } else {
+                alert('Processo protocolado com sucesso.');
+                document.getElementById('processo-form').reset();
+                showAppView('dash');
+                loadData();
+            }
+        });
+
+        // 11. Inicialização de Estado da Sessão
+        supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'PASSWORD_RECOVERY') {
+                showAuthView('view-new-password');
+            } else if (event === 'SIGNED_IN') {
+                toggleMainModules(true);
+            } else if (event === 'SIGNED_OUT') {
+                toggleMainModules(false);
+            }
+        });
+
+        // Checagem primária para inicializar a tela correta na abertura da página
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            toggleMainModules(!!session);
+        });
+
     </script>
 </body>
 </html>
