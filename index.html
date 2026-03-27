@@ -68,7 +68,6 @@
         .stat-value.success { color: #10b981; }
         .stat-value.warning { color: #f59e0b; }
 
-        /* Componentes Modais e Toast */
         #modal-preview, #modal-confirm { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; width: 90%; max-width: 800px; height: 85vh; border-radius: 12px; display: flex; flex-direction: column; }
         .modal-content-small { background: white; width: 90%; max-width: 400px; border-radius: 12px; padding: 25px; text-align: center; }
@@ -128,7 +127,7 @@
                 <div class="card">
                     <h4>Últimos Processos Atualizados</h4>
                     <table>
-                        <thead><tr><th>Nº Processo</th><th>Requerente</th><th>Requerido</th><th>Status</th></tr></thead>
+                        <thead><tr><th>Nº Processo</th><th>Requerente</th><th>Requerido</th><th>Status</th><th>Ações</th></tr></thead>
                         <tbody id="lista-processos"></tbody>
                     </table>
                 </div>
@@ -217,7 +216,7 @@
 
                 <div id="tab-docs" class="tab-content">
                     <div class="card">
-                        <p style="font-size:13px; color:#64748b; margin-top:0;">Dica: Clique em <strong>Visualizar</strong>. Dentro do documento, os dados sublinhados podem ser editados diretamente no texto e salvos no banco de dados.</p>
+                        <p style="font-size:13px; color:#64748b; margin-top:0;">Dica: Ao clicar em <strong>Visualizar</strong>, os dados do processo ficarão sublinhados e tracejados. Clique sobre eles para editar o texto livremente. Ao concluir, clique em "Salvar Alterações no Banco" para atualizar definitivamente o cadastro.</p>
                         <h4>Fase 1: Início do Procedimento</h4>
                         <div class="doc-list">
                             <div class="doc-item"><span>Capa do Processo</span><button class="btn btn-primary" onclick="visualizarDoc(1)">Visualizar</button></div>
@@ -452,7 +451,7 @@
         const carregarProcessos = async () => {
             const { data } = await supabase.from('processos').select('*').order('created_at', {ascending: false});
             window.db_procs = data || [];
-            document.getElementById('lista-processos').innerHTML = window.db_procs.map(p => `<tr onclick="openProc('${p.id}')" style="cursor:pointer"><td><span class="link-processo">${p.numero_processo}</span></td><td>${p.requerente_nome}</td><td>${p.requerido_nome}</td><td><span class="badge badge-status">${p.status}</span></td></tr>`).join('');
+            document.getElementById('lista-processos').innerHTML = window.db_procs.map(p => `<tr><td onclick="openProc('${p.id}')" style="cursor:pointer"><span class="link-processo">${p.numero_processo}</span></td><td onclick="openProc('${p.id}')" style="cursor:pointer">${p.requerente_nome}</td><td onclick="openProc('${p.id}')" style="cursor:pointer">${p.requerido_nome}</td><td onclick="openProc('${p.id}')" style="cursor:pointer"><span class="badge badge-status">${p.status}</span></td><td><button class="btn btn-danger btn-sm" onclick="excluirProcesso('${p.id}')">Excluir</button></td></tr>`).join('');
         };
 
         const carregarDashboardMetrics = async () => {
@@ -535,11 +534,12 @@
             let config = '{}'; try { config = localStorage.getItem('camara_config') || '{}'; } catch(e){}
             const cam = JSON.parse(config); const p = activeProcess; let arb = db_arbitros.find(a => a.id == p.arbitro_id);
             
-            document.getElementById('p-logo').src = cam.logo || ''; if(!cam.logo) document.getElementById('p-logo').style.display = 'none';
+            document.getElementById('p-logo').src = cam.logo || '';
+            document.getElementById('p-logo').style.display = cam.logo ? 'inline-block' : 'none';
             document.getElementById('p-cam-nome').innerText = cam.nome || 'CÂMARA ARBITRAL'; document.getElementById('p-cam-cnpj').innerText = cam.cnpj ? 'CNPJ: ' + cam.cnpj : '';
             
             let html = ""; let hoje = new Date().toLocaleDateString('pt-BR');
-            document.getElementById('btn-salvar-edicoes').style.display = 'block'; // Mostra o botão de inline edit
+            document.getElementById('btn-salvar-edicoes').style.display = 'block';
 
             if(num === 1) html = `<div style="text-align:center; border:2px solid #000; padding:50px;"><h2>PROCEDIMENTO N° ${p.numero_processo}</h2><h1 style="margin-top:50px;">CAPA DE PROCESSO</h1><p>Demandante: ${mkEdit(p.requerente_nome, 'requerente_nome')}</p><p>Demandado: ${mkEdit(p.requerido_nome, 'requerido_nome')}</p></div>`;
             else if(num === 2) html = `<h3>TERMO DE APRESENTAÇÃO N° ${p.numero_processo}</h3><p>Eu, ${mkEdit(p.requerente_nome, 'requerente_nome')}, documento ${mkEdit(p.requerente_documento, 'requerente_documento')}, venho formalizar pedido em face de ${mkEdit(p.requerido_nome, 'requerido_nome')}, documento ${mkEdit(p.requerido_documento, 'requerido_documento')}.</p><h4>FATOS:</h4><p style="white-space:pre-wrap;">${mkEdit(p.resumo_fatos, 'resumo_fatos')}</p><p><strong>VALOR DA CAUSA:</strong> R$ ${Number(p.valor_causa).toLocaleString('pt-BR')}</p>`;
@@ -557,7 +557,7 @@
                 html = `<h3>TERMO DE COMPROMISSO ARBITRAL</h3><p>Pelo presente instrumento, ${mkEdit(p.requerente_nome, 'requerente_nome')} e ${mkEdit(p.requerido_nome, 'requerido_nome')} elegem a ${cam.nome || 'Câmara'} e o árbitro <strong>${arb.nome}</strong> para dirimir o litígio do processo ${p.numero_processo}.</p><div style="margin-top:60px; display:flex; justify-content:space-between; text-align:center;"><div>___________________________<br>Requerente</div><div>___________________________<br>Requerido</div></div>`;
             }
             else if(num === 7) {
-                document.getElementById('btn-salvar-edicoes').style.display = 'none'; // Ata vem de tabela separada
+                document.getElementById('btn-salvar-edicoes').style.display = 'none';
                 html = `<h3>ATA DE AUDIÊNCIA N° ${p.numero_processo}</h3><p>Aos ${hoje}, realizou-se audiência.</p><h4>RELATO:</h4><p style="white-space: pre-wrap;">${activeAudiencia?.texto_ata || 'Nenhum texto registrado na aba Instrução.'}</p><div style="margin-top:60px; text-align:center;">_________________________________<br>Árbitro / Partes</div>`;
             }
             else if(num === 8) {
@@ -567,8 +567,9 @@
             else if(num === 9) html = `<h3>TERMO DE ENTREGA DE DOCUMENTOS</h3><p>Declaramos para os devidos fins que as partes receberam cópia da Sentença Arbitral proferida no processo ${p.numero_processo}.</p><div style="margin-top:60px; display:flex; justify-content:space-between; text-align:center;"><div>___________________________<br>Requerente</div><div>___________________________<br>Requerido</div></div>`;
             else if(num === 10 && extraData) {
                 document.getElementById('btn-salvar-edicoes').style.display = 'none';
-                let dataPag = new Date(extraData.dataPagamento + 'T00:00:00').toLocaleDateString('pt-BR');
-                html = `<h3>RECIBO DE ACORDO - PARCELA ${extraData.num}</h3><p>Recebi de ${p.requerido_nome} a importância de R$ ${Number(extraData.valor).toLocaleString('pt-BR')}, referente ao pagamento da parcela ${extraData.num} do processo ${p.numero_processo}.</p><p>Data: ${dataPag}</p><div style="margin-top:60px; text-align:center;">_________________________________<br>${p.requerente_nome} (Recebedor)</div>`;
+                let strData = String(extraData.dataPagamento);
+                let dataPag = (strData !== 'null' && strData !== 'undefined' && strData !== '') ? new Date(strData + 'T00:00:00').toLocaleDateString('pt-BR') : '_________________';
+                html = `<h3>RECIBO DE ACORDO - PARCELA ${extraData.num}</h3><p>Recebi de ${mkEdit(p.requerido_nome, 'requerido_nome')} a importância de R$ ${Number(extraData.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}, referente ao pagamento da parcela ${extraData.num} do processo ${p.numero_processo}.</p><p>Data do Pagamento: ${dataPag}</p><div style="margin-top:60px; text-align:center;">_________________________________<br>${mkEdit(p.requerente_nome, 'requerente_nome')} (Recebedor)</div>`;
             }
             else if(num === 11) html = `<h3>RECIBO DE HONORÁRIOS DA CÂMARA</h3><p>A ${cam.nome || 'Câmara'} recebeu de ${mkEdit(p.requerente_nome, 'requerente_nome')} o valor de R$ ${Number(p.valor_causa * 0.1).toLocaleString('pt-BR')} referente aos honorários.</p>`;
             
@@ -594,7 +595,7 @@
             };
 
             await updateStatus(novoStatus);
-            showToast(`Status atualizado para "${novoStatus}".`, async () => { await updateStatus(oldStatus); showToast("Status restaurado para o estado anterior."); });
+            showToast(`Status atualizado para "${novoStatus}".`, async () => { await updateStatus(oldStatus); showToast("Status restaurado."); });
         };
 
         document.getElementById('acordo-form').onsubmit = (e) => {
@@ -615,10 +616,17 @@
             });
         };
 
+        window.excluirProcesso = (id) => {
+            showConfirm('Atenção: A exclusão apagará o processo, acordos e anexos permanentemente. Confirma?', async () => {
+                await supabase.from('processos').delete().eq('id', id);
+                showToast('Processo excluído.'); carregarProcessos(); carregarDashboardMetrics();
+            });
+        };
+
         window.excluirArbitro = (id) => {
             showConfirm('Deseja realmente excluir este árbitro do sistema?', async () => {
                 await supabase.from('arbitros').delete().eq('id', id);
-                showToast('Árbitro excluído com sucesso.'); carregarArbitros();
+                showToast('Árbitro excluído.'); carregarArbitros();
             });
         };
 
@@ -659,6 +667,8 @@
         window.salvarTextosAudiencia = async () => { const payload = { processo_id: activeProcess.id, data_hora_audiencia: new Date().toISOString(), texto_ata: document.getElementById('texto_ata').value, texto_sentenca: document.getElementById('texto_sentenca').value }; let error; if (activeAudiencia) { error = (await supabase.from('audiencias').update({texto_ata: payload.texto_ata, texto_sentenca: payload.texto_sentenca}).eq('id', activeAudiencia.id)).error; } else { error = (await supabase.from('audiencias').insert([payload])).error; } if (error) alert(error.message); else { showToast("Textos jurídicos salvos!"); openProc(activeProcess.id); } };
         window.uploadAnexo = async () => { const fileInput = document.getElementById('arquivo_anexo'); const file = fileInput.files[0]; if(!file) return alert("Selecione PDF."); const path = `processo_${activeProcess.id}/${Date.now()}_${file.name}`; const { error: uploadError } = await supabase.storage.from('documentos_assinados').upload(path, file); if(uploadError) return alert(uploadError.message); await supabase.from('processos_anexos').insert([{ processo_id: activeProcess.id, nome_arquivo: file.name, caminho_arquivo: path }]); showToast('Anexo adicionado!'); fileInput.value = ''; loadAnexos(); };
         window.downloadAnexo = async (path) => { const { data, error } = await supabase.storage.from('documentos_assinados').createSignedUrl(path, 60); if(error) alert(error.message); else window.open(data.signedUrl, '_blank'); };
+
+        window.visualizarRecibo = (id, num, valor, dataPagamento) => visualizarDoc(10, { num, valor, dataPagamento });
 
         document.getElementById('camara-form').onsubmit = (e) => { e.preventDefault(); localStorage.setItem('camara_config', JSON.stringify({ nome: document.getElementById('cam_nome').value, cnpj: document.getElementById('cam_cnpj').value, endereco: document.getElementById('cam_endereco').value, fone: document.getElementById('cam_fone').value, logo: localStorage.getItem('temp_logo') || '' })); showToast("Dados da Câmara Salvos!"); };
         document.getElementById('cam_logo').onchange = (e) => { const r = new FileReader(); r.onload = ev => localStorage.setItem('temp_logo', ev.target.result); if(e.target.files[0]) r.readAsDataURL(e.target.files[0]); };
