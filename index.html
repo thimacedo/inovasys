@@ -21,6 +21,7 @@
             --danger: #ef4444;
             --success: #10b981;
             --warning: #f59e0b;
+            --god-color: #8b5cf6;
         }
 
         body { font-family: 'Inter', sans-serif; background-color: var(--color-bg); color: #334155; margin: 0; display: flex; min-height: 100vh; flex-direction: row; }
@@ -33,9 +34,11 @@
         .sidebar { width: var(--sidebar-width); background: white; border-right: 1px solid #e2e8f0; position: fixed; height: 100vh; display: flex; flex-direction: column; z-index: 10; transition: all 0.3s; }
         .sidebar-brand { padding: 25px; text-align: center; border-bottom: 1px solid #e2e8f0; }
         .sidebar-brand img { max-width: 120px; max-height: 60px; object-fit: contain; margin-bottom: 10px; display: none; }
-        .nav-item { padding: 15px 25px; cursor: pointer; font-size: 14px; font-weight: 500; color: #64748b; border-left: 4px solid transparent; transition: 0.2s; }
+        .nav-item { padding: 15px 25px; cursor: pointer; font-size: 14px; font-weight: 500; color: #64748b; border-left: 4px solid transparent; transition: 0.2s; display: none; } /* Oculto por padrão */
         .nav-item:hover { background: #f8fafc; color: var(--color-accent); }
         .nav-item.active { background: #f1f5f9; color: var(--color-accent); border-left-color: var(--color-accent); }
+        .nav-item.god-menu { color: var(--god-color); }
+        .nav-item.god-menu.active { color: var(--god-color); border-left-color: var(--god-color); }
         
         /* Main Layout */
         .main { flex: 1; margin-left: var(--sidebar-width); padding: 40px; position: relative; max-width: 1400px; }
@@ -66,17 +69,20 @@
         .form-group { margin-bottom: 15px; }
         .form-label { font-size: 12px; font-weight: 600; color: var(--color-primary); }
         
-        .btn { padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-size: 13px; transition: 0.2s; display: inline-block; color: white; }
+        .btn { padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-size: 13px; transition: 0.2s; display: inline-block; color: white; text-align: center; }
         .btn-primary { background: var(--color-accent); }
         .btn-success { background: var(--success); }
         .btn-danger { background: var(--danger); }
         .btn-secondary { background: #64748b; }
+        .btn-god { background: var(--god-color); }
         .btn-sm { padding: 4px 10px; font-size: 11px; }
 
         /* Badges e Tabs */
         .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; display: inline-block; }
         .badge-status { background: #e0f2fe; color: #0369a1; }
         .badge-admin { background: #fce7f3; color: #be185d; }
+        .badge-god { background: #ede9fe; color: #6d28d9; }
+        .badge-vendas { background: #fef3c7; color: #b45309; }
         
         .tab-menu { display: flex; gap: 15px; border-bottom: 1px solid #eee; margin-bottom: 20px; padding-bottom: 10px; flex-wrap: wrap; }
         .tab-link { cursor: pointer; font-weight: 600; font-size: 14px; color: #64748b; padding-bottom: 10px; transition: 0.2s; }
@@ -159,17 +165,96 @@
                 <img src="logo-inovasys.png" class="sys-logo" style="max-width: 120px; max-height: 60px; object-fit: contain; margin-bottom: 10px;">
                 <h3 style="margin: 0; color: var(--color-primary);" class="sys-name">inovaSys</h3>
             </div>
-            <div class="nav-item active" id="nav-dash" onclick="showView('dash')"><span>Painel e Processos</span></div>
+            <!-- Menus Câmaras (Padrão) -->
+            <div class="nav-item" id="nav-dash" onclick="showView('dash')"><span>Painel e Processos</span></div>
             <div class="nav-item" id="nav-novo" onclick="showView('novo')"><span>Novo Protocolo</span></div>
             <div class="nav-item" id="nav-arbitros" onclick="showView('arbitros')"><span>Corpo Arbitral</span></div>
-            <div class="nav-item" id="nav-equipe" onclick="showView('equipe')" style="display:none;"><span>Gestão de Equipe</span></div>
-            <div class="nav-item" id="nav-camara" onclick="showView('camara')" style="display:none;"><span>Configuração</span></div>
-            <div class="nav-item" id="nav-logout" onclick="deslogarSistema()" style="margin-top:auto; color: var(--danger);"><span>Sair</span></div>
+            <div class="nav-item" id="nav-equipe" onclick="showView('equipe')"><span>Gestão da Câmara</span></div>
+            <div class="nav-item" id="nav-camara" onclick="showView('camara')"><span>Configuração</span></div>
+            
+            <!-- Menus Ecossistema (Vendas / Gestores / GOD) -->
+            <div class="nav-item god-menu" id="nav-vendas" onclick="showView('vendas')"><span>Ecossistema Corporativo</span></div>
+            <div class="nav-item god-menu" id="nav-usuarios" onclick="showView('usuarios')"><span>Gestão de Contas e Usuários</span></div>
+
+            <div class="nav-item" id="nav-logout" onclick="deslogarSistema()" style="margin-top:auto; color: var(--danger); display: block;"><span>Sair</span></div>
         </nav>
 
         <main class="main">
-            <!-- VIEW: DASHBOARD -->
-            <div id="view-dash" class="view active">
+            <!-- VIEW: ECOSSISTEMA DE VENDAS E GLOBAL (Vendas / GOD) -->
+            <div id="view-vendas" class="view">
+                <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+                    <h2 style="margin:0; color: var(--god-color);">Ecossistema de Gestão de Contas</h2>
+                    <div style="display:flex; gap:10px; flex-wrap: wrap;">
+                        <button class="btn btn-god" onclick="window.showToast('Funcionalidade em desenvolvimento')">Nova Assinatura</button>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="stat-card" style="border-left: 4px solid var(--god-color);"><span class="stat-title">Câmaras Ativas</span><div class="stat-value">12</div></div>
+                    <div class="stat-card"><span class="stat-title">MRR (Receita Recorrente)</span><div class="stat-value" style="color:var(--success);">R$ 14.500,00</div></div>
+                    <div class="stat-card"><span class="stat-title">Novos Contratos (Mês)</span><div class="stat-value">3</div></div>
+                    <div class="stat-card"><span class="stat-title">Inadimplência</span><div class="stat-value warning">R$ 0,00</div></div>
+                </div>
+
+                <div class="card">
+                    <h4>Câmaras Contratantes (Ecossistema)</h4>
+                    <div style="overflow-x: auto;">
+                        <table style="min-width: 600px;">
+                            <thead><tr><th>ID</th><th>Câmara / Instituição</th><th>Plano</th><th>Status Fatura</th><th>Ações</th></tr></thead>
+                            <tbody id="lista-contas-globais">
+                                <!-- Mock de Dados do Ecossistema -->
+                                <tr><td>#1001</td><td>Câmara de Arbitragem Matriz</td><td>Enterprise</td><td><span class="badge badge-status">Em dia</span></td><td><button class="btn btn-secondary btn-sm">Acessar Conta</button></td></tr>
+                                <tr><td>#1002</td><td>Câmara de Mediação Sul</td><td>Pro</td><td><span class="badge badge-status">Em dia</span></td><td><button class="btn btn-secondary btn-sm">Acessar Conta</button></td></tr>
+                                <tr><td>#1003</td><td>Tribunal Privado Norte</td><td>Starter</td><td><span class="badge badge-vendas">Pendente</span></td><td><button class="btn btn-secondary btn-sm">Acessar Conta</button></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: GESTÃO GERAL DE USUÁRIOS E PERFIS (Gestor / Vendas / GOD) -->
+            <div id="view-usuarios" class="view">
+                <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                    <h2 style="margin:0; color: var(--god-color);">Gestão de Usuários</h2>
+                </div>
+
+                <div class="card">
+                    <h4>Cadastrar / Atualizar Usuário do Sistema</h4>
+                    <form id="global-user-form">
+                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:15px;">
+                            <div class="form-group"><label class="form-label">Nome</label><input type="text" id="g_user_nome" class="form-control" required></div>
+                            <div class="form-group"><label class="form-label">E-mail (Login)</label><input type="email" id="g_user_email" class="form-control" required></div>
+                            <div class="form-group"><label class="form-label">Senha Provisória</label><input type="text" id="g_user_pass" class="form-control" required></div>
+                            <div class="form-group">
+                                <label class="form-label">Nível de Acesso (Perfil)</label>
+                                <select id="g_user_perfil" class="form-control" required>
+                                    <option value="arbitro">Árbitro (Acesso Restrito a Processos)</option>
+                                    <option value="admin">Administrador da Câmara</option>
+                                    <option value="gestor">Gestor de Usuários</option>
+                                    <option value="vendas">Equipe de Vendas / Financeiro</option>
+                                    <option value="god">GOD (Acesso Total)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-god" style="margin-top:10px;">Processar Cadastro</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h4>Lista de Usuários no Ecossistema</h4>
+                    <div style="overflow-x: auto;">
+                        <table style="min-width: 600px;">
+                            <thead><tr><th>Nome</th><th>E-mail</th><th>Perfil</th><th>Status</th><th>Ações</th></tr></thead>
+                            <tbody id="lista-usuarios-global">
+                                <!-- Dados populados via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: DASHBOARD DA CÂMARA -->
+            <div id="view-dash" class="view">
                 <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
                     <h2 style="margin:0;">Painel de Inteligência</h2>
                     <div style="display:flex; gap:10px; flex-wrap: wrap;">
@@ -442,9 +527,9 @@
                 </div>
             </div>
 
-            <!-- VIEW: EQUIPE -->
+            <!-- VIEW: EQUIPE DA CÂMARA (Admin) -->
             <div id="view-equipe" class="view">
-                <h2>Gestão de Equipe</h2>
+                <h2>Gestão da Câmara</h2>
                 <div class="card">
                     <div style="overflow-x: auto;">
                         <table style="min-width: 400px;">
@@ -544,6 +629,7 @@
         window.activeAudiencia = null;
         window.chartFluxo = null; 
         window.chartStatus = null;
+        window.currentUserRole = 'arbitro';
 
         // --- SISTEMA DE MÁSCARAS ---
         const Masks = {
@@ -657,28 +743,64 @@
             if(id === 'dash') window.carregarDashAnalytics(); 
         };
 
+        // --- GESTÃO DE PERMISSÕES (RBAC Frontend) ---
+        const aplicarPermissoes = (tipo) => {
+            window.currentUserRole = tipo;
+            const todosMenus = ['nav-dash', 'nav-novo', 'nav-arbitros', 'nav-equipe', 'nav-camara', 'nav-vendas', 'nav-usuarios'];
+            todosMenus.forEach(nav => {
+                const el = document.getElementById(nav);
+                if (el) el.style.display = 'none';
+            });
+
+            let viewInicial = 'dash';
+
+            if (tipo === 'god') {
+                todosMenus.forEach(nav => document.getElementById(nav).style.display = 'block');
+                viewInicial = 'vendas';
+            } else if (tipo === 'vendas') {
+                ['nav-vendas', 'nav-usuarios'].forEach(nav => document.getElementById(nav).style.display = 'block');
+                viewInicial = 'vendas';
+            } else if (tipo === 'gestor') {
+                ['nav-usuarios'].forEach(nav => document.getElementById(nav).style.display = 'block');
+                viewInicial = 'usuarios';
+            } else if (tipo === 'admin') {
+                ['nav-dash', 'nav-novo', 'nav-arbitros', 'nav-equipe', 'nav-camara'].forEach(nav => document.getElementById(nav).style.display = 'block');
+                viewInicial = 'dash';
+            } else if (tipo === 'arbitro') {
+                ['nav-dash'].forEach(nav => document.getElementById(nav).style.display = 'block');
+                document.querySelector('.tab-financeiro-link').style.display = 'none';
+                document.querySelector('.card-financeiro').style.display = 'none';
+                document.getElementById('btn-exportar').style.display = 'none';
+                viewInicial = 'dash';
+            } else {
+                ['nav-dash'].forEach(nav => document.getElementById(nav).style.display = 'block');
+            }
+
+            window.showView(viewInicial);
+            
+            // Carrega dados baseados no perfil
+            if (['god', 'vendas', 'gestor'].includes(tipo)) window.carregarUsuariosGlobal();
+            if (['god', 'admin', 'arbitro'].includes(tipo)) {
+                window.carregarProcessos();
+                window.carregarArbitros();
+                window.carregarEquipe();
+            }
+        };
+
         // --- INICIALIZAÇÃO DE SISTEMA E AUTH ---
         const iniciarSistema = async (user) => {
             aplicarIdentidadeVisual();
             window.mostrarMudarView('module-app');
             try { 
                 const { data: perfil } = await supabase.from('perfis').select('*').eq('id', user.id).maybeSingle(); 
-                if (perfil) {
-                    if (perfil.tipo_usuario === 'admin') { 
-                        document.getElementById('nav-equipe').style.display = 'block'; 
-                        document.getElementById('nav-camara').style.display = 'block'; 
-                    } else if (perfil.tipo_usuario === 'arbitro') {
-                        document.getElementById('nav-novo').style.display = 'none';
-                        document.getElementById('nav-arbitros').style.display = 'none';
-                        document.getElementById('nav-equipe').style.display = 'none';
-                        document.getElementById('nav-camara').style.display = 'none';
-                        document.querySelector('.tab-financeiro-link').style.display = 'none';
-                        document.querySelector('.card-financeiro').style.display = 'none';
-                        document.getElementById('btn-exportar').style.display = 'none';
-                    }
+                if (perfil && perfil.tipo_usuario) {
+                    aplicarPermissoes(perfil.tipo_usuario);
+                } else {
+                    aplicarPermissoes('admin'); // fallback
                 }
-            } catch (err) {}
-            await Promise.all([window.carregarProcessos(), window.carregarDashAnalytics(), window.carregarArbitros(), window.carregarEquipe()]);
+            } catch (err) {
+                aplicarPermissoes('admin');
+            }
         };
 
         aplicarIdentidadeVisual();
@@ -701,7 +823,40 @@
             supabase.auth.signOut();
         };
 
-        // --- CARREGAMENTO DE DADOS (READ) ---
+        // --- MÓDULO DE GESTÃO DE USUÁRIOS (GLOBAL) ---
+        window.carregarUsuariosGlobal = async () => {
+            try {
+                const { data } = await supabase.from('perfis').select('*').order('created_at', {ascending: false});
+                const lista = document.getElementById('lista-usuarios-global');
+                if (data && lista) {
+                    lista.innerHTML = data.map(e => `
+                        <tr>
+                            <td>${e.nome || 'Não informado'}</td>
+                            <td>${e.id}</td> <!-- Usando ID como representação de Email para o admin mockup -->
+                            <td>
+                                <span class="badge ${e.tipo_usuario === 'god' ? 'badge-god' : (e.tipo_usuario === 'vendas' ? 'badge-vendas' : 'badge-admin')}">
+                                    ${e.tipo_usuario}
+                                </span>
+                            </td>
+                            <td><span class="badge badge-status">Ativo</span></td>
+                            <td>
+                                <button class="btn btn-secondary btn-sm" onclick="window.showToast('Recurso em desenvolvimento: Resetar Senha')">Resetar</button>
+                                <button class="btn btn-danger btn-sm" onclick="window.showToast('Recurso em desenvolvimento: Bloquear Acesso')">Bloquear</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            } catch(e){}
+        };
+
+        document.getElementById('global-user-form')?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            window.showToast('Funcionalidade de criação de usuário global será ligada via Supabase Admin API em breve.');
+            e.target.reset();
+        });
+
+
+        // --- CARREGAMENTO DE DADOS CÂMARA (READ) ---
         window.carregarProcessos = async () => {
             try {
                 const { data } = await supabase.from('processos').select('*').order('created_at', {ascending: false}); 
@@ -711,7 +866,9 @@
         };
 
         window.renderizarTabelaProcessos = (dados) => {
-            document.getElementById('lista-processos').innerHTML = dados.map(p => `
+            const table = document.getElementById('lista-processos');
+            if(!table) return;
+            table.innerHTML = dados.map(p => `
                 <tr>
                     <td onclick="openProc('${p.id}')" style="cursor:pointer"><span class="link-processo">${p.numero_processo}</span></td>
                     <td onclick="openProc('${p.id}')" style="cursor:pointer">${p.requerente_nome}</td>
@@ -722,13 +879,15 @@
             `).join('');
         };
 
-        document.getElementById('search-input').addEventListener('input', (e) => {
+        document.getElementById('search-input')?.addEventListener('input', (e) => {
             const term = e.target.value.toLowerCase();
             const filtered = window.db_procs.filter(p => p.numero_processo.toLowerCase().includes(term) || p.requerente_nome.toLowerCase().includes(term) || p.requerido_nome.toLowerCase().includes(term));
             window.renderizarTabelaProcessos(filtered);
         });
 
         window.carregarDashAnalytics = async () => {
+            if (!['admin', 'god', 'arbitro'].includes(window.currentUserRole)) return;
+
             try {
                 const { data: m } = await supabase.rpc('get_dashboard_metrics');
                 if (m) {
@@ -739,9 +898,11 @@
                 }
                 
                 if(window.db_procs && window.db_procs.length > 0) {
-                    const ctxF = document.getElementById('chartFluxo').getContext('2d'); 
-                    const ctxS = document.getElementById('chartStatus').getContext('2d');
+                    const ctxF = document.getElementById('chartFluxo')?.getContext('2d'); 
+                    const ctxS = document.getElementById('chartStatus')?.getContext('2d');
                     
+                    if (!ctxF || !ctxS) return;
+
                     if(window.chartFluxo) window.chartFluxo.destroy(); 
                     if(window.chartStatus) window.chartStatus.destroy();
                     
@@ -779,15 +940,22 @@
             try {
                 const { data } = await supabase.from('arbitros').select('*').order('nome'); 
                 window.db_arbitros = data || [];
-                document.getElementById('lista-arbitros').innerHTML = window.db_arbitros.map(a => `<tr><td>${a.nome}</td><td>${a.cpf}</td><td>${a.profissao || '-'}</td><td><button class="btn btn-danger btn-sm" onclick="excluirArbitro('${a.id}')">Excluir</button></td></tr>`).join('');
-                document.getElementById('select-arbitro').innerHTML = '<option value="">Selecionar Árbitro...</option>' + window.db_arbitros.map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
+                const lista = document.getElementById('lista-arbitros');
+                if (lista) {
+                    lista.innerHTML = window.db_arbitros.map(a => `<tr><td>${a.nome}</td><td>${a.cpf}</td><td>${a.profissao || '-'}</td><td><button class="btn btn-danger btn-sm" onclick="excluirArbitro('${a.id}')">Excluir</button></td></tr>`).join('');
+                }
+                const select = document.getElementById('select-arbitro');
+                if (select) {
+                    select.innerHTML = '<option value="">Selecionar Árbitro...</option>' + window.db_arbitros.map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
+                }
             } catch(e){}
         };
 
         window.carregarEquipe = async () => {
             try {
                 const { data } = await supabase.from('perfis').select('*').order('created_at', {ascending: false});
-                if (data) document.getElementById('lista-equipe').innerHTML = data.map(e => `<tr><td>${e.nome || 'Usuário'}</td><td>${new Date(e.created_at).toLocaleDateString('pt-BR')}</td><td><span class="badge ${e.tipo_usuario === 'admin' ? 'badge-admin' : 'badge-status'}">${e.tipo_usuario}</span></td></tr>`).join('');
+                const lista = document.getElementById('lista-equipe');
+                if (data && lista) lista.innerHTML = data.map(e => `<tr><td>${e.nome || 'Usuário'}</td><td>${new Date(e.created_at).toLocaleDateString('pt-BR')}</td><td><span class="badge ${e.tipo_usuario === 'admin' ? 'badge-admin' : 'badge-status'}">${e.tipo_usuario}</span></td></tr>`).join('');
             } catch(e){}
         };
 
@@ -849,7 +1017,7 @@
         };
 
         // --- ATUALIZAÇÕES CRUD E FORMS ---
-        document.getElementById('editar-processo-form').addEventListener('submit', async (e) => {
+        document.getElementById('editar-processo-form')?.addEventListener('submit', async (e) => {
             e.preventDefault(); 
             const btn = document.getElementById('btn-salvar-processo');
             btn.innerText = "Salvando..."; btn.disabled = true;
@@ -898,7 +1066,7 @@
             window.showToast(`Fase atualizada para "${nv}".`, async () => { await upd(old); window.showToast("Status restaurado."); });
         };
 
-        document.getElementById('notificacao-form').addEventListener('submit', async (e) => {
+        document.getElementById('notificacao-form')?.addEventListener('submit', async (e) => {
             e.preventDefault();
             const payload = { processo_id: window.activeProcess.id, tipo_comunicacao: document.getElementById('not_tipo').value, destinatario: document.getElementById('not_dest').value, status: document.getElementById('not_status').value, observacoes: document.getElementById('not_obs').value };
             const { error } = await supabase.from('notificacoes').insert([payload]); 
@@ -929,8 +1097,8 @@
                 const colName = s.dataset.col;
                 if(colunasValidas.includes(colName)) {
                     let val = s.innerText.trim();
-                    if(colName === 'valor_causa') val = parseFloat(val.replace('R$', '').replace(/\\./g, '').replace(',', '.').trim()) || 0;
-                    if(colName === 'requerente_documento' || colName === 'requerido_documento') val = val.replace(/\\D/g, "");
+                    if(colName === 'valor_causa') val = parseFloat(val.replace('R$', '').replace(/\./g, '').replace(',', '.').trim()) || 0;
+                    if(colName === 'requerente_documento' || colName === 'requerido_documento') val = val.replace(/\D/g, "");
                     payload[colName] = val;
                 }
             });
@@ -1285,7 +1453,7 @@
         window.fecharModal = () => document.getElementById('modal-preview').style.display = 'none';
 
         // --- SUBMISSÕES E CRUD EXTRAS ---
-        document.getElementById('acordo-form').addEventListener('submit', (e) => { 
+        document.getElementById('acordo-form')?.addEventListener('submit', (e) => { 
             e.preventDefault(); 
             window.showConfirm('Gerar acordo e parcelas definitivas?', async () => { 
                 let vRaw = document.getElementById('aco_valor').value.replace('R$ ', '').replace(/\./g, '').replace(',', '.'); 
@@ -1312,7 +1480,7 @@
             a.click(); 
         };
 
-        document.getElementById('processo-form').addEventListener('submit', async (e) => { 
+        document.getElementById('processo-form')?.addEventListener('submit', async (e) => { 
             e.preventDefault(); 
             const btn = e.target.querySelector('button[type="submit"]'); 
             btn.innerText = 'Processando...'; btn.disabled = true;
@@ -1341,7 +1509,7 @@
             } catch (err) {} finally { btn.innerText = 'Iniciar Procedimento'; btn.disabled = false; } 
         });
 
-        document.getElementById('arbitro-form').addEventListener('submit', async (e) => { 
+        document.getElementById('arbitro-form')?.addEventListener('submit', async (e) => { 
             e.preventDefault(); 
             await supabase.from('arbitros').insert([{ 
                 nome: document.getElementById('arb_nome').value, 
@@ -1398,7 +1566,7 @@
 
         window.visualizarRecibo = (id, num, valor, dt) => window.visualizarDoc(10, { num, valor, dataPagamento: dt });
 
-        document.getElementById('camara-form').addEventListener('submit', (e) => { 
+        document.getElementById('camara-form')?.addEventListener('submit', (e) => { 
             e.preventDefault(); 
             localStorage.setItem('camara_config', JSON.stringify({ 
                 nome: document.getElementById('cam_nome').value, 
@@ -1412,25 +1580,6 @@
             aplicarIdentidadeVisual(); 
             window.showToast("Configurações Salvas!"); 
         });
-
-        document.getElementById('nav-dash').onclick = () => window.showView('dash'); 
-        document.getElementById('nav-novo').onclick = () => window.showView('novo'); 
-        document.getElementById('nav-arbitros').onclick = () => window.showView('arbitros'); 
-        document.getElementById('nav-equipe').onclick = () => window.showView('equipe'); 
-        document.getElementById('nav-camara').onclick = () => { 
-            try { 
-                const c = JSON.parse(localStorage.getItem('camara_config')); 
-                if(c) { 
-                    document.getElementById('cam_nome').value = c.nome||''; 
-                    document.getElementById('cam_cnpj').value = c.cnpj||''; 
-                    document.getElementById('cam_endereco').value = c.endereco||''; 
-                    document.getElementById('cam_fone').value = c.fone||''; 
-                    document.getElementById('cam_webhook_url').value = c.webhook_url||''; 
-                    document.getElementById('cam_webhook_token').value = c.webhook_token||''; 
-                } 
-            } catch(e) {} 
-            window.showView('camara'); 
-        };
 
         // --- CONSULTA PÚBLICA ---
         document.getElementById('consulta-form').addEventListener('submit', async (e) => {
