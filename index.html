@@ -137,7 +137,7 @@
                     <h2>Painel de Controle</h2>
                     <div style="display:flex; gap:10px;">
                         <input type="text" id="search-input" class="form-control" style="width: 200px; margin-top:0;" placeholder="Pesquisar processos...">
-                        <button class="btn btn-secondary" onclick="exportarCSV()">Exportar CSV</button>
+                        <button class="btn btn-secondary" onclick="exportarCSV()" id="btn-exportar">Exportar CSV</button>
                     </div>
                 </div>
 
@@ -204,7 +204,7 @@
                     <span class="tab-link" onclick="switchTab('tab-docs', this)">Modelos & Documentos</span>
                     <span class="tab-link" onclick="switchTab('tab-andamento', this)">Andamento & Comunicações</span>
                     <span class="tab-link" onclick="switchTab('tab-instrucao', this)">Instrução & Acordo</span>
-                    <span class="tab-link" onclick="switchTab('tab-financeiro', this)">Financeiro</span>
+                    <span class="tab-link tab-financeiro-link" onclick="switchTab('tab-financeiro', this)">Financeiro</span>
                     <span class="tab-link" onclick="switchTab('tab-anexos', this)">Anexos</span>
                 </div>
 
@@ -225,7 +225,7 @@
                             <hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
                             <div class="form-group"><label class="form-label">Valor Causa</label><input type="text" id="edit_valor_causa" class="form-control" data-mask="money" required></div>
                             <div class="form-group"><label class="form-label">Fatos</label><textarea id="edit_fatos" class="form-control" rows="3" required></textarea></div>
-                            <button type="submit" class="btn btn-success">Salvar Alterações</button>
+                            <button type="submit" class="btn btn-success" id="btn-salvar-processo">Salvar Alterações</button>
                         </div>
                     </form>
                 </div>
@@ -303,7 +303,7 @@
                         <div class="form-group"><label class="form-label">Sentença</label><textarea id="texto_sentenca" class="form-control" rows="8"></textarea></div>
                         <button class="btn btn-success" onclick="salvarTextosAudiencia()">Salvar Textos</button>
                     </div>
-                    <div class="card">
+                    <div class="card card-financeiro">
                         <h4>Acordo Financeiro</h4>
                         <form id="acordo-form">
                             <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:15px; margin-bottom:15px;">
@@ -370,7 +370,7 @@
                             <div class="form-group"><label class="form-label">Endereço</label><input type="text" id="cam_endereco" class="form-control" required></div>
                             <div class="form-group"><label class="form-label">Telefone</label><input type="text" id="cam_fone" class="form-control" data-mask="phone" required></div>
                         </div>
-                        <div class="form-group"><label class="form-label">Logotipo (URL ou Arquivo de Imagem)</label><input type="file" id="cam_logo" class="form-control" accept="image/*"></div>
+                        <div class="form-group"><label class="form-label">Logotipo (URL ou Imagem)</label><input type="file" id="cam_logo" class="form-control" accept="image/*"></div>
                         
                         <hr style="margin:30px 0; border:0; border-top:1px solid #eee;">
                         <h4>Integrações (Webhooks / API)</h4>
@@ -506,7 +506,23 @@
         const iniciarSistema = async (user) => {
             aplicarIdentidadeVisual();
             mostrarMudarView('module-app');
-            try { const { data: perfil } = await supabase.from('perfis').select('*').eq('id', user.id).maybeSingle(); if (perfil && perfil.tipo_usuario === 'admin') { document.getElementById('nav-equipe').style.display = 'block'; document.getElementById('nav-camara').style.display = 'block'; } } catch (err) {}
+            try { 
+                const { data: perfil } = await supabase.from('perfis').select('*').eq('id', user.id).maybeSingle(); 
+                if (perfil) {
+                    if (perfil.tipo_usuario === 'admin') { 
+                        document.getElementById('nav-equipe').style.display = 'block'; 
+                        document.getElementById('nav-camara').style.display = 'block'; 
+                    } else if (perfil.tipo_usuario === 'arbitro') {
+                        document.getElementById('nav-novo').style.display = 'none';
+                        document.getElementById('nav-arbitros').style.display = 'none';
+                        document.getElementById('nav-equipe').style.display = 'none';
+                        document.getElementById('nav-camara').style.display = 'none';
+                        document.querySelector('.tab-financeiro-link').style.display = 'none';
+                        document.querySelector('.card-financeiro').style.display = 'none';
+                        document.getElementById('btn-exportar').style.display = 'none';
+                    }
+                }
+            } catch (err) {}
             await Promise.all([carregarProcessos(), carregarDashAnalytics(), carregarArbitros(), carregarEquipe()]);
         };
 
@@ -594,9 +610,24 @@
 
         // --- ATUALIZAÇÕES CRUD ---
         document.getElementById('editar-processo-form').onsubmit = async (e) => {
-            e.preventDefault(); const v = document.getElementById('edit_valor_causa').value.replace(/[^\d,]/g,'').replace(',','.');
+            e.preventDefault(); 
+            const btn = document.getElementById('btn-salvar-processo');
+            btn.innerText = "Salvando..."; btn.disabled = true;
+            
+            const v = document.getElementById('edit_valor_causa').value.replace(/[^\d,]/g,'').replace(',','.');
             const p = { requerente_nome: document.getElementById('edit_req_nome').value, requerente_documento: document.getElementById('edit_req_doc').value, requerente_endereco: document.getElementById('edit_req_end').value, requerido_nome: document.getElementById('edit_def_nome').value, requerido_documento: document.getElementById('edit_def_doc').value, requerido_endereco: document.getElementById('edit_def_end').value, valor_causa: parseFloat(v), resumo_fatos: document.getElementById('edit_fatos').value };
-            await supabase.from('processos').update(p).eq('id', activeProcess.id); showToast("Dados atualizados!"); await carregarProcessos(); activeProcess = window.db_procs.find(x => x.id === activeProcess.id);
+            
+            const { error } = await supabase.from('processos').update(p).eq('id', activeProcess.id); 
+            
+            btn.innerText = "Salvar Alterações"; btn.disabled = false;
+            
+            if(error) {
+                showToast("Erro: " + error.message);
+            } else {
+                showToast("Dados atualizados!"); 
+                await carregarProcessos(); 
+                activeProcess = window.db_procs.find(x => x.id === activeProcess.id);
+            }
         };
 
         window.atualizarStatusProcesso = async () => {
@@ -688,7 +719,7 @@
             const v_causa = document.getElementById('valor_causa').value.replace(/[^\d,]/g,'').replace(',','.'); const n = new Date().getFullYear() + String(Math.floor(Math.random() * 90000)+10000); try { const { data:{user} } = await supabase.auth.getUser(); await supabase.from('processos').insert([{ numero_processo: n, requerente_nome: document.getElementById('req_nome').value, requerente_documento: document.getElementById('req_doc').value, requerente_endereco: document.getElementById('req_end').value, requerido_nome: document.getElementById('def_nome').value, requerido_documento: document.getElementById('def_doc').value, requerido_endereco: document.getElementById('def_end').value, valor_causa: parseFloat(v), resumo_fatos: document.getElementById('fatos').value, status: 'Protocolado', user_id: user.id }]); showToast("Protocolado!"); e.target.reset(); carregarProcessos(); showView('dash'); } catch (err) {} finally { btn.innerText = 'Iniciar Procedimento'; btn.disabled = false; } };
         document.getElementById('arbitro-form').onsubmit = async (e) => { e.preventDefault(); await supabase.from('arbitros').insert([{ nome: document.getElementById('arb_nome').value, cpf: document.getElementById('arb_cpf').value, rg: document.getElementById('arb_rg').value, profissao: document.getElementById('arb_prof').value, endereco: document.getElementById('arb_end').value }]); showToast("Salvo!"); e.target.reset(); carregarArbitros(); };
         window.vincularArbitro = async () => { const a = document.getElementById('select-arbitro').value; if(a){ await supabase.from('processos').update({ arbitro_id: a }).eq('id', activeProcess.id); showToast('Vinculado!'); carregarProcessos(); } };
-        window.salvarTextosAudiencia = async () => { const p = { processo_id: activeProcess.id, data_hora_audiencia: new Date().toISOString(), texto_ata: document.getElementById('texto_ata').value, texto_sentenca: document.getElementById('texto_sentenca').value }; if (activeAudiencia) await supabase.from('audiencias').update({texto_ata: p.texto_ata, texto_sentenca: p.texto_sentenca}).eq('id', activeAudiencia.id); else await supabase.from('audiencias').insert([p]); showToast("Textos salvos!"); openProc(activeProcess.id); };
+        window.salvarTextosAudiencia = async () => { const p = { processo_id: activeProcess.id, data_hora_audiencia: new Date().toISOString(), texto_ata: document.getElementById('texto_ata').value, texto_sentenca: document.getElementById('texto_sentenca').value }; let error; if (activeAudiencia) { error = (await supabase.from('audiencias').update({texto_ata: p.texto_ata, texto_sentenca: p.texto_sentenca}).eq('id', activeAudiencia.id)).error; } else { error = (await supabase.from('audiencias').insert([p])).error; } if (error) alert(error.message); else { showToast("Textos salvos!"); openProc(activeProcess.id); } };
         window.uploadAnexo = async () => { const f = document.getElementById('arquivo_anexo').files[0]; if(!f) return; const pt = `proc_${activeProcess.id}/${Date.now()}_${f.name}`; await supabase.storage.from('documentos_assinados').upload(pt, f); await supabase.from('processos_anexos').insert([{ processo_id: activeProcess.id, nome_arquivo: f.name, caminho_arquivo: pt }]); showToast('Anexo salvo!'); loadAnexos(); };
         window.downloadAnexo = async (pt) => { const { data } = await supabase.storage.from('documentos_assinados').createSignedUrl(pt, 60); if(data) window.open(data.signedUrl, '_blank'); };
         window.visualizarRecibo = (id, num, valor, dt) => visualizarDoc(10, { num, valor, dataPagamento: dt });
