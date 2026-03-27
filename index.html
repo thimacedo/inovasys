@@ -78,6 +78,9 @@
         .modal-body { flex: 1; overflow-y: auto; padding: 40px; background: #f1f5f9; }
         .pdf-page { background: white; width: 100%; padding: 60px; box-sizing: border-box; font-family: 'Times New Roman', serif; box-shadow: 0 5px 15px rgba(0,0,0,0.2); line-height: 1.6; color: #000; }
         
+        .pdf-header { text-align: center; margin-bottom: 30px; }
+        .pdf-logo { max-width: 200px; max-height: 80px; object-fit: contain; margin-bottom: 10px; }
+        
         .editable-field { border-bottom: 1px dashed var(--color-accent); cursor: text; transition: background 0.2s; padding: 0 2px; outline: none; }
         .editable-field:hover, .editable-field:focus { background: #e0f2fe; }
 
@@ -367,12 +370,12 @@
                             <div class="form-group"><label class="form-label">Endereço</label><input type="text" id="cam_endereco" class="form-control" required></div>
                             <div class="form-group"><label class="form-label">Telefone</label><input type="text" id="cam_fone" class="form-control" data-mask="phone" required></div>
                         </div>
-                        <div class="form-group"><label class="form-label">Logotipo (URL/Base64)</label><input type="file" id="cam_logo" class="form-control" accept="image/*"></div>
+                        <div class="form-group"><label class="form-label">Logotipo (URL ou Arquivo de Imagem)</label><input type="file" id="cam_logo" class="form-control" accept="image/*"></div>
                         
                         <hr style="margin:30px 0; border:0; border-top:1px solid #eee;">
                         <h4>Integrações (Webhooks / API)</h4>
-                        <p style="font-size:12px; color:#64748b;">Configure URLs para disparos automáticos (ex: Make, Zapier) ao registrar notificações.</p>
-                        <div class="form-group"><label class="form-label">Webhook URL (Notificações)</label><input type="url" id="cam_webhook_url" class="form-control" placeholder="https://sua-api.com/webhook"></div>
+                        <p style="font-size:12px; color:#64748b;">Configure URLs para disparos automáticos ao registrar notificações.</p>
+                        <div class="form-group"><label class="form-label">Webhook URL</label><input type="url" id="cam_webhook_url" class="form-control" placeholder="https://sua-api.com/webhook"></div>
                         <div class="form-group"><label class="form-label">Token/Secret (Opcional)</label><input type="text" id="cam_webhook_token" class="form-control" placeholder="Bearer seu_token_aqui"></div>
 
                         <button type="submit" class="btn btn-success" style="margin-top:15px;">Salvar e Aplicar Identidade</button>
@@ -428,6 +431,31 @@
         let activeProcess = null; let db_procs = []; let db_arbitros = []; let activeAudiencia = null;
         let chartFluxo, chartStatus;
 
+        // --- REDIMENSIONAMENTO DE LOGOTIPO (CANVAS) ---
+        document.getElementById('cam_logo').onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width; let height = img.height;
+                    const MAX_WIDTH = 250; const MAX_HEIGHT = 100;
+                    if (width > MAX_WIDTH || height > MAX_HEIGHT) {
+                        const ratio = Math.min(MAX_WIDTH / width, MAX_HEIGHT / height);
+                        width = width * ratio; height = height * ratio;
+                    }
+                    canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    localStorage.setItem('temp_logo', canvas.toDataURL(file.type));
+                };
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        };
+
         // --- SISTEMA WHITE-LABEL ---
         const aplicarIdentidadeVisual = () => {
             try {
@@ -437,8 +465,7 @@
                 
                 document.querySelectorAll('.sys-name').forEach(el => el.innerText = nomeSistema);
                 document.querySelectorAll('.sys-logo').forEach(el => {
-                    el.src = logoSistema;
-                    el.style.display = 'inline-block';
+                    el.src = logoSistema; el.style.display = 'inline-block';
                 });
             } catch(e) {}
         };
@@ -483,7 +510,7 @@
             await Promise.all([carregarProcessos(), carregarDashAnalytics(), carregarArbitros(), carregarEquipe()]);
         };
 
-        aplicarIdentidadeVisual(); // Chamada inicial
+        aplicarIdentidadeVisual();
         supabase.auth.getSession().then(({ data: { session } }) => { if (session) iniciarSistema(session.user); });
         supabase.auth.onAuthStateChange((event, session) => { if (event === 'SIGNED_IN' && session) iniciarSistema(session.user); else if (event === 'SIGNED_OUT') mostrarMudarView('module-auth'); });
         
@@ -667,7 +694,6 @@
         window.visualizarRecibo = (id, num, valor, dt) => visualizarDoc(10, { num, valor, dataPagamento: dt });
 
         document.getElementById('camara-form').onsubmit = (e) => { e.preventDefault(); localStorage.setItem('camara_config', JSON.stringify({ nome: document.getElementById('cam_nome').value, cnpj: document.getElementById('cam_cnpj').value, endereco: document.getElementById('cam_endereco').value, fone: document.getElementById('cam_fone').value, logo: localStorage.getItem('temp_logo') || '', webhook_url: document.getElementById('cam_webhook_url').value, webhook_token: document.getElementById('cam_webhook_token').value })); aplicarIdentidadeVisual(); showToast("Configurações Salvas!"); };
-        document.getElementById('cam_logo').onchange = (e) => { const r = new FileReader(); r.onload = ev => localStorage.setItem('temp_logo', ev.target.result); if(e.target.files[0]) r.readAsDataURL(e.target.files[0]); };
 
         document.getElementById('nav-dash').onclick = () => showView('dash'); document.getElementById('nav-novo').onclick = () => showView('novo'); document.getElementById('nav-arbitros').onclick = () => showView('arbitros'); document.getElementById('nav-equipe').onclick = () => showView('equipe'); document.getElementById('nav-camara').onclick = () => { try { const c = JSON.parse(localStorage.getItem('camara_config')); if(c) { document.getElementById('cam_nome').value = c.nome||''; document.getElementById('cam_cnpj').value = c.cnpj||''; document.getElementById('cam_endereco').value = c.endereco||''; document.getElementById('cam_fone').value = c.fone||''; document.getElementById('cam_webhook_url').value = c.webhook_url||''; document.getElementById('cam_webhook_token').value = c.webhook_token||''; } } catch(e) {} showView('camara'); };
 
