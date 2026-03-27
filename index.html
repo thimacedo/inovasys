@@ -17,7 +17,7 @@
             --sidebar-width: 260px;
         }
 
-        body { font-family: 'Inter', sans-serif; background-color: var(--color-bg); color: #334155; margin: 0; display: flex; min-height: 100vh; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--color-bg); color: #334155; margin: 0; display: flex; min-height: 100vh; flex-direction: row; }
         .module { display: none; width: 100%; }
         .module.active { display: flex; }
         .view { display: none; }
@@ -68,6 +68,7 @@
         .stat-value.success { color: #10b981; }
         .stat-value.warning { color: #f59e0b; }
 
+        /* Componentes Modais e Toast */
         #modal-preview, #modal-confirm { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; width: 90%; max-width: 800px; height: 85vh; border-radius: 12px; display: flex; flex-direction: column; }
         .modal-content-small { background: white; width: 90%; max-width: 400px; border-radius: 12px; padding: 25px; text-align: center; }
@@ -82,6 +83,21 @@
 
         .toast { position: fixed; bottom: 30px; right: 30px; background: #1e293b; color: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 10px 15px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 15px; opacity: 0; transition: opacity 0.3s, transform 0.3s; transform: translateY(20px); pointer-events: none; z-index: 9999; font-size: 14px; font-weight: 500; }
         .toast.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; position: relative; flex-direction: row; overflow-x: auto; white-space: nowrap; border-right: none; border-bottom: 1px solid #e2e8f0; }
+            .sidebar-brand { padding: 15px; border-bottom: none; border-right: 1px solid #e2e8f0; display: inline-block; }
+            .nav-item { display: inline-block; padding: 15px; border-left: none; border-bottom: 3px solid transparent; }
+            .nav-item.active { border-left-color: transparent; border-bottom-color: var(--color-accent); }
+            .main { margin-left: 0; padding: 20px; }
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .modal-content { width: 95%; height: 95vh; }
+            .pdf-page { padding: 20px; }
+            table { display: block; overflow-x: auto; white-space: nowrap; }
+            .form-control, .btn { width: 100%; margin-top: 5px; }
+        }
     </style>
 </head>
 <body>
@@ -114,9 +130,12 @@
 
         <main class="main">
             <div id="view-dash" class="view active">
-                <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
                     <h2>Painel de Controle</h2>
-                    <input type="text" id="search-input" class="form-control" style="width: 250px;" placeholder="Pesquisar Processos...">
+                    <div style="display:flex; gap: 10px;">
+                        <input type="text" id="search-input" class="form-control" style="width: 200px; margin-top: 0;" placeholder="Pesquisar Processos...">
+                        <button class="btn btn-secondary" onclick="exportarCSV()">Exportar CSV</button>
+                    </div>
                 </div>
                 <div class="dashboard-grid">
                     <div class="stat-card"><span class="stat-title">Processos Ativos</span><span class="stat-value" id="dash-ativos">0</span></div>
@@ -138,7 +157,7 @@
                 <div class="card">
                     <h4>Cadastrar Árbitro</h4>
                     <form id="arbitro-form">
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+                        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:15px;">
                             <div class="form-group"><label class="form-label">Nome Completo</label><input type="text" id="arb_nome" class="form-control" required></div>
                             <div class="form-group"><label class="form-label">CPF</label><input type="text" id="arb_cpf" class="form-control" data-mask="doc" required></div>
                             <div class="form-group"><label class="form-label">RG</label><input type="text" id="arb_rg" class="form-control" required></div>
@@ -164,7 +183,7 @@
                 <h2>Configuração da Câmara</h2>
                 <div class="card">
                     <form id="camara-form">
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+                        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:15px;">
                             <div class="form-group"><label class="form-label">Nome da Instituição</label><input type="text" id="cam_nome" class="form-control" required></div>
                             <div class="form-group"><label class="form-label">CNPJ</label><input type="text" id="cam_cnpj" class="form-control" data-mask="doc" required></div>
                             <div class="form-group"><label class="form-label">Endereço Completo</label><input type="text" id="cam_endereco" class="form-control" required></div>
@@ -181,7 +200,7 @@
                 <form id="processo-form">
                     <div class="card">
                         <h4>Qualificação do Requerente</h4>
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+                        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:15px;">
                             <div class="form-group"><label class="form-label">Nome</label><input type="text" id="req_nome" class="form-control" required></div>
                             <div class="form-group"><label class="form-label">CPF/CNPJ</label><input type="text" id="req_doc" class="form-control" data-mask="doc" required></div>
                         </div>
@@ -189,7 +208,7 @@
                     </div>
                     <div class="card">
                         <h4>Qualificação do Requerido</h4>
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+                        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:15px;">
                             <div class="form-group"><label class="form-label">Nome</label><input type="text" id="def_nome" class="form-control" required></div>
                             <div class="form-group"><label class="form-label">CPF/CNPJ</label><input type="text" id="def_doc" class="form-control" data-mask="doc" required></div>
                         </div>
@@ -199,7 +218,7 @@
                         <h4>Objeto</h4>
                         <div class="form-group"><label class="form-label">Valor da Causa</label><input type="text" id="valor_causa" class="form-control" data-mask="money" placeholder="R$ 0,00" required></div>
                         <div class="form-group"><label class="form-label">Fatos</label><textarea id="fatos" class="form-control" rows="4" required></textarea></div>
-                        <button type="submit" class="btn btn-primary">Iniciar Procedimento</button>
+                        <button type="submit" class="btn btn-primary" style="width:auto;">Iniciar Procedimento</button>
                     </div>
                 </form>
             </div>
@@ -260,13 +279,13 @@
                     <div class="card">
                         <h4>Registrar Comunicação (Notificações)</h4>
                         <form id="notificacao-form">
-                            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:15px; margin-bottom:15px;">
+                            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:15px; margin-bottom:15px;">
                                 <div><label class="form-label">Meio</label><select id="not_tipo" class="form-control" required><option value="WhatsApp">WhatsApp</option><option value="Correios/AR">Correios/AR</option><option value="E-mail">E-mail</option><option value="Presencial">Presencial</option></select></div>
                                 <div><label class="form-label">Destinatário</label><select id="not_dest" class="form-control" required><option value="Requerido">Requerido</option><option value="Requerente">Requerente</option><option value="Ambos">Ambos</option></select></div>
                                 <div><label class="form-label">Status</label><select id="not_status" class="form-control" required><option value="Enviada">Enviada</option><option value="Entregue">Entregue</option><option value="Lida">Lida</option><option value="Devolvida">Devolvida</option></select></div>
                             </div>
                             <div class="form-group"><label class="form-label">Observações</label><input type="text" id="not_obs" class="form-control"></div>
-                            <button type="submit" class="btn btn-primary">Registrar Comunicação</button>
+                            <button type="submit" class="btn btn-primary" style="width:auto;">Registrar Comunicação</button>
                         </form>
                         <table style="margin-top:20px;"><thead><tr><th>Meio</th><th>Destinatário</th><th>Data</th><th>Status</th><th>Obs</th><th>Ação</th></tr></thead><tbody id="lista-notificacoes"></tbody></table>
                     </div>
@@ -293,12 +312,12 @@
                     <div class="card">
                         <h4>Termos do Acordo Financeiro</h4>
                         <form id="acordo-form">
-                            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:15px; margin-bottom:15px;">
+                            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:15px; margin-bottom:15px;">
                                 <div><label class="form-label">Valor do Acordo</label><input type="text" id="aco_valor" class="form-control" data-mask="money" required></div>
                                 <div><label class="form-label">Nº de Parcelas</label><input type="number" id="aco_parc" class="form-control" min="1" required></div>
                                 <div><label class="form-label">Data da 1ª Parcela</label><input type="date" id="aco_data" class="form-control" required></div>
                             </div>
-                            <button type="submit" class="btn btn-primary">Gerar Acordo e Parcelas</button>
+                            <button type="submit" class="btn btn-primary" style="width:auto;">Gerar Acordo e Parcelas</button>
                         </form>
                     </div>
                 </div>
@@ -340,7 +359,7 @@
                     <div id="p-body"></div>
                 </div>
             </div>
-            <div style="padding:15px; text-align:right; background:#f8fafc; border-top:1px solid #eee; display: flex; justify-content: space-between;">
+            <div style="padding:15px; text-align:right; background:#f8fafc; border-top:1px solid #eee; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
                 <div>
                     <button class="btn btn-success" id="btn-salvar-edicoes" style="display:none;" onclick="salvarEdicoesEmLinha()">Salvar Alterações no Banco</button>
                 </div>
@@ -488,7 +507,7 @@
                 const { data: acordo } = await supabase.from('acordos').select('id').eq('processo_id', id).maybeSingle();
                 if(acordo) {
                     const { data: parcelas } = await supabase.from('parcelas').select('*').eq('acordo_id', acordo.id).order('numero_parcela');
-                    document.getElementById('lista-parcelas').innerHTML = (parcelas || []).map(pa => `<tr><td>${pa.numero_parcela}</td><td>${new Date(pa.data_vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</td><td>R$ ${Number(pa.valor_parcela).toLocaleString('pt-BR')}</td><td><span class="badge badge-${pa.status.toLowerCase()}">${pa.status}</span></td><td>${pa.status === 'Pendente' ? `<button class="btn btn-success btn-sm" onclick="pagarParcela(${pa.id})">Baixar</button>` : `<button class="btn btn-primary btn-sm" onclick="visualizarRecibo(${pa.id}, ${pa.numero_parcela}, '${pa.valor_parcela}', '${pa.data_pagamento}')">Recibo</button>`}</td></tr>`).join('');
+                    document.getElementById('lista-parcelas').innerHTML = (parcelas || []).map(pa => `<tr><td>${pa.numero_parcela}</td><td>${new Date(pa.data_vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</td><td>R$ ${Number(pa.valor_parcela).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td><td><span class="badge badge-${pa.status.toLowerCase()}">${pa.status}</span></td><td>${pa.status === 'Pendente' ? `<button class="btn btn-success btn-sm" onclick="pagarParcela(${pa.id})">Baixar</button>` : `<button class="btn btn-primary btn-sm" onclick="visualizarRecibo(${pa.id}, ${pa.numero_parcela}, '${pa.valor_parcela}', '${pa.data_pagamento}')">Recibo</button>`}</td></tr>`).join('');
                 } else document.getElementById('lista-parcelas').innerHTML = '<tr><td colspan="5" style="text-align:center;">Nenhum acordo firmado.</td></tr>';
 
                 await Promise.all([loadAnexos(), loadAndamento()]);
@@ -646,6 +665,14 @@
         };
 
         // --- SUBMISSÃO RESTANTE ---
+        window.exportarCSV = () => {
+            if (!window.db_procs || window.db_procs.length === 0) return showToast('Sem dados para exportar.');
+            let csv = 'Nº Processo,Requerente,Requerido,Valor Causa,Status,Data Cadastro\n';
+            window.db_procs.forEach(p => { csv += `${p.numero_processo},"${p.requerente_nome}","${p.requerido_nome}",${p.valor_causa},${p.status},${new Date(p.created_at).toLocaleDateString('pt-BR')}\n`; });
+            const blob = new Blob([csv], { type: 'text/csv' }); const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.setAttribute('hidden', ''); a.setAttribute('href', url); a.setAttribute('download', 'relatorio_processos.csv'); document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        };
+
         document.getElementById('processo-form').onsubmit = async (e) => {
             e.preventDefault(); const btn = e.target.querySelector('button[type="submit"]'); btn.innerText = 'Processando...'; btn.disabled = true;
             const v_causa = document.getElementById('valor_causa').value.replace(/[^\d,]/g,'').replace(',','.'); const numProc = new Date().getFullYear() + String(Math.floor(Math.random() * 90000) + 10000);
@@ -667,8 +694,6 @@
         window.salvarTextosAudiencia = async () => { const payload = { processo_id: activeProcess.id, data_hora_audiencia: new Date().toISOString(), texto_ata: document.getElementById('texto_ata').value, texto_sentenca: document.getElementById('texto_sentenca').value }; let error; if (activeAudiencia) { error = (await supabase.from('audiencias').update({texto_ata: payload.texto_ata, texto_sentenca: payload.texto_sentenca}).eq('id', activeAudiencia.id)).error; } else { error = (await supabase.from('audiencias').insert([payload])).error; } if (error) alert(error.message); else { showToast("Textos jurídicos salvos!"); openProc(activeProcess.id); } };
         window.uploadAnexo = async () => { const fileInput = document.getElementById('arquivo_anexo'); const file = fileInput.files[0]; if(!file) return alert("Selecione PDF."); const path = `processo_${activeProcess.id}/${Date.now()}_${file.name}`; const { error: uploadError } = await supabase.storage.from('documentos_assinados').upload(path, file); if(uploadError) return alert(uploadError.message); await supabase.from('processos_anexos').insert([{ processo_id: activeProcess.id, nome_arquivo: file.name, caminho_arquivo: path }]); showToast('Anexo adicionado!'); fileInput.value = ''; loadAnexos(); };
         window.downloadAnexo = async (path) => { const { data, error } = await supabase.storage.from('documentos_assinados').createSignedUrl(path, 60); if(error) alert(error.message); else window.open(data.signedUrl, '_blank'); };
-
-        window.visualizarRecibo = (id, num, valor, dataPagamento) => visualizarDoc(10, { num, valor, dataPagamento });
 
         document.getElementById('camara-form').onsubmit = (e) => { e.preventDefault(); localStorage.setItem('camara_config', JSON.stringify({ nome: document.getElementById('cam_nome').value, cnpj: document.getElementById('cam_cnpj').value, endereco: document.getElementById('cam_endereco').value, fone: document.getElementById('cam_fone').value, logo: localStorage.getItem('temp_logo') || '' })); showToast("Dados da Câmara Salvos!"); };
         document.getElementById('cam_logo').onchange = (e) => { const r = new FileReader(); r.onload = ev => localStorage.setItem('temp_logo', ev.target.result); if(e.target.files[0]) r.readAsDataURL(e.target.files[0]); };
