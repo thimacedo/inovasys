@@ -98,7 +98,7 @@
         .pdf-page { background: white; padding: 60px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); font-family: 'Times New Roman', serif; line-height: 1.6; box-sizing: border-box; width: 100%; color: #000; min-height: 842px;}
         .pdf-header { text-align: center; margin-bottom: 30px; }
         .pdf-logo { max-width: 200px; max-height: 80px; object-fit: contain; margin-bottom: 10px; display: none; }
-        .editable-field { border-bottom: 1px dashed var(--color-accent); cursor: text; transition: background 0.2s; padding: 0 2px; outline: none; }
+        .editable-field { border-bottom: 1px dashed var(--color-accent); cursor: text; transition: background 0.2s; outline: none; }
         .editable-field:hover, .editable-field:focus { background: #e0f2fe; }
 
         /* Toast */
@@ -834,17 +834,17 @@
             document.getElementById('proc_status').value = window.activeProcess.status;
             try {
                 const { data: notifs } = await supabase.from('notificacoes').select('*').eq('processo_id', window.activeProcess.id).order('data_envio', {ascending: false});
-                document.getElementById('lista-notificacoes').innerHTML = (notifs || []).map(n => `<tr><td>${n.tipo_comunicacao}</td><td>${n.destinatario}</td><td>${new Date(n.data_envio).toLocaleDateString('pt-BR')}</td><td>${n.status}</td><td>${n.observacoes || '-'}</td><td><button class="btn btn-danger btn-sm" onclick="excluirNotificacao(${n.id})">Excluir</button></td></tr>`).join('') || '<tr><td colspan="6" style="text-align:center;">Nenhuma comunicação.</td></tr>';
+                document.getElementById('lista-notificacoes').innerHTML = (notifs || []).map(n => `<tr><td>${n.tipo_comunicacao}</td><td>${n.destinatario}</td><td>${new Date(n.data_envio).toLocaleDateString('pt-BR')}</td><td>${n.status}</td><td>${n.observacoes || '-'}</td><td><button class="btn btn-danger btn-sm" onclick="excluirNotificacao(${n.id})">Excluir</button></td></tr>`).join('') || '<tr><td colspan="6" style="text-align:center;">Nenhuma comunicação registrada.</td></tr>';
 
                 const { data: hist } = await supabase.from('historico_processos').select('*').eq('processo_id', window.activeProcess.id).order('data_movimentacao', {ascending: false});
-                document.getElementById('lista-historico').innerHTML = (hist || []).map(h => `<tr><td>${new Date(h.data_movimentacao).toLocaleString('pt-BR')}</td><td>${h.descricao}</td><td>${h.status_anterior || '-'}</td><td><strong>${h.status_novo}</strong></td></tr>`).join('') || '<tr><td colspan="4" style="text-align:center;">Sem histórico.</td></tr>';
+                document.getElementById('lista-historico').innerHTML = (hist || []).map(h => `<tr><td>${new Date(h.data_movimentacao).toLocaleString('pt-BR')}</td><td>${h.descricao}</td><td>${h.status_anterior || '-'}</td><td><strong>${h.status_novo}</strong></td></tr>`).join('') || '<tr><td colspan="4" style="text-align:center;">Nenhuma movimentação registrada.</td></tr>';
             } catch(e) {}
         };
 
         window.loadAnexos = async () => {
             try {
                 const { data } = await supabase.from('processos_anexos').select('*').eq('processo_id', window.activeProcess.id);
-                document.getElementById('lista-anexos').innerHTML = (data || []).map(an => `<tr><td>${an.nome_arquivo}</td><td>${new Date(an.uploaded_at).toLocaleDateString('pt-BR')}</td><td><button class="btn btn-secondary btn-sm" onclick="downloadAnexo('${an.caminho_arquivo}')">Ver</button> <button class="btn btn-danger btn-sm" onclick="excluirAnexo(${an.id}, '${an.caminho_arquivo}')">Excluir</button></td></tr>`).join('') || '<tr><td colspan="3" style="text-align:center;">Nenhum anexo.</td></tr>';
+                document.getElementById('lista-anexos').innerHTML = (data || []).map(an => `<tr><td>${an.nome_arquivo}</td><td>${new Date(an.uploaded_at).toLocaleDateString('pt-BR')}</td><td><button class="btn btn-secondary btn-sm" onclick="downloadAnexo('${an.caminho_arquivo}')">Ver</button> <button class="btn btn-danger btn-sm" onclick="excluirAnexo(${an.id}, '${an.caminho_arquivo}')">Excluir</button></td></tr>`).join('') || '<tr><td colspan="3" style="text-align:center;">Nenhum arquivo anexado.</td></tr>';
             } catch(e) {}
         };
 
@@ -929,8 +929,8 @@
                 const colName = s.dataset.col;
                 if(colunasValidas.includes(colName)) {
                     let val = s.innerText.trim();
-                    if(colName === 'valor_causa') val = parseFloat(val.replace('R$', '').replace(/\./g, '').replace(',', '.').trim()) || 0;
-                    if(colName === 'requerente_documento' || colName === 'requerido_documento') val = val.replace(/\D/g, "");
+                    if(colName === 'valor_causa') val = parseFloat(val.replace('R$', '').replace(/\\./g, '').replace(',', '.').trim()) || 0;
+                    if(colName === 'requerente_documento' || colName === 'requerido_documento') val = val.replace(/\\D/g, "");
                     payload[colName] = val;
                 }
             });
@@ -1045,8 +1045,21 @@
                 </div>`;
             }
             else if(num === 4) { 
-                if(!arb) return alert("Vincule um árbitro primeiro."); 
-                html = `<div style="font-family: 'Times New Roman', serif;"><h3>PORTARIA DE NOMEAÇÃO N° ${p.numero_processo}</h3><p>O Presidente da ${cam.nome || 'Câmara'}, RESOLVE:</p><p>NOMEAR o Sr(a) <strong>${arb.nome}</strong> para atuar como Juiz Arbitral no processo.</p><div style="margin-top:60px; text-align:center;">_________________________________<br>Presidente</div></div>`; 
+                if(!arb) return alert("Vincule um árbitro primeiro na aba de Instrução e Sentença.");
+                html = `
+                <div style="font-family: 'Times New Roman', serif; text-align: justify; line-height: 1.6;">
+                    <div style="text-align:center; margin-bottom:20px;">
+                        <h3 style="margin:0; text-transform:uppercase;">${cam.nome || 'CÂMARA DE ARBITRAGEM, MEDIAÇÃO E CONCILIAÇÃO'}</h3>
+                        <p style="margin:0; font-size:12px;">CNPJ: ${cam.cnpj || '___.___.___/____-__'}</p>
+                    </div>
+                    <h3 style="text-align:center; text-decoration:underline;">PORTARIA ARBITRAL N° ${p.numero_processo}</h3>
+                    <p>O Presidente da ${cam.nome || 'CÂMARA DE ARBITRAGEM, MEDIAÇÃO E CONCILIAÇÃO'}, usando de suas atribuições legais que lhes são conferidas através do Art. 1º, III - DA DENOMINAÇÃO, SEDE E FINS, do Regimento Interno da Entidade.</p>
+                    <p><strong>RESOLVE:</strong></p>
+                    <p><strong>Art. 1º</strong> NOMEAR, na forma do §3º do art. 260 do CPC/2015, e §4º do art.7°, artigos 13 e 19 da Lei 9.307/96, o Sr(a). <strong>${arb.nome}</strong>, como Juiz Arbitral Ad hoc para atuar no Procedimento Arbitral de n° ${p.numero_processo}, constando como partes ${mkEdit(p.requerente_nome, 'requerente_nome')} e ${mkEdit(p.requerido_nome, 'requerido_nome')}, para, sob compromisso, desempenhar a função de Juiz Arbitral no Ato da Arbitragem supramencionada, ficando à disposição para todos os atos praticados no referido Procedimento Arbitral até o encerramento deste.</p>
+                    <p><strong>Art. 2º</strong> Esta Portaria entra em vigor na data de sua publicação.</p>
+                    <p style="text-align:right; margin-top: 30px;">${mkEdit('Local, Data.', 'campo_livre_local_data')}</p>
+                    <div style="margin-top:60px; text-align:center;">_________________________________________<br><strong>Presidente da Câmara</strong></div>
+                </div>`;
             }
             else if(num === 5) { 
                 if(!arb) return alert("Vincule um árbitro primeiro."); 
@@ -1191,18 +1204,46 @@
             document.getElementById('modal-preview').style.display = 'flex';
             
             document.getElementById('btn-download').onclick = () => { 
-                document.querySelectorAll('.editable-field').forEach(el => el.style.borderBottom = 'none'); 
+                const fields = document.querySelectorAll('.editable-field');
+                fields.forEach(el => {
+                    el.style.borderBottom = 'none';
+                    el.style.background = 'transparent';
+                    el.removeAttribute('contenteditable');
+                });
+                
+                const docTitles = {
+                    1: "01_Capa_do_Processo",
+                    2: "02_Termo_de_Apresentacao",
+                    3: "03_Notificacao_Extrajudicial",
+                    4: "04_Portaria_de_Nomeacao",
+                    5: "05_Termo_Compromisso_Arbitro",
+                    6: "06_Termo_Compromisso_Arbitral",
+                    7: "07_Ata_de_Audiencia",
+                    8: "08_Sentenca_Arbitral",
+                    9: "09_Termo_Entrega_Documentos",
+                    10: "10_Recibo_Acordo",
+                    11: "11_Recibo_Honorarios",
+                    12: "12_Requerimento",
+                    13: "13_Anexos"
+                };
+                const filename = `${docTitles[num] || 'Documento'}_${p.numero_processo}.pdf`;
+
                 const element = document.getElementById('pdf-area');
                 const opt = {
                     margin:       [15, 15, 15, 15],
-                    filename:     `Doc_${p.numero_processo}.pdf`,
+                    filename:     filename,
                     image:        { type: 'jpeg', quality: 0.98 },
                     html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 },
                     jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                    pagebreak:    { mode: ['css', 'legacy'], avoid: ['p', 'h1', 'h2', 'h3', 'h4', 'tr'] }
+                    pagebreak:    { mode: ['css', 'legacy'] }
                 };
                 html2pdf().set(opt).from(element).save().then(() => {
-                    setTimeout(() => document.querySelectorAll('.editable-field').forEach(el => el.style.borderBottom = '1px dashed var(--color-accent)'), 1000); 
+                    setTimeout(() => {
+                        fields.forEach(el => {
+                            el.style.borderBottom = '1px dashed var(--color-accent)';
+                            el.setAttribute('contenteditable', 'true');
+                        });
+                    }, 1000); 
                 });
             };
         };
@@ -1235,7 +1276,7 @@
                     image:        { type: 'jpeg', quality: 0.98 },
                     html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 },
                     jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                    pagebreak:    { mode: ['css', 'legacy'], avoid: ['p', 'h1', 'h2', 'h3', 'h4', 'tr'] }
+                    pagebreak:    { mode: ['css', 'legacy'] }
                 };
                 html2pdf().set(opt).from(element).save(); 
             };
