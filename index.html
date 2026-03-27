@@ -46,6 +46,7 @@
         .btn-success { background: #10b981; }
         .btn-secondary { background: #64748b; }
         .btn-danger { background: #ef4444; }
+        .btn-sm { padding: 4px 10px; font-size: 11px; }
 
         .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
         .badge-status { background: #e0e7ff; color: #3730a3; }
@@ -131,7 +132,7 @@
                 <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <h2>Painel de Controle</h2>
                     <div style="display:flex; gap:10px;">
-                        <input type="text" id="search-input" class="form-control" style="width: 200px; margin-top:0;" placeholder="Pesquisar...">
+                        <input type="text" id="search-input" class="form-control" style="width: 200px; margin-top:0;" placeholder="Pesquisar processos...">
                         <button class="btn btn-secondary" onclick="exportarCSV()">Exportar CSV</button>
                     </div>
                 </div>
@@ -362,7 +363,7 @@
                         
                         <hr style="margin:30px 0; border:0; border-top:1px solid #eee;">
                         <h4>Integrações (Webhooks / API)</h4>
-                        <p style="font-size:12px; color:#64748b;">Configure URLs para disparos automáticos (ex: Make, Zapier, Supabase Edge Functions) ao registrar notificações.</p>
+                        <p style="font-size:12px; color:#64748b;">Configure URLs para disparos automáticos (ex: Make, Zapier) ao registrar notificações.</p>
                         <div class="form-group"><label class="form-label">Webhook URL (Notificações)</label><input type="url" id="cam_webhook_url" class="form-control" placeholder="https://sua-api.com/webhook"></div>
                         <div class="form-group"><label class="form-label">Token/Secret (Opcional)</label><input type="text" id="cam_webhook_token" class="form-control" placeholder="Bearer seu_token_aqui"></div>
 
@@ -432,13 +433,19 @@
         };
         window.fecharToast = () => document.getElementById('toast').classList.remove('show');
 
-        // --- MÁSCARAS ---
+        // --- MÁSCARAS E PESQUISA ---
         const Masks = {
             doc: v => v.length <= 11 ? v.replace(/\D/g,"").replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,"$1.$2.$3-$4") : v.replace(/\D/g,"").replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,"$1.$2.$3/$4-$5"),
             money: v => "R$ " + (v.replace(/\D/g,"")/100).toLocaleString('pt-BR', {minimumFractionDigits: 2}),
             cleanMoney: v => parseFloat(v.replace(/[^\d,]/g,'').replace(',','.'))
         };
         document.body.addEventListener('input', (e) => { if (e.target.getAttribute('data-mask')) e.target.value = Masks[e.target.getAttribute('data-mask')](e.target.value); });
+        
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = window.db_procs.filter(p => p.numero_processo.toLowerCase().includes(term) || p.requerente_nome.toLowerCase().includes(term) || p.requerido_nome.toLowerCase().includes(term));
+            document.getElementById('lista-processos').innerHTML = filtered.map(p => `<tr><td onclick="openProc('${p.id}')" style="cursor:pointer"><span class="link-processo">${p.numero_processo}</span></td><td onclick="openProc('${p.id}')" style="cursor:pointer">${p.requerente_nome}</td><td onclick="openProc('${p.id}')" style="cursor:pointer">${p.requerido_nome}</td><td><span class="badge badge-status">${p.status}</span></td><td><button class="btn btn-danger btn-sm" onclick="excluirProcesso('${p.id}')">Excluir</button></td></tr>`).join('');
+        });
 
         // --- NAVEGAÇÃO ---
         window.mostrarMudarView = (moduleId) => { document.querySelectorAll('.module').forEach(m => m.classList.remove('active')); document.getElementById(moduleId).classList.add('active'); };
@@ -508,7 +515,7 @@
                 if(acordo) {
                     const { data: parcs } = await supabase.from('parcelas').select('*').eq('acordo_id', acordo.id).order('numero_parcela');
                     document.getElementById('lista-parcelas').innerHTML = (parcs || []).map(pa => `<tr><td>${pa.numero_parcela}</td><td>${new Date(pa.data_vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</td><td>R$ ${Number(pa.valor_parcela).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td><td><span class="badge badge-${pa.status.toLowerCase()}">${pa.status}</span></td><td>${pa.status === 'Pendente' ? `<button class="btn btn-success btn-sm" onclick="pagarParcela(${pa.id})">Baixar</button>` : `<button class="btn btn-primary btn-sm" onclick="visualizarRecibo(${pa.id}, ${pa.numero_parcela}, '${pa.valor_parcela}', '${pa.data_pagamento}')">Recibo</button>`}</td></tr>`).join('');
-                } else document.getElementById('lista-parcelas').innerHTML = '<tr><td colspan="5" style="text-align:center;">Nenhum acordo.</td></tr>';
+                } else document.getElementById('lista-parcelas').innerHTML = '<tr><td colspan="5" style="text-align:center;">Nenhum acordo firmado.</td></tr>';
                 await Promise.all([loadAnexos(), loadAndamento()]);
             } catch(e) {} showView('detalhes');
         };
@@ -516,14 +523,14 @@
         const loadAndamento = async () => {
             document.getElementById('proc_status').value = activeProcess.status;
             const { data: notifs } = await supabase.from('notificacoes').select('*').eq('processo_id', activeProcess.id).order('data_envio', {ascending: false});
-            document.getElementById('lista-notificacoes').innerHTML = (notifs || []).map(n => `<tr><td>${n.tipo_comunicacao}</td><td>${n.destinatario}</td><td>${new Date(n.data_envio).toLocaleDateString('pt-BR')}</td><td>${n.status}</td><td><button class="btn btn-danger btn-sm" onclick="excluirNotificacao(${n.id})">Del</button></td></tr>`).join('') || '<tr><td colspan="5" style="text-align:center;">Nenhuma notificação.</td></tr>';
+            document.getElementById('lista-notificacoes').innerHTML = (notifs || []).map(n => `<tr><td>${n.tipo_comunicacao}</td><td>${n.destinatario}</td><td>${new Date(n.data_envio).toLocaleDateString('pt-BR')}</td><td>${n.status}</td><td>${n.observacoes || '-'}</td><td><button class="btn btn-danger btn-sm" onclick="excluirNotificacao(${n.id})">Excluir</button></td></tr>`).join('') || '<tr><td colspan="6" style="text-align:center;">Nenhuma comunicação registrada.</td></tr>';
             const { data: hist } = await supabase.from('historico_processos').select('*').eq('processo_id', activeProcess.id).order('data_movimentacao', {ascending: false});
             document.getElementById('lista-historico').innerHTML = (hist || []).map(h => `<tr><td>${new Date(h.data_movimentacao).toLocaleString('pt-BR')}</td><td>${h.descricao}</td><td>${h.status_anterior || '-'}</td><td><strong>${h.status_novo}</strong></td></tr>`).join('');
         };
 
         const loadAnexos = async () => {
             const { data } = await supabase.from('processos_anexos').select('*').eq('processo_id', activeProcess.id);
-            document.getElementById('lista-anexos').innerHTML = (data || []).map(an => `<tr><td>${an.nome_arquivo}</td><td>${new Date(an.uploaded_at).toLocaleDateString('pt-BR')}</td><td><button class="btn btn-secondary btn-sm" onclick="downloadAnexo('${an.caminho_arquivo}')">Ver</button> <button class="btn btn-danger btn-sm" onclick="excluirAnexo(${an.id}, '${an.caminho_arquivo}')">Excluir</button></td></tr>`).join('') || '<tr><td colspan="3" style="text-align:center;">Nenhum anexo.</td></tr>';
+            document.getElementById('lista-anexos').innerHTML = (data || []).map(an => `<tr><td>${an.nome_arquivo}</td><td>${new Date(an.uploaded_at).toLocaleDateString('pt-BR')}</td><td><button class="btn btn-secondary btn-sm" onclick="downloadAnexo('${an.caminho_arquivo}')">Ver</button> <button class="btn btn-danger btn-sm" onclick="excluirAnexo(${an.id}, '${an.caminho_arquivo}')">Excluir</button></td></tr>`).join('') || '<tr><td colspan="3" style="text-align:center;">Nenhum arquivo anexado.</td></tr>';
         };
 
         // --- ATUALIZAÇÕES CRUD ---
@@ -549,17 +556,12 @@
             showToast("Comunicação registrada no banco!"); 
             document.getElementById('notificacao-form').reset(); loadAndamento();
             
-            // Disparo Webhook
             try {
                 const conf = JSON.parse(localStorage.getItem('camara_config') || '{}');
                 if (conf.webhook_url) {
                     const headers = { 'Content-Type': 'application/json' };
                     if (conf.webhook_token) headers['Authorization'] = conf.webhook_token;
-                    
-                    fetch(conf.webhook_url, {
-                        method: 'POST', headers: headers,
-                        body: JSON.stringify({ evento: 'nova_notificacao', processo: activeProcess.numero_processo, notificacao: payload })
-                    }).then(r => console.log('Webhook acionado:', r.status)).catch(err => console.warn('Erro Webhook:', err));
+                    fetch(conf.webhook_url, { method: 'POST', headers: headers, body: JSON.stringify({ evento: 'nova_notificacao', processo: activeProcess.numero_processo, notificacao: payload }) }).catch(err => console.warn('Erro Webhook:', err));
                 }
             } catch(ex) { console.log('Sem webhook configurado.'); }
         };
@@ -598,7 +600,7 @@
         // --- SUBMISSÕES E CRUD EXTRAS ---
         document.getElementById('acordo-form').onsubmit = (e) => { e.preventDefault(); showConfirm('Gerar acordo e parcelas definitivas?', async () => { const v = document.getElementById('aco_valor').value.replace(/[^\d,]/g,'').replace(',','.'); const d = new Date(document.getElementById('aco_data').value + 'T00:00:00'); const { error } = await supabase.from('acordos').insert([{ processo_id: activeProcess.id, valor_acordado: parseFloat(v), quantidade_parcelas: parseInt(document.getElementById('aco_parc').value), dia_vencimento: d.getDate() }]); if(error) showToast(error.message); else { showToast('Acordo gerado!'); openProc(activeProcess.id); carregarDashAnalytics(); } }); };
         window.pagarParcela = (id) => showConfirm('Dar baixa nesta parcela?', async () => { await supabase.rpc('registrar_pagamento_parcela', { p_parcela_id: id }); showToast('Pagamento registrado!'); openProc(activeProcess.id); carregarDashAnalytics(); });
-        window.excluirProcesso = (id) => showConfirm('A exclusão apagará TUDO. Confirma?', async () => { await supabase.from('processos').delete().eq('id', id); showToast('Processo excluído.'); carregarProcessos(); carregarDashAnalytics(); });
+        window.excluirProcesso = (id) => showConfirm('A exclusão apagará TUDO. Confirma?', async () => { await supabase.from('processos').delete().eq('id', id); showToast('Processo excluído.'); carregarProcessos(); carregarDashAnalytics(); showView('dash'); });
         window.excluirArbitro = (id) => showConfirm('Excluir este árbitro?', async () => { await supabase.from('arbitros').delete().eq('id', id); showToast('Excluído.'); carregarArbitros(); });
         window.excluirNotificacao = (id) => showConfirm('Excluir notificação?', async () => { await supabase.from('notificacoes').delete().eq('id', id); showToast('Excluída.'); loadAndamento(); });
         window.excluirAnexo = (id, path) => showConfirm('Deletar arquivo?', async () => { await supabase.storage.from('documentos_assinados').remove([path]); await supabase.from('processos_anexos').delete().eq('id', id); showToast('Deletado.'); loadAnexos(); });
