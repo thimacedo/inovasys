@@ -27,7 +27,7 @@
         .sidebar-brand { padding: 25px; text-align: center; border-bottom: 1px solid #e2e8f0; }
         .nav-item { padding: 15px 25px; cursor: pointer; font-size: 14px; font-weight: 500; color: #64748b; border-left: 4px solid transparent; }
         .nav-item.active { background: #f1f5f9; color: var(--color-accent); border-left-color: var(--color-accent); }
-        .main { flex: 1; margin-left: var(--sidebar-width); padding: 40px; }
+        .main { flex: 1; margin-left: var(--sidebar-width); padding: 40px; position: relative;}
 
         .card { background: white; border-radius: 8px; border: 1px solid #e2e8f0; padding: 25px; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
@@ -38,10 +38,12 @@
         .form-group { margin-bottom: 15px; }
         .form-label { font-size: 12px; font-weight: 600; color: var(--color-primary); }
         
-        .btn { padding: 10px 18px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; color: white; transition: 0.2s; font-size: 13px; text-align: center; }
+        .btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; color: white; transition: 0.2s; font-size: 13px; text-align: center; display: inline-block; }
         .btn-primary { background: var(--color-accent); }
         .btn-success { background: #10b981; }
         .btn-secondary { background: #64748b; }
+        .btn-danger { background: #ef4444; }
+        .btn-sm { padding: 4px 10px; font-size: 11px; }
 
         .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
         .badge-pendente { background: #fef3c7; color: #92400e; }
@@ -56,7 +58,6 @@
         .doc-list { display: grid; gap: 10px; margin-top: 15px; }
         .doc-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; }
         .doc-item span { font-weight: 500; font-size: 14px; color: #334155; }
-        .doc-item .btn { width: auto; margin: 0; padding: 8px 16px; }
         
         .link-processo { color: var(--color-accent); font-weight: bold; text-decoration: underline; cursor: pointer; }
 
@@ -67,13 +68,21 @@
         .stat-value.success { color: #10b981; }
         .stat-value.warning { color: #f59e0b; }
 
-        #modal-preview { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; }
+        /* Componentes Modais e Toast */
+        #modal-preview, #modal-confirm { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; width: 90%; max-width: 800px; height: 85vh; border-radius: 12px; display: flex; flex-direction: column; }
+        .modal-content-small { background: white; width: 90%; max-width: 400px; border-radius: 12px; padding: 25px; text-align: center; }
         .modal-header { padding: 15px 25px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
         .modal-body { flex: 1; overflow-y: auto; padding: 40px; background: #f1f5f9; }
         .pdf-page { background: white; width: 100%; padding: 60px; box-sizing: border-box; font-family: 'Times New Roman', serif; box-shadow: 0 5px 15px rgba(0,0,0,0.2); line-height: 1.6; color: #000; }
         .pdf-header { text-align: center; margin-bottom: 40px; }
         .pdf-logo { max-width: 100px; margin-bottom: 10px; }
+        
+        .editable-field { border-bottom: 1px dashed var(--color-accent); cursor: text; transition: background 0.2s; padding: 0 2px; }
+        .editable-field:hover, .editable-field:focus { background: #e0f2fe; outline: none; }
+
+        .toast { position: fixed; bottom: 30px; right: 30px; background: #1e293b; color: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 10px 15px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 15px; opacity: 0; transition: opacity 0.3s, transform 0.3s; transform: translateY(20px); pointer-events: none; z-index: 9999; font-size: 14px; font-weight: 500; }
+        .toast.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
     </style>
 </head>
 <body>
@@ -141,7 +150,7 @@
                     </form>
                 </div>
                 <div class="card">
-                    <table><thead><tr><th>Nome</th><th>CPF</th><th>Profissão</th></tr></thead><tbody id="lista-arbitros"></tbody></table>
+                    <table><thead><tr><th>Nome</th><th>CPF</th><th>Profissão</th><th>Ação</th></tr></thead><tbody id="lista-arbitros"></tbody></table>
                 </div>
             </div>
 
@@ -208,24 +217,25 @@
 
                 <div id="tab-docs" class="tab-content">
                     <div class="card">
+                        <p style="font-size:13px; color:#64748b; margin-top:0;">Dica: Clique em <strong>Visualizar</strong>. Dentro do documento, os dados sublinhados podem ser editados diretamente no texto e salvos no banco de dados.</p>
                         <h4>Fase 1: Início do Procedimento</h4>
                         <div class="doc-list">
-                            <div class="doc-item"><span>01. Capa do Processo</span><button class="btn btn-primary" onclick="visualizarDoc(1)">Visualizar</button></div>
-                            <div class="doc-item"><span>02. Termo de Apresentação</span><button class="btn btn-primary" onclick="visualizarDoc(2)">Visualizar</button></div>
+                            <div class="doc-item"><span>Capa do Processo</span><button class="btn btn-primary" onclick="visualizarDoc(1)">Visualizar</button></div>
+                            <div class="doc-item"><span>Termo de Apresentação</span><button class="btn btn-primary" onclick="visualizarDoc(2)">Visualizar</button></div>
                         </div>
                         <h4 style="margin-top:30px;">Fase 2: Comunicação e Instalação</h4>
                         <div class="doc-list">
-                            <div class="doc-item"><span>03. Notificação Extrajudicial</span><button class="btn btn-primary" onclick="visualizarDoc(3)">Visualizar</button></div>
-                            <div class="doc-item"><span>04. Portaria de Nomeação</span><button class="btn btn-primary" onclick="visualizarDoc(4)">Visualizar</button></div>
-                            <div class="doc-item"><span>05. Termo de Compromisso Árbitro</span><button class="btn btn-primary" onclick="visualizarDoc(5)">Visualizar</button></div>
-                            <div class="doc-item"><span>11. Recibo de Honorários (Câmara)</span><button class="btn btn-primary" onclick="visualizarDoc(11)">Visualizar</button></div>
+                            <div class="doc-item"><span>Notificação Extrajudicial</span><button class="btn btn-primary" onclick="visualizarDoc(3)">Visualizar</button></div>
+                            <div class="doc-item"><span>Portaria de Nomeação</span><button class="btn btn-primary" onclick="visualizarDoc(4)">Visualizar</button></div>
+                            <div class="doc-item"><span>Termo de Compromisso Árbitro</span><button class="btn btn-primary" onclick="visualizarDoc(5)">Visualizar</button></div>
+                            <div class="doc-item"><span>Recibo de Honorários (Câmara)</span><button class="btn btn-primary" onclick="visualizarDoc(11)">Visualizar</button></div>
                         </div>
                         <h4 style="margin-top:30px;">Fase 3: Audiência e Decisão</h4>
                         <div class="doc-list">
-                            <div class="doc-item"><span>06. Termo de Compromisso Arbitral</span><button class="btn btn-primary" onclick="visualizarDoc(6)">Visualizar</button></div>
-                            <div class="doc-item"><span>07. Ata de Audiência</span><button class="btn btn-primary" onclick="visualizarDoc(7)">Visualizar</button></div>
-                            <div class="doc-item"><span>08. Sentença Arbitral</span><button class="btn btn-primary" onclick="visualizarDoc(8)">Visualizar</button></div>
-                            <div class="doc-item"><span>09. Termo de Entrega de Documentos</span><button class="btn btn-primary" onclick="visualizarDoc(9)">Visualizar</button></div>
+                            <div class="doc-item"><span>Termo de Compromisso Arbitral</span><button class="btn btn-primary" onclick="visualizarDoc(6)">Visualizar</button></div>
+                            <div class="doc-item"><span>Ata de Audiência</span><button class="btn btn-primary" onclick="visualizarDoc(7)">Visualizar</button></div>
+                            <div class="doc-item"><span>Sentença Arbitral</span><button class="btn btn-primary" onclick="visualizarDoc(8)">Visualizar</button></div>
+                            <div class="doc-item"><span>Termo de Entrega de Documentos</span><button class="btn btn-primary" onclick="visualizarDoc(9)">Visualizar</button></div>
                         </div>
                     </div>
                 </div>
@@ -259,7 +269,7 @@
                             <div class="form-group"><label class="form-label">Observações</label><input type="text" id="not_obs" class="form-control"></div>
                             <button type="submit" class="btn btn-primary">Registrar Comunicação</button>
                         </form>
-                        <table style="margin-top:20px;"><thead><tr><th>Meio</th><th>Destinatário</th><th>Data</th><th>Status</th><th>Obs</th></tr></thead><tbody id="lista-notificacoes"></tbody></table>
+                        <table style="margin-top:20px;"><thead><tr><th>Meio</th><th>Destinatário</th><th>Data</th><th>Status</th><th>Obs</th><th>Ação</th></tr></thead><tbody id="lista-notificacoes"></tbody></table>
                     </div>
                     <div class="card">
                         <h4>Auditoria do Processo</h4>
@@ -282,7 +292,7 @@
                         <button class="btn btn-success" style="width:auto;" onclick="salvarTextosAudiencia()">Salvar Textos Jurídicos</button>
                     </div>
                     <div class="card">
-                        <h4>Termos do Acordo (Opcional)</h4>
+                        <h4>Termos do Acordo Financeiro</h4>
                         <form id="acordo-form">
                             <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:15px; margin-bottom:15px;">
                                 <div><label class="form-label">Valor do Acordo</label><input type="text" id="aco_valor" class="form-control" data-mask="money" required></div>
@@ -331,12 +341,30 @@
                     <div id="p-body"></div>
                 </div>
             </div>
-            <div style="padding:15px; text-align:right; background:#f8fafc; border-top:1px solid #eee;">
-                <button class="btn btn-secondary" style="width:auto;" onclick="fecharModal()">Cancelar</button>
-                <button class="btn btn-success" style="width:auto;" id="btn-download">Baixar PDF</button>
+            <div style="padding:15px; text-align:right; background:#f8fafc; border-top:1px solid #eee; display: flex; justify-content: space-between;">
+                <div>
+                    <button class="btn btn-success" id="btn-salvar-edicoes" style="display:none;" onclick="salvarEdicoesEmLinha()">Salvar Alterações no Banco</button>
+                </div>
+                <div>
+                    <button class="btn btn-secondary" style="width:auto;" onclick="fecharModal()">Cancelar</button>
+                    <button class="btn btn-primary" style="width:auto;" id="btn-download">Baixar PDF</button>
+                </div>
             </div>
         </div>
     </div>
+
+    <div id="modal-confirm">
+        <div class="modal-content-small">
+            <h3 style="margin-top:0; color:var(--color-primary);">Confirmação Necessária</h3>
+            <p id="confirm-msg" style="color:#64748b; font-size:14px; line-height:1.5; margin-bottom:25px;"></p>
+            <div style="display:flex; gap:10px; justify-content:center;">
+                <button class="btn btn-secondary" onclick="closeConfirm()">Cancelar</button>
+                <button class="btn btn-danger" onclick="executeConfirm()">Confirmar Ação</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
 
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/+esm';
@@ -346,37 +374,47 @@
         let db_arbitros = [];
         let activeAudiencia = null;
 
-        const Masks = {
-            doc: (v) => {
-                v = v.replace(/\D/g, "");
-                if (v.length <= 11) return v.replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-                return v.replace(/(\d{2})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1/$2").replace(/(\d{4})(\d{1,2})$/, "$1-$2");
-            },
-            money: (v) => {
-                v = v.replace(/\D/g, "");
-                if (v === "") return "";
-                v = (parseInt(v) / 100).toFixed(2).replace(".", ",");
-                return "R$ " + v.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
-            },
-            phone: (v) => {
-                v = v.replace(/\D/g, "");
-                if (v.length <= 10) return v.replace(/(\d{2})(\d)/, "($1) $2").replace(/(\d{4})(\d)/, "$1-$2");
-                return v.replace(/(\d{2})(\d)/, "($1) $2").replace(/(\d{5})(\d)/, "$1-$2");
-            }
+        // --- SISTEMA DE CONFIRMAÇÃO E TOAST ---
+        let confirmActionCallback = null;
+        window.showConfirm = (msg, callback) => {
+            document.getElementById('confirm-msg').innerText = msg;
+            confirmActionCallback = callback;
+            document.getElementById('modal-confirm').style.display = 'flex';
         };
+        window.closeConfirm = () => document.getElementById('modal-confirm').style.display = 'none';
+        window.executeConfirm = () => { if(confirmActionCallback) confirmActionCallback(); closeConfirm(); };
 
-        document.body.addEventListener('input', (e) => {
-            const maskType = e.target.getAttribute('data-mask');
-            if (maskType && Masks[maskType]) {
-                e.target.value = Masks[maskType](e.target.value);
+        let toastTimeout;
+        window.showToast = (msg, undoCallback = null) => {
+            const t = document.getElementById('toast');
+            t.innerHTML = `<span>${msg}</span>`;
+            if (undoCallback) {
+                const btn = document.createElement('button');
+                btn.innerText = 'Desfazer';
+                btn.className = 'btn btn-secondary btn-sm';
+                btn.style.marginLeft = '15px';
+                btn.onclick = () => { undoCallback(); window.fecharToast(); };
+                t.appendChild(btn);
             }
-        });
+            t.classList.add('show');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(window.fecharToast, 6000);
+        };
+        window.fecharToast = () => document.getElementById('toast').classList.remove('show');
 
+        // --- MÁSCARAS ---
+        const Masks = {
+            doc: (v) => { v = v.replace(/\D/g, ""); return v.length <= 11 ? v.replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2") : v.replace(/(\d{2})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1/$2").replace(/(\d{4})(\d{1,2})$/, "$1-$2"); },
+            money: (v) => { v = v.replace(/\D/g, ""); return v === "" ? "" : "R$ " + (parseInt(v) / 100).toFixed(2).replace(".", ",").replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1."); },
+            phone: (v) => { v = v.replace(/\D/g, ""); return v.length <= 10 ? v.replace(/(\d{2})(\d)/, "($1) $2").replace(/(\d{4})(\d)/, "$1-$2") : v.replace(/(\d{2})(\d)/, "($1) $2").replace(/(\d{5})(\d)/, "$1-$2"); }
+        };
+        document.body.addEventListener('input', (e) => { if (e.target.getAttribute('data-mask')) e.target.value = Masks[e.target.getAttribute('data-mask')](e.target.value); });
+
+        // --- NAVEGAÇÃO E INICIALIZAÇÃO ---
         window.switchTab = (tabId, el) => {
             document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
             document.querySelectorAll('.tab-link').forEach(l => l.classList.remove('active'));
-            document.getElementById(tabId).style.display = 'block';
-            el.classList.add('active');
+            document.getElementById(tabId).style.display = 'block'; el.classList.add('active');
         };
 
         const showView = (id) => {
@@ -387,97 +425,55 @@
         };
 
         const iniciarSistema = async (user) => {
-            document.getElementById('module-auth').classList.remove('active');
-            document.getElementById('module-app').classList.add('active');
+            document.getElementById('module-auth').classList.remove('active'); document.getElementById('module-app').classList.add('active');
             try {
                 const { data: perfil } = await supabase.from('perfis').select('*').eq('id', user.id).maybeSingle();
-                if (perfil && perfil.tipo_usuario === 'admin') {
-                    document.getElementById('nav-equipe').style.display = 'block';
-                    document.getElementById('nav-camara').style.display = 'block';
-                }
+                if (perfil && perfil.tipo_usuario === 'admin') { document.getElementById('nav-equipe').style.display = 'block'; document.getElementById('nav-camara').style.display = 'block'; }
             } catch (err) {}
             await loadDataSafe();
         };
 
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            if (session) iniciarSistema(session.user);
-        });
-
+        supabase.auth.getSession().then(({ data: { session } }) => { if (session) iniciarSistema(session.user); });
         supabase.auth.onAuthStateChange((event, session) => {
             if (event === 'SIGNED_IN' && session) iniciarSistema(session.user);
-            else if (event === 'SIGNED_OUT') {
-                document.getElementById('module-app').classList.remove('active');
-                document.getElementById('module-auth').classList.add('active');
-            }
+            else if (event === 'SIGNED_OUT') { document.getElementById('module-app').classList.remove('active'); document.getElementById('module-auth').classList.add('active'); }
         });
 
         document.getElementById('login-form').onsubmit = async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btn-login');
-            btn.innerText = "Carregando...";
-            const { error } = await supabase.auth.signInWithPassword({
-                email: e.target.email.value,
-                password: e.target.password.value
-            });
-            if (error) {
-                alert("Erro ao acessar: " + error.message);
-                btn.innerText = "Acessar Painel";
-            }
+            e.preventDefault(); const btn = document.getElementById('btn-login'); btn.innerText = "Carregando...";
+            const { error } = await supabase.auth.signInWithPassword({ email: e.target.email.value, password: e.target.password.value });
+            if (error) { alert("Erro ao acessar: " + error.message); btn.innerText = "Acessar Painel"; }
         };
-
         document.getElementById('nav-logout').onclick = async () => await supabase.auth.signOut();
 
-        const loadDataSafe = async () => {
-            try {
-                await Promise.all([carregarProcessos(), carregarDashboardMetrics(), carregarArbitros(), carregarEquipe()]);
-            } catch (err) {}
-        };
+        const loadDataSafe = async () => { try { await Promise.all([carregarProcessos(), carregarDashboardMetrics(), carregarArbitros(), carregarEquipe()]); } catch (err) {} };
 
+        // --- LOADERS DE DADOS ---
         const carregarProcessos = async () => {
-            try {
-                const { data } = await supabase.from('processos').select('*').order('created_at', {ascending: false});
-                window.db_procs = data || [];
-                document.getElementById('lista-processos').innerHTML = window.db_procs.map(p => `
-                    <tr onclick="openProc('${p.id}')" style="cursor:pointer">
-                        <td><span class="link-processo">${p.numero_processo}</span></td>
-                        <td>${p.requerente_nome}</td>
-                        <td>${p.requerido_nome}</td>
-                        <td><span class="badge badge-status">${p.status}</span></td>
-                    </tr>
-                `).join('');
-            } catch(e) {}
+            const { data } = await supabase.from('processos').select('*').order('created_at', {ascending: false});
+            window.db_procs = data || [];
+            document.getElementById('lista-processos').innerHTML = window.db_procs.map(p => `<tr onclick="openProc('${p.id}')" style="cursor:pointer"><td><span class="link-processo">${p.numero_processo}</span></td><td>${p.requerente_nome}</td><td>${p.requerido_nome}</td><td><span class="badge badge-status">${p.status}</span></td></tr>`).join('');
         };
 
         const carregarDashboardMetrics = async () => {
-            try {
-                const { data } = await supabase.rpc('get_dashboard_metrics');
-                if (data) {
-                    document.getElementById('dash-ativos').innerText = data.processos_ativos || 0;
-                    document.getElementById('dash-volume').innerText = Masks.money((data.volume_acordos || 0).toString());
-                    document.getElementById('dash-recebido').innerText = Masks.money((data.total_recebido || 0).toString());
-                    document.getElementById('dash-pendente').innerText = Masks.money((data.total_pendente || 0).toString());
-                }
-            } catch(e) {}
+            const { data } = await supabase.rpc('get_dashboard_metrics');
+            if (data) {
+                document.getElementById('dash-ativos').innerText = data.processos_ativos || 0;
+                document.getElementById('dash-volume').innerText = Masks.money((data.volume_acordos || 0).toString());
+                document.getElementById('dash-recebido').innerText = Masks.money((data.total_recebido || 0).toString());
+                document.getElementById('dash-pendente').innerText = Masks.money((data.total_pendente || 0).toString());
+            }
         };
 
         const carregarArbitros = async () => {
-            try {
-                const { data } = await supabase.from('arbitros').select('*').order('nome');
-                db_arbitros = data || [];
-                document.getElementById('lista-arbitros').innerHTML = db_arbitros.map(a => `<tr><td>${a.nome}</td><td>${a.cpf}</td><td>${a.profissao || '-'}</td></tr>`).join('');
-                document.getElementById('select-arbitro').innerHTML = '<option value="">Selecionar Árbitro...</option>' + db_arbitros.map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
-            } catch(e) {}
+            const { data } = await supabase.from('arbitros').select('*').order('nome'); db_arbitros = data || [];
+            document.getElementById('lista-arbitros').innerHTML = db_arbitros.map(a => `<tr><td>${a.nome}</td><td>${a.cpf}</td><td>${a.profissao || '-'}</td><td><button class="btn btn-danger btn-sm" onclick="excluirArbitro('${a.id}')">Excluir</button></td></tr>`).join('');
+            document.getElementById('select-arbitro').innerHTML = '<option value="">Selecionar Árbitro...</option>' + db_arbitros.map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
         };
 
         const carregarEquipe = async () => {
-            try {
-                const { data } = await supabase.from('perfis').select('*').order('created_at', {ascending: false});
-                if (data) {
-                    document.getElementById('lista-equipe').innerHTML = data.map(e => `
-                        <tr><td>${e.nome || 'Usuário'}</td><td>${new Date(e.created_at).toLocaleDateString('pt-BR')}</td><td><span class="badge ${e.tipo_usuario === 'admin' ? 'badge-admin' : 'badge-status'}">${e.tipo_usuario}</span></td></tr>
-                    `).join('');
-                }
-            } catch(e) {}
+            const { data } = await supabase.from('perfis').select('*').order('created_at', {ascending: false});
+            if (data) document.getElementById('lista-equipe').innerHTML = data.map(e => `<tr><td>${e.nome || 'Usuário'}</td><td>${new Date(e.created_at).toLocaleDateString('pt-BR')}</td><td><span class="badge ${e.tipo_usuario === 'admin' ? 'badge-admin' : 'badge-status'}">${e.tipo_usuario}</span></td></tr>`).join('');
         };
 
         window.openProc = async (id) => {
@@ -488,161 +484,69 @@
             try {
                 const { data: aud } = await supabase.from('audiencias').select('*').eq('processo_id', id).maybeSingle();
                 activeAudiencia = aud || null;
-                document.getElementById('texto_ata').value = aud?.texto_ata || '';
-                document.getElementById('texto_sentenca').value = aud?.texto_sentenca || '';
+                document.getElementById('texto_ata').value = aud?.texto_ata || ''; document.getElementById('texto_sentenca').value = aud?.texto_sentenca || '';
                 
                 const { data: acordo } = await supabase.from('acordos').select('id').eq('processo_id', id).maybeSingle();
                 if(acordo) {
                     const { data: parcelas } = await supabase.from('parcelas').select('*').eq('acordo_id', acordo.id).order('numero_parcela');
-                    document.getElementById('lista-parcelas').innerHTML = (parcelas || []).map(pa => `
-                        <tr>
-                            <td>${pa.numero_parcela}</td>
-                            <td>${new Date(pa.data_vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
-                            <td>R$ ${Number(pa.valor_parcela).toLocaleString('pt-BR')}</td>
-                            <td><span class="badge badge-${pa.status.toLowerCase()}">${pa.status}</span></td>
-                            <td>${pa.status === 'Pendente' 
-                                ? `<button class="btn btn-success" style="padding: 4px 10px;" onclick="pagarParcela(${pa.id})">Dar Baixa</button>` 
-                                : `<button class="btn btn-primary" style="padding: 4px 10px;" onclick="visualizarRecibo(${pa.id}, ${pa.numero_parcela}, '${pa.valor_parcela}', '${pa.data_pagamento}')">Recibo</button>`}
-                            </td>
-                        </tr>
-                    `).join('');
-                } else {
-                    document.getElementById('lista-parcelas').innerHTML = '<tr><td colspan="5" style="text-align:center;">Nenhum acordo firmado.</td></tr>';
-                }
+                    document.getElementById('lista-parcelas').innerHTML = (parcelas || []).map(pa => `<tr><td>${pa.numero_parcela}</td><td>${new Date(pa.data_vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</td><td>R$ ${Number(pa.valor_parcela).toLocaleString('pt-BR')}</td><td><span class="badge badge-${pa.status.toLowerCase()}">${pa.status}</span></td><td>${pa.status === 'Pendente' ? `<button class="btn btn-success btn-sm" onclick="pagarParcela(${pa.id})">Baixar</button>` : `<button class="btn btn-primary btn-sm" onclick="visualizarRecibo(${pa.id}, ${pa.numero_parcela}, '${pa.valor_parcela}', '${pa.data_pagamento}')">Recibo</button>`}</td></tr>`).join('');
+                } else document.getElementById('lista-parcelas').innerHTML = '<tr><td colspan="5" style="text-align:center;">Nenhum acordo firmado.</td></tr>';
 
                 await Promise.all([loadAnexos(), loadAndamento()]);
-            } catch(e) {}
-            
-            showView('detalhes');
+            } catch(e) {} showView('detalhes');
         };
 
         const loadAndamento = async () => {
             document.getElementById('proc_status').value = activeProcess.status;
             try {
                 const { data: notifs } = await supabase.from('notificacoes').select('*').eq('processo_id', activeProcess.id).order('data_envio', {ascending: false});
-                document.getElementById('lista-notificacoes').innerHTML = (notifs || []).map(n => `
-                    <tr><td>${n.tipo_comunicacao}</td><td>${n.destinatario}</td><td>${new Date(n.data_envio).toLocaleDateString('pt-BR')}</td><td>${n.status}</td><td>${n.observacoes || '-'}</td></tr>
-                `).join('') || '<tr><td colspan="5" style="text-align:center;">Nenhuma comunicação registrada.</td></tr>';
+                document.getElementById('lista-notificacoes').innerHTML = (notifs || []).map(n => `<tr><td>${n.tipo_comunicacao}</td><td>${n.destinatario}</td><td>${new Date(n.data_envio).toLocaleDateString('pt-BR')}</td><td>${n.status}</td><td>${n.observacoes || '-'}</td><td><button class="btn btn-danger btn-sm" onclick="excluirNotificacao(${n.id})">Excluir</button></td></tr>`).join('') || '<tr><td colspan="6" style="text-align:center;">Nenhuma comunicação registrada.</td></tr>';
 
                 const { data: hist } = await supabase.from('historico_processos').select('*').eq('processo_id', activeProcess.id).order('data_movimentacao', {ascending: false});
-                document.getElementById('lista-historico').innerHTML = (hist || []).map(h => `
-                    <tr><td>${new Date(h.data_movimentacao).toLocaleString('pt-BR')}</td><td>${h.descricao}</td><td>${h.status_anterior || '-'}</td><td><strong>${h.status_novo}</strong></td></tr>
-                `).join('') || '<tr><td colspan="4" style="text-align:center;">Nenhuma movimentação registrada.</td></tr>';
+                document.getElementById('lista-historico').innerHTML = (hist || []).map(h => `<tr><td>${new Date(h.data_movimentacao).toLocaleString('pt-BR')}</td><td>${h.descricao}</td><td>${h.status_anterior || '-'}</td><td><strong>${h.status_novo}</strong></td></tr>`).join('') || '<tr><td colspan="4" style="text-align:center;">Nenhuma movimentação registrada.</td></tr>';
             } catch(e) {}
         };
 
         const loadAnexos = async () => {
             try {
                 const { data } = await supabase.from('processos_anexos').select('*').eq('processo_id', activeProcess.id);
-                document.getElementById('lista-anexos').innerHTML = (data || []).map(an => `
-                    <tr><td>${an.nome_arquivo}</td><td>${new Date(an.uploaded_at).toLocaleDateString('pt-BR')}</td><td><button class="btn btn-secondary" style="padding: 4px 10px;" onclick="downloadAnexo('${an.caminho_arquivo}')">Ver</button></td></tr>
-                `).join('') || '<tr><td colspan="3" style="text-align:center;">Nenhum arquivo anexado.</td></tr>';
+                document.getElementById('lista-anexos').innerHTML = (data || []).map(an => `<tr><td>${an.nome_arquivo}</td><td>${new Date(an.uploaded_at).toLocaleDateString('pt-BR')}</td><td><button class="btn btn-secondary btn-sm" onclick="downloadAnexo('${an.caminho_arquivo}')">Ver</button> <button class="btn btn-danger btn-sm" onclick="excluirAnexo(${an.id}, '${an.caminho_arquivo}')">Excluir</button></td></tr>`).join('') || '<tr><td colspan="3" style="text-align:center;">Nenhum arquivo anexado.</td></tr>';
             } catch(e) {}
         };
 
-        window.atualizarStatusProcesso = async () => {
-            const novoStatus = document.getElementById('proc_status').value;
-            if(novoStatus === activeProcess.status) return;
-            const { error } = await supabase.from('processos').update({status: novoStatus}).eq('id', activeProcess.id);
-            if(error) alert(error.message);
-            else { alert('Fase atualizada com sucesso!'); activeProcess.status = novoStatus; await carregarProcessos(); loadAndamento(); }
-        };
+        // --- INLINE EDITING NO DOCUMENTO ---
+        const mkEdit = (val, col) => `<span class="editable-field" contenteditable="true" data-col="${col}">${val || '_________________'}</span>`;
 
-        window.vincularArbitro = async () => {
-            const arbId = document.getElementById('select-arbitro').value;
-            if(!arbId) return alert("Selecione um árbitro na lista.");
-            await supabase.from('processos').update({ arbitro_id: arbId }).eq('id', activeProcess.id);
-            alert('Árbitro vinculado com sucesso!');
-            carregarProcessos();
-        };
-
-        window.salvarTextosAudiencia = async () => {
-            const payload = {
-                processo_id: activeProcess.id,
-                data_hora_audiencia: new Date().toISOString(),
-                texto_ata: document.getElementById('texto_ata').value,
-                texto_sentenca: document.getElementById('texto_sentenca').value
-            };
+        window.salvarEdicoesEmLinha = async () => {
+            const spans = document.querySelectorAll('#pdf-area .editable-field');
+            let payload = {};
+            spans.forEach(s => { payload[s.dataset.col] = s.innerText.trim(); });
             
-            let error;
-            if (activeAudiencia) {
-                const res = await supabase.from('audiencias').update({texto_ata: payload.texto_ata, texto_sentenca: payload.texto_sentenca}).eq('id', activeAudiencia.id);
-                error = res.error;
-            } else {
-                const res = await supabase.from('audiencias').insert([payload]);
-                error = res.error;
+            if (Object.keys(payload).length > 0) {
+                const { error } = await supabase.from('processos').update(payload).eq('id', activeProcess.id);
+                if (error) { showToast("Erro ao atualizar banco."); return; }
+                Object.assign(activeProcess, payload);
+                showToast("Alterações no texto salvas diretamente no banco!");
+                carregarProcessos();
             }
-            if (error) alert("Erro ao salvar textos: " + error.message);
-            else { alert("Textos jurídicos salvos com sucesso!"); openProc(activeProcess.id); }
         };
-
-        document.getElementById('notificacao-form').onsubmit = async (e) => {
-            e.preventDefault();
-            const payload = {
-                processo_id: activeProcess.id,
-                tipo_comunicacao: document.getElementById('not_tipo').value,
-                destinatario: document.getElementById('not_dest').value,
-                status: document.getElementById('not_status').value,
-                observacoes: document.getElementById('not_obs').value
-            };
-            const { error } = await supabase.from('notificacoes').insert([payload]);
-            if(error) alert(error.message);
-            else { alert("Comunicação registrada!"); document.getElementById('notificacao-form').reset(); loadAndamento(); }
-        };
-
-        document.getElementById('acordo-form').onsubmit = async (e) => {
-            e.preventDefault();
-            const val = document.getElementById('aco_valor').value.replace(/[^\d,]/g,'').replace(',','.');
-            const dataPrimeiraParcela = new Date(document.getElementById('aco_data').value + 'T00:00:00');
-            const payload = { processo_id: activeProcess.id, valor_acordado: parseFloat(val), quantidade_parcelas: parseInt(document.getElementById('aco_parc').value), dia_vencimento: dataPrimeiraParcela.getDate() };
-            const { error } = await supabase.from('acordos').insert([payload]);
-            if(error) alert(error.message); else { alert('Acordo e Parcelas Gerados!'); openProc(activeProcess.id); carregarDashboardMetrics(); }
-        };
-
-        window.pagarParcela = async (id) => {
-            await supabase.rpc('registrar_pagamento_parcela', { p_parcela_id: id });
-            alert('Pagamento registrado com sucesso!'); openProc(activeProcess.id); carregarDashboardMetrics();
-        };
-
-        window.uploadAnexo = async () => {
-            const fileInput = document.getElementById('arquivo_anexo');
-            const file = fileInput.files[0];
-            if(!file) return alert("Selecione um arquivo PDF.");
-            const path = `processo_${activeProcess.id}/${Date.now()}_${file.name}`;
-            const { error: uploadError } = await supabase.storage.from('documentos_assinados').upload(path, file);
-            if(uploadError) return alert(uploadError.message);
-            await supabase.from('processos_anexos').insert([{ processo_id: activeProcess.id, nome_arquivo: file.name, caminho_arquivo: path }]);
-            alert('Documento arquivado com sucesso!'); fileInput.value = ''; loadAnexos();
-        };
-
-        window.downloadAnexo = async (path) => {
-            const { data, error } = await supabase.storage.from('documentos_assinados').createSignedUrl(path, 60);
-            if(error) alert(error.message); else window.open(data.signedUrl, '_blank');
-        };
-
-        window.visualizarRecibo = (id, num, valor, dataPagamento) => visualizarDoc(10, { num, valor, dataPagamento });
 
         window.visualizarDoc = (num, extraData = null) => {
-            let config = '{}';
-            try { config = localStorage.getItem('camara_config') || '{}'; } catch(e){}
-            const cam = JSON.parse(config);
-            const p = activeProcess;
-            let arb = db_arbitros.find(a => a.id == p.arbitro_id);
+            let config = '{}'; try { config = localStorage.getItem('camara_config') || '{}'; } catch(e){}
+            const cam = JSON.parse(config); const p = activeProcess; let arb = db_arbitros.find(a => a.id == p.arbitro_id);
             
-            document.getElementById('p-logo').src = cam.logo || '';
-            if(!cam.logo) document.getElementById('p-logo').style.display = 'none';
-            document.getElementById('p-cam-nome').innerText = cam.nome || 'CÂMARA ARBITRAL';
-            document.getElementById('p-cam-cnpj').innerText = cam.cnpj ? 'CNPJ: ' + cam.cnpj : '';
+            document.getElementById('p-logo').src = cam.logo || ''; if(!cam.logo) document.getElementById('p-logo').style.display = 'none';
+            document.getElementById('p-cam-nome').innerText = cam.nome || 'CÂMARA ARBITRAL'; document.getElementById('p-cam-cnpj').innerText = cam.cnpj ? 'CNPJ: ' + cam.cnpj : '';
             
-            let html = "";
-            let hoje = new Date().toLocaleDateString('pt-BR');
+            let html = ""; let hoje = new Date().toLocaleDateString('pt-BR');
+            document.getElementById('btn-salvar-edicoes').style.display = 'block'; // Mostra o botão de inline edit
 
-            if(num === 1) html = `<div style="text-align:center; border:2px solid #000; padding:50px;"><h2>PROCEDIMENTO N° ${p.numero_processo}</h2><h1 style="margin-top:50px;">CAPA DE PROCESSO</h1><p>Demandante: ${p.requerente_nome}</p><p>Demandado: ${p.requerido_nome}</p></div>`;
-            else if(num === 2) html = `<h3>TERMO DE APRESENTAÇÃO N° ${p.numero_processo}</h3><p>Eu, ${p.requerente_nome}, venho formalizar pedido em face de ${p.requerido_nome}.</p><h4>FATOS:</h4><p>${p.resumo_fatos}</p><p><strong>VALOR DA CAUSA:</strong> R$ ${Number(p.valor_causa).toLocaleString('pt-BR')}</p>`;
-            else if(num === 3) html = `<h3>NOTIFICAÇÃO EXTRAJUDICIAL</h3><p>Prezado(a) ${p.requerido_nome}, fica notificado(a) sobre o processo nº ${p.numero_processo}.</p>`;
+            if(num === 1) html = `<div style="text-align:center; border:2px solid #000; padding:50px;"><h2>PROCEDIMENTO N° ${p.numero_processo}</h2><h1 style="margin-top:50px;">CAPA DE PROCESSO</h1><p>Demandante: ${mkEdit(p.requerente_nome, 'requerente_nome')}</p><p>Demandado: ${mkEdit(p.requerido_nome, 'requerido_nome')}</p></div>`;
+            else if(num === 2) html = `<h3>TERMO DE APRESENTAÇÃO N° ${p.numero_processo}</h3><p>Eu, ${mkEdit(p.requerente_nome, 'requerente_nome')}, documento ${mkEdit(p.requerente_documento, 'requerente_documento')}, venho formalizar pedido em face de ${mkEdit(p.requerido_nome, 'requerido_nome')}, documento ${mkEdit(p.requerido_documento, 'requerido_documento')}.</p><h4>FATOS:</h4><p style="white-space:pre-wrap;">${mkEdit(p.resumo_fatos, 'resumo_fatos')}</p><p><strong>VALOR DA CAUSA:</strong> R$ ${Number(p.valor_causa).toLocaleString('pt-BR')}</p>`;
+            else if(num === 3) html = `<h3>NOTIFICAÇÃO EXTRAJUDICIAL</h3><p>Prezado(a) ${mkEdit(p.requerido_nome, 'requerido_nome')}, fica notificado(a) sobre o processo nº ${p.numero_processo} movido por ${mkEdit(p.requerente_nome, 'requerente_nome')}.</p>`;
             else if(num === 4) {
                 if(!arb) return alert("Vincule um árbitro primeiro.");
-                html = `<h3>PORTARIA DE NOMEAÇÃO N° ${p.numero_processo}</h3><p>O Presidente da ${cam.nome || 'Câmara'}, RESOLVE:</p><p>NOMEAR o Sr(a) <strong>${arb.nome}</strong> para atuar como Juiz Arbitral no processo.</p><div style="margin-top:60px; text-align:center;">_________________________________<br>Presidente</div>`;
+                html = `<h3>PORTARIA DE NOMEAÇÃO N° ${p.numero_processo}</h3><p>O Presidente da ${cam.nome || 'Câmara'}, RESOLVE:</p><p>NOMEAR o Sr(a) <strong>${arb.nome}</strong> para atuar como Juiz Arbitral no processo entre ${mkEdit(p.requerente_nome, 'requerente_nome')} e ${mkEdit(p.requerido_nome, 'requerido_nome')}.</p><div style="margin-top:60px; text-align:center;">_________________________________<br>Presidente</div>`;
             }
             else if(num === 5) {
                 if(!arb) return alert("Vincule um árbitro primeiro.");
@@ -650,99 +554,116 @@
             }
             else if(num === 6) {
                 if(!arb) return alert("Vincule um árbitro primeiro.");
-                html = `<h3>TERMO DE COMPROMISSO ARBITRAL</h3><p>Pelo presente instrumento, ${p.requerente_nome} e ${p.requerido_nome} elegem a ${cam.nome || 'Câmara'} e o árbitro <strong>${arb.nome}</strong> para dirimir o litígio do processo ${p.numero_processo}, submetendo-se à Lei 9.307/96.</p><div style="margin-top:60px; display:flex; justify-content:space-between; text-align:center;"><div>___________________________<br>Requerente</div><div>___________________________<br>Requerido</div></div>`;
+                html = `<h3>TERMO DE COMPROMISSO ARBITRAL</h3><p>Pelo presente instrumento, ${mkEdit(p.requerente_nome, 'requerente_nome')} e ${mkEdit(p.requerido_nome, 'requerido_nome')} elegem a ${cam.nome || 'Câmara'} e o árbitro <strong>${arb.nome}</strong> para dirimir o litígio do processo ${p.numero_processo}.</p><div style="margin-top:60px; display:flex; justify-content:space-between; text-align:center;"><div>___________________________<br>Requerente</div><div>___________________________<br>Requerido</div></div>`;
             }
             else if(num === 7) {
-                html = `<h3>ATA DE AUDIÊNCIA N° ${p.numero_processo}</h3><p>Aos ${hoje}, realizou-se audiência referente ao processo.</p><h4>RELATO E TERMOS:</h4><p style="white-space: pre-wrap;">${activeAudiencia?.texto_ata || 'Nenhum texto registrado na aba Instrução.'}</p><div style="margin-top:60px; text-align:center;">_________________________________<br>Árbitro / Partes</div>`;
+                document.getElementById('btn-salvar-edicoes').style.display = 'none'; // Ata vem de tabela separada
+                html = `<h3>ATA DE AUDIÊNCIA N° ${p.numero_processo}</h3><p>Aos ${hoje}, realizou-se audiência.</p><h4>RELATO:</h4><p style="white-space: pre-wrap;">${activeAudiencia?.texto_ata || 'Nenhum texto registrado na aba Instrução.'}</p><div style="margin-top:60px; text-align:center;">_________________________________<br>Árbitro / Partes</div>`;
             }
             else if(num === 8) {
+                document.getElementById('btn-salvar-edicoes').style.display = 'none';
                 html = `<h3>SENTENÇA ARBITRAL - PROCESSO ${p.numero_processo}</h3><p>Partes: ${p.requerente_nome} e ${p.requerido_nome}.</p><h4>FUNDAMENTAÇÃO E DISPOSITIVO:</h4><p style="white-space: pre-wrap;">${activeAudiencia?.texto_sentenca || 'Nenhum texto registrado na aba Instrução.'}</p><div style="margin-top:60px; text-align:center;">_________________________________<br>Juiz Arbitral</div>`;
             }
             else if(num === 9) html = `<h3>TERMO DE ENTREGA DE DOCUMENTOS</h3><p>Declaramos para os devidos fins que as partes receberam cópia da Sentença Arbitral proferida no processo ${p.numero_processo}.</p><div style="margin-top:60px; display:flex; justify-content:space-between; text-align:center;"><div>___________________________<br>Requerente</div><div>___________________________<br>Requerido</div></div>`;
             else if(num === 10 && extraData) {
+                document.getElementById('btn-salvar-edicoes').style.display = 'none';
                 let dataPag = new Date(extraData.dataPagamento + 'T00:00:00').toLocaleDateString('pt-BR');
-                html = `<h3>RECIBO DE ACORDO - PARCELA ${extraData.num}</h3><p>Recebi de ${p.requerido_nome} a importância de R$ ${Number(extraData.valor).toLocaleString('pt-BR')}, referente ao pagamento da parcela ${extraData.num} do acordo firmado no processo ${p.numero_processo}.</p><p>Data do Pagamento: ${dataPag}</p><div style="margin-top:60px; text-align:center;">_________________________________<br>${p.requerente_nome} (Recebedor)</div>`;
+                html = `<h3>RECIBO DE ACORDO - PARCELA ${extraData.num}</h3><p>Recebi de ${p.requerido_nome} a importância de R$ ${Number(extraData.valor).toLocaleString('pt-BR')}, referente ao pagamento da parcela ${extraData.num} do processo ${p.numero_processo}.</p><p>Data: ${dataPag}</p><div style="margin-top:60px; text-align:center;">_________________________________<br>${p.requerente_nome} (Recebedor)</div>`;
             }
-            else if(num === 11) html = `<h3>RECIBO DE HONORÁRIOS DA CÂMARA</h3><p>A ${cam.nome || 'Câmara'} recebeu de ${p.requerente_nome} o valor de R$ ${Number(p.valor_causa * 0.1).toLocaleString('pt-BR')} referente aos honorários.</p>`;
+            else if(num === 11) html = `<h3>RECIBO DE HONORÁRIOS DA CÂMARA</h3><p>A ${cam.nome || 'Câmara'} recebeu de ${mkEdit(p.requerente_nome, 'requerente_nome')} o valor de R$ ${Number(p.valor_causa * 0.1).toLocaleString('pt-BR')} referente aos honorários.</p>`;
             
             document.getElementById('p-body').innerHTML = html;
             document.getElementById('modal-preview').style.display = 'flex';
-            document.getElementById('btn-download').onclick = () => html2pdf().from(document.getElementById('pdf-area')).set({ margin: 15, filename: `Doc_${num}_${p.numero_processo}.pdf` }).save();
+            document.getElementById('btn-download').onclick = () => {
+                document.querySelectorAll('.editable-field').forEach(el => el.style.borderBottom = 'none');
+                html2pdf().from(document.getElementById('pdf-area')).set({ margin: 15, filename: `Doc_${p.numero_processo}.pdf` }).save();
+                setTimeout(() => document.querySelectorAll('.editable-field').forEach(el => el.style.borderBottom = '1px dashed #0284c7'), 2000);
+            };
         };
-
         window.fecharModal = () => document.getElementById('modal-preview').style.display = 'none';
 
-        document.getElementById('processo-form').onsubmit = async (e) => {
-            e.preventDefault();
-            const btn = e.target.querySelector('button[type="submit"]');
-            btn.innerText = 'Processando...'; btn.disabled = true;
-
-            const v_causa = document.getElementById('valor_causa').value.replace(/[^\d,]/g,'').replace(',','.');
-            const numProc = new Date().getFullYear() + String(Math.floor(Math.random() * 90000) + 10000);
+        // --- AÇÕES COM CONFIRMAÇÃO E DESFAZER (TOAST/CRUD) ---
+        window.atualizarStatusProcesso = async () => {
+            const novoStatus = document.getElementById('proc_status').value;
+            const oldStatus = activeProcess.status;
+            if(novoStatus === oldStatus) return;
             
-            const payload = {
-                numero_processo: numProc,
-                requerente_nome: document.getElementById('req_nome').value,
-                requerente_documento: document.getElementById('req_doc').value,
-                requerente_endereco: document.getElementById('req_end').value,
-                requerido_nome: document.getElementById('def_nome').value,
-                requerido_documento: document.getElementById('def_doc').value,
-                requerido_endereco: document.getElementById('def_end').value,
-                valor_causa: parseFloat(v_causa),
-                resumo_fatos: document.getElementById('fatos').value,
-                status: 'Protocolado'
+            const updateStatus = async (statusVal) => {
+                await supabase.from('processos').update({status: statusVal}).eq('id', activeProcess.id);
+                activeProcess.status = statusVal; await carregarProcessos(); loadAndamento();
             };
 
-            try {
-                const { data: { user } } = await supabase.auth.getUser();
-                payload.user_id = user.id;
-                const { error } = await supabase.from('processos').insert([payload]);
-                if(error) throw error;
-                alert(`Processo ${numProc} protocolado com sucesso!`);
-                e.target.reset();
-                await carregarProcessos();
-                showView('dash');
-            } catch (err) { alert("Erro ao protocolar: " + err.message); }
-            finally { btn.innerText = 'Iniciar Procedimento'; btn.disabled = false; }
+            await updateStatus(novoStatus);
+            showToast(`Status atualizado para "${novoStatus}".`, async () => { await updateStatus(oldStatus); showToast("Status restaurado para o estado anterior."); });
+        };
+
+        document.getElementById('acordo-form').onsubmit = (e) => {
+            e.preventDefault();
+            showConfirm('Tem certeza que deseja gerar este acordo e suas parcelas financeiras definitivas?', async () => {
+                const val = document.getElementById('aco_valor').value.replace(/[^\d,]/g,'').replace(',','.');
+                const dataPrimeiraParcela = new Date(document.getElementById('aco_data').value + 'T00:00:00');
+                const payload = { processo_id: activeProcess.id, valor_acordado: parseFloat(val), quantidade_parcelas: parseInt(document.getElementById('aco_parc').value), dia_vencimento: dataPrimeiraParcela.getDate() };
+                const { error } = await supabase.from('acordos').insert([payload]);
+                if(error) showToast(error.message); else { showToast('Acordo e parcelas gerados!'); openProc(activeProcess.id); carregarDashboardMetrics(); }
+            });
+        };
+
+        window.pagarParcela = (id) => {
+            showConfirm('Deseja registrar o pagamento e dar baixa nesta parcela financeira irreversivelmente?', async () => {
+                await supabase.rpc('registrar_pagamento_parcela', { p_parcela_id: id });
+                showToast('Pagamento registrado e baixado!'); openProc(activeProcess.id); carregarDashboardMetrics();
+            });
+        };
+
+        window.excluirArbitro = (id) => {
+            showConfirm('Deseja realmente excluir este árbitro do sistema?', async () => {
+                await supabase.from('arbitros').delete().eq('id', id);
+                showToast('Árbitro excluído com sucesso.'); carregarArbitros();
+            });
+        };
+
+        window.excluirNotificacao = (id) => {
+            showConfirm('Deseja excluir o registro desta notificação?', async () => {
+                await supabase.from('notificacoes').delete().eq('id', id);
+                showToast('Notificação excluída.'); loadAndamento();
+            });
+        };
+
+        window.excluirAnexo = (id, path) => {
+            showConfirm('Deseja deletar este arquivo permanentemente do processo?', async () => {
+                await supabase.storage.from('documentos_assinados').remove([path]);
+                await supabase.from('processos_anexos').delete().eq('id', id);
+                showToast('Anexo deletado.'); loadAnexos();
+            });
+        };
+
+        // --- SUBMISSÃO RESTANTE ---
+        document.getElementById('processo-form').onsubmit = async (e) => {
+            e.preventDefault(); const btn = e.target.querySelector('button[type="submit"]'); btn.innerText = 'Processando...'; btn.disabled = true;
+            const v_causa = document.getElementById('valor_causa').value.replace(/[^\d,]/g,'').replace(',','.'); const numProc = new Date().getFullYear() + String(Math.floor(Math.random() * 90000) + 10000);
+            const payload = { numero_processo: numProc, requerente_nome: document.getElementById('req_nome').value, requerente_documento: document.getElementById('req_doc').value, requerente_endereco: document.getElementById('req_end').value, requerido_nome: document.getElementById('def_nome').value, requerido_documento: document.getElementById('def_doc').value, requerido_endereco: document.getElementById('def_end').value, valor_causa: parseFloat(v_causa), resumo_fatos: document.getElementById('fatos').value, status: 'Protocolado' };
+            try { const { data: { user } } = await supabase.auth.getUser(); payload.user_id = user.id; const { error } = await supabase.from('processos').insert([payload]); if(error) throw error; alert(`Processo ${numProc} protocolado!`); e.target.reset(); await carregarProcessos(); showView('dash'); } catch (err) { alert(err.message); } finally { btn.innerText = 'Iniciar Procedimento'; btn.disabled = false; }
         };
 
         document.getElementById('arbitro-form').onsubmit = async (e) => {
-            e.preventDefault();
-            const payload = { nome: document.getElementById('arb_nome').value, cpf: document.getElementById('arb_cpf').value, rg: document.getElementById('arb_rg').value, profissao: document.getElementById('arb_prof').value, endereco: document.getElementById('arb_end').value };
-            const { error } = await supabase.from('arbitros').insert([payload]);
-            if(error) alert("Erro: " + error.message); else { alert("Árbitro salvo!"); document.getElementById('arbitro-form').reset(); await carregarArbitros(); }
+            e.preventDefault(); const payload = { nome: document.getElementById('arb_nome').value, cpf: document.getElementById('arb_cpf').value, rg: document.getElementById('arb_rg').value, profissao: document.getElementById('arb_prof').value, endereco: document.getElementById('arb_end').value };
+            const { error } = await supabase.from('arbitros').insert([payload]); if(error) alert(error.message); else { showToast("Árbitro salvo!"); document.getElementById('arbitro-form').reset(); await carregarArbitros(); }
         };
 
-        document.getElementById('camara-form').onsubmit = (e) => {
-            e.preventDefault();
-            const config = { nome: document.getElementById('cam_nome').value, cnpj: document.getElementById('cam_cnpj').value, endereco: document.getElementById('cam_endereco').value, fone: document.getElementById('cam_fone').value, logo: localStorage.getItem('temp_logo') || '' };
-            localStorage.setItem('camara_config', JSON.stringify(config));
-            alert("Dados Salvos com Sucesso!");
+        document.getElementById('notificacao-form').onsubmit = async (e) => {
+            e.preventDefault(); const payload = { processo_id: activeProcess.id, tipo_comunicacao: document.getElementById('not_tipo').value, destinatario: document.getElementById('not_dest').value, status: document.getElementById('not_status').value, observacoes: document.getElementById('not_obs').value };
+            const { error } = await supabase.from('notificacoes').insert([payload]); if(error) alert(error.message); else { showToast("Comunicação registrada!"); document.getElementById('notificacao-form').reset(); loadAndamento(); }
         };
 
-        document.getElementById('cam_logo').onchange = (e) => {
-            const reader = new FileReader();
-            reader.onload = (ev) => localStorage.setItem('temp_logo', ev.target.result);
-            if(e.target.files[0]) reader.readAsDataURL(e.target.files[0]);
-        };
+        window.vincularArbitro = async () => { const arbId = document.getElementById('select-arbitro').value; if(!arbId) return alert("Selecione um árbitro na lista."); await supabase.from('processos').update({ arbitro_id: arbId }).eq('id', activeProcess.id); showToast('Árbitro vinculado com sucesso!'); carregarProcessos(); };
+        window.salvarTextosAudiencia = async () => { const payload = { processo_id: activeProcess.id, data_hora_audiencia: new Date().toISOString(), texto_ata: document.getElementById('texto_ata').value, texto_sentenca: document.getElementById('texto_sentenca').value }; let error; if (activeAudiencia) { error = (await supabase.from('audiencias').update({texto_ata: payload.texto_ata, texto_sentenca: payload.texto_sentenca}).eq('id', activeAudiencia.id)).error; } else { error = (await supabase.from('audiencias').insert([payload])).error; } if (error) alert(error.message); else { showToast("Textos jurídicos salvos!"); openProc(activeProcess.id); } };
+        window.uploadAnexo = async () => { const fileInput = document.getElementById('arquivo_anexo'); const file = fileInput.files[0]; if(!file) return alert("Selecione PDF."); const path = `processo_${activeProcess.id}/${Date.now()}_${file.name}`; const { error: uploadError } = await supabase.storage.from('documentos_assinados').upload(path, file); if(uploadError) return alert(uploadError.message); await supabase.from('processos_anexos').insert([{ processo_id: activeProcess.id, nome_arquivo: file.name, caminho_arquivo: path }]); showToast('Anexo adicionado!'); fileInput.value = ''; loadAnexos(); };
+        window.downloadAnexo = async (path) => { const { data, error } = await supabase.storage.from('documentos_assinados').createSignedUrl(path, 60); if(error) alert(error.message); else window.open(data.signedUrl, '_blank'); };
 
-        document.getElementById('nav-dash').onclick = () => showView('dash');
-        document.getElementById('nav-novo').onclick = () => showView('novo');
-        document.getElementById('nav-arbitros').onclick = () => showView('arbitros');
-        document.getElementById('nav-equipe').onclick = () => showView('equipe');
-        document.getElementById('nav-camara').onclick = () => { 
-            try {
-                const configStr = localStorage.getItem('camara_config');
-                if(configStr) {
-                    const config = JSON.parse(configStr);
-                    document.getElementById('cam_nome').value = config.nome || '';
-                    document.getElementById('cam_cnpj').value = config.cnpj || '';
-                    document.getElementById('cam_endereco').value = config.endereco || '';
-                    document.getElementById('cam_fone').value = config.fone || '';
-                }
-            } catch(e) {}
-            showView('camara'); 
-        };
+        document.getElementById('camara-form').onsubmit = (e) => { e.preventDefault(); localStorage.setItem('camara_config', JSON.stringify({ nome: document.getElementById('cam_nome').value, cnpj: document.getElementById('cam_cnpj').value, endereco: document.getElementById('cam_endereco').value, fone: document.getElementById('cam_fone').value, logo: localStorage.getItem('temp_logo') || '' })); showToast("Dados da Câmara Salvos!"); };
+        document.getElementById('cam_logo').onchange = (e) => { const r = new FileReader(); r.onload = ev => localStorage.setItem('temp_logo', ev.target.result); if(e.target.files[0]) r.readAsDataURL(e.target.files[0]); };
+
+        document.getElementById('nav-dash').onclick = () => showView('dash'); document.getElementById('nav-novo').onclick = () => showView('novo'); document.getElementById('nav-arbitros').onclick = () => showView('arbitros'); document.getElementById('nav-equipe').onclick = () => showView('equipe'); document.getElementById('nav-camara').onclick = () => { try { const c = JSON.parse(localStorage.getItem('camara_config')); if(c) { document.getElementById('cam_nome').value = c.nome||''; document.getElementById('cam_cnpj').value = c.cnpj||''; document.getElementById('cam_endereco').value = c.endereco||''; document.getElementById('cam_fone').value = c.fone||''; } } catch(e) {} showView('camara'); };
 
     </script>
 </body>
