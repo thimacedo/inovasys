@@ -1,6 +1,6 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/+esm';
 
-// ATENÇÃO: Substitua as credenciais abaixo pelas chaves corretas do seu projeto Supabase se necessário.
+// ATENÇÃO: Substitua as credenciais pelas chaves do seu projeto Supabase
 const supabaseUrl = 'https://tsgbvhfdceyjbyfstjol.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzZ2J2aGZkY2V5amJ5ZnN0am9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0NjY3MDEsImV4cCI6MjA5MDA0MjcwMX0.ucDetUUuVKyycACaNtzArQ8YpgybrRpQqYljYYiTgyI';
 const supabase = createClient(supabaseUrl, supabaseKey);
@@ -272,9 +272,14 @@ document.getElementById('editar-processo-form').addEventListener('submit', async
     if(error) {
         window.showToast("Erro: " + error.message);
     } else {
-        window.showToast("Dados atualizados!"); 
+        window.showToast("Dados atualizados com sucesso!"); 
         await window.carregarProcessos(); 
         window.activeProcess = window.db_procs.find(x => x.id === window.activeProcess.id);
+        
+        // Sincroniza visualmente os campos caso tenha havido formatação
+        document.getElementById('edit_req_doc').value = Masks.doc(p.requerente_documento);
+        document.getElementById('edit_def_doc').value = Masks.doc(p.requerido_documento);
+        document.getElementById('edit_valor_causa').value = Masks.money((p.valor_causa * 100).toString());
     }
 });
 
@@ -314,17 +319,40 @@ document.getElementById('notificacao-form').addEventListener('submit', async (e)
     } catch(ex) { console.log('Sem webhook configurado.'); }
 });
 
-// --- DOCUMENTOS INLINE E DOSSIÊ ---
+// --- DOCUMENTOS JURÍDICOS (MODELOS ADAPTADOS) ---
 const mkEdit = (val, col) => `<span class="editable-field" contenteditable="true" data-col="${col}">${val || '_________________'}</span>`;
 
 window.salvarEdicoesEmLinha = async () => {
-    let p = {}; 
-    document.querySelectorAll('#pdf-area .editable-field').forEach(s => p[s.dataset.col] = s.innerText.trim());
-    if (Object.keys(p).length > 0) { 
-        await supabase.from('processos').update(p).eq('id', window.activeProcess.id); 
-        Object.assign(window.activeProcess, p); 
-        window.showToast("Texto salvo no banco!"); 
+    // Lista de colunas válidas no banco de dados para evitar erro 42703 (coluna inexistente)
+    const colunasValidas = ['requerente_nome', 'requerente_documento', 'requerente_endereco', 'requerido_nome', 'requerido_documento', 'requerido_endereco', 'valor_causa', 'resumo_fatos'];
+    let payload = {}; 
+    
+    document.querySelectorAll('#pdf-area .editable-field').forEach(s => {
+        const colName = s.dataset.col;
+        if(colunasValidas.includes(colName)) {
+            let val = s.innerText.trim();
+            if(colName === 'valor_causa') val = parseFloat(val.replace('R$', '').replace(/\./g, '').replace(',', '.').trim()) || 0;
+            if(colName === 'requerente_documento' || colName === 'requerido_documento') val = val.replace(/\D/g, "");
+            payload[colName] = val;
+        }
+    });
+
+    if (Object.keys(payload).length > 0) { 
+        const { error } = await supabase.from('processos').update(payload).eq('id', window.activeProcess.id); 
+        if(error) {
+            window.showToast("Erro ao salvar: " + error.message);
+            return;
+        }
+        Object.assign(window.activeProcess, payload); 
+        window.showToast("Dados oficiais atualizados a partir do documento!"); 
+        
+        // Mantém a sincronia da interface de Dados
+        document.getElementById('edit_req_nome').value = window.activeProcess.requerente_nome;
+        document.getElementById('edit_valor_causa').value = Masks.money((window.activeProcess.valor_causa * 100).toString());
+        
         window.carregarProcessos(); 
+    } else {
+        window.showToast("Preenchimento apenas visual. Nenhum dado de banco alterado.");
     }
 };
 
@@ -335,23 +363,84 @@ window.visualizarDoc = (num, extraData = null) => {
     
     document.getElementById('p-logo').src = cam.logo || ''; 
     document.getElementById('p-logo').style.display = cam.logo ? 'inline-block' : 'none';
-    document.getElementById('p-cam-nome').innerText = cam.nome || 'CÂMARA ARBITRAL'; 
-    document.getElementById('p-cam-cnpj').innerText = cam.cnpj ? 'CNPJ: ' + cam.cnpj : '';
+    document.getElementById('p-cam-nome').innerText = ''; 
+    document.getElementById('p-cam-cnpj').innerText = '';
     
     let html = ""; 
     document.getElementById('btn-salvar-edicoes').style.display = 'block';
 
-    if(num === 1) html = `<div style="text-align:center; border:5px double #000; padding:40px;"><h2>PROCEDIMENTO N° ${p.numero_processo}</h2><h1 style="margin-top:50px;">CAPA DE PROCESSO</h1><p>Demandante: ${mkEdit(p.requerente_nome, 'requerente_nome')}</p><p>Demandado: ${mkEdit(p.requerido_nome, 'requerido_nome')}</p></div>`;
-    else if(num === 2) html = `<h3>TERMO DE APRESENTAÇÃO N° ${p.numero_processo}</h3><p>Eu, ${mkEdit(p.requerente_nome, 'requerente_nome')}, documento ${mkEdit(p.requerente_documento, 'requerente_documento')}, movo contra ${mkEdit(p.requerido_nome, 'requerido_nome')}.</p><h4>FATOS:</h4><p>${mkEdit(p.resumo_fatos, 'resumo_fatos')}</p><p><strong>CAUSA:</strong> R$ ${Number(p.valor_causa).toLocaleString('pt-BR')}</p>`;
-    else if(num === 3) html = `<h3>NOTIFICAÇÃO EXTRAJUDICIAL</h3><p>Prezado(a) ${mkEdit(p.requerido_nome, 'requerido_nome')}, notificado(a) sobre o processo nº ${p.numero_processo}.</p>`;
-    else if(num === 4) { if(!arb) return alert("Vincule árbitro."); html = `<h3>PORTARIA DE NOMEAÇÃO</h3><p>NOMEAR o Sr(a) <strong>${arb.nome}</strong> para atuar no processo entre ${mkEdit(p.requerente_nome, 'requerente_nome')} e ${mkEdit(p.requerido_nome, 'requerido_nome')}.</p>`; }
-    else if(num === 5) { if(!arb) return alert("Vincule árbitro."); html = `<h3>TERMO DE COMPROMISSO DO ÁRBITRO</h3><p>O Sr(a) <strong>${arb.nome}</strong> assume a função no Procedimento n° ${p.numero_processo}.</p>`; }
-    else if(num === 6) { if(!arb) return alert("Vincule árbitro."); html = `<h3>TERMO DE COMPROMISSO ARBITRAL</h3><p>${mkEdit(p.requerente_nome, 'requerente_nome')} e ${mkEdit(p.requerido_nome, 'requerido_nome')} elegem o árbitro <strong>${arb.nome}</strong> para o processo ${p.numero_processo}.</p>`; }
-    else if(num === 7) { document.getElementById('btn-salvar-edicoes').style.display = 'none'; html = `<h3>ATA DE AUDIÊNCIA N° ${p.numero_processo}</h3><p style="white-space: pre-wrap;">${window.activeAudiencia?.texto_ata || 'Sem texto.'}</p>`; }
-    else if(num === 8) { document.getElementById('btn-salvar-edicoes').style.display = 'none'; html = `<h3>SENTENÇA ARBITRAL - PROCESSO ${p.numero_processo}</h3><p style="white-space: pre-wrap;">${window.activeAudiencia?.texto_sentenca || 'Sem texto.'}</p>`; }
-    else if(num === 9) html = `<h3>TERMO DE ENTREGA DE DOCUMENTOS</h3><p>Declaramos recebimento da Sentença Arbitral do processo ${p.numero_processo}.</p>`;
-    else if(num === 10 && extraData) { document.getElementById('btn-salvar-edicoes').style.display = 'none'; html = `<h3>RECIBO DE ACORDO - PARCELA ${extraData.num}</h3><p>Recebi de ${mkEdit(p.requerido_nome, 'requerido_nome')} o valor de R$ ${Number(extraData.valor).toLocaleString('pt-BR', {minimumFractionDigits:2})} do processo ${p.numero_processo}.</p><p>Data: ${new Date(extraData.dataPagamento+'T00:00:00').toLocaleDateString('pt-BR')}</p><br><p>${mkEdit(p.requerente_nome, 'requerente_nome')} (Recebedor)</p>`; }
-    else if(num === 11) html = `<h3>RECIBO DE HONORÁRIOS DA CÂMARA</h3><p>A ${cam.nome || 'Câmara'} recebeu de ${mkEdit(p.requerente_nome, 'requerente_nome')} R$ ${Number(p.valor_causa * 0.1).toLocaleString('pt-BR')}.</p>`;
+    let dia = new Date().getDate();
+    let mes = new Date().toLocaleString('pt-BR', { month: 'long' });
+    let ano = new Date().getFullYear();
+
+    if(num === 1) {
+        // Modelo 01 - Capa do Processo Fiel ao PDF Base
+        html = `
+        <div style="text-align:center; padding:20px; font-family: 'Times New Roman', serif;">
+            <h3 style="margin-bottom:5px;">PROCEDIMENTO N° ${p.numero_processo}</h3>
+            <h4 style="margin-top:0;">JUSTIÇA PRIVADA<br>${cam.nome || 'CÂMARA ARBITRAL'}</h4>
+            <p style="font-weight:bold; margin-top:20px;">LEI 9.307/1996</p>
+            <h3 style="margin-top:20px; text-transform:uppercase;">${cam.nome || 'CÂMARA DE ARBITRAGEM, MEDIAÇÃO E CONCILIAÇÃO'}</h3>
+            <h4 style="margin-top:20px; text-decoration: underline;">AUTOS DE PROCESSO DE MEDIAÇÃO, CONCILIAÇÃO E ARBITRAGEM</h4>
+            
+            <div style="text-align:left; margin-top:50px; padding-left: 10%;">
+                <p><strong>DEMANDANTE:</strong><br>${mkEdit(p.requerente_nome, 'requerente_nome')}</p>
+                <p style="margin-top:20px;"><strong>DEMANDADO:</strong><br>${mkEdit(p.requerido_nome, 'requerido_nome')}</p>
+                <p style="margin-top:20px;"><strong>DATA DA ENTRADA:</strong> ${new Date(p.created_at).toLocaleDateString('pt-BR')}</p>
+            </div>
+
+            <div style="margin-top:50px; text-align:justify;">
+                <h4 style="text-align:center;">AUTUAÇÃO</h4>
+                <p>No dia ${dia} de ${mes} do ano de ${ano}, nesta cidade de ${mkEdit('_______', 'campo_livre_cidade')}, nesta ${cam.nome || 'CÂMARA DE ARBITRAGEM'}, fiz a presente autuação dos presentes autos.</p>
+            </div>
+        </div>`;
+    }
+    else if(num === 2) {
+        // Modelo 02 - Termo de Apresentação Fiel ao PDF Base
+        html = `
+        <div style="font-family: 'Times New Roman', serif; text-align: justify; line-height: 1.6;">
+            <div style="text-align:center; margin-bottom:20px;">
+                <h3 style="margin:0; text-transform:uppercase;">${cam.nome || 'CÂMARA DE ARBITRAGEM, MEDIAÇÃO E CONCILIAÇÃO'}</h3>
+                <p style="margin:0; font-size:12px;">CNPJ: ${cam.cnpj || '___.___.___/____-__'}</p>
+                <p style="margin:0; font-size:12px;">Endereço: ${cam.endereco || '___________________________'} | Fone: ${cam.fone || '_____________'}</p>
+            </div>
+
+            <h4 style="text-align:center; text-decoration:underline;">TERMO DE APRESENTAÇÃO DO PEDIDO N° ${p.numero_processo}</h4>
+            <p style="text-align:right;">${mkEdit('Local, Data.', 'campo_livre_local_data')}</p>
+
+            <p>Eu, abaixo qualificado(a), na qualidade de Demandante, venho mui respeitosamente, requerer que seja objeto de Mediação, Conciliação e/ou Arbitragem, o litígio descrito abaixo, em face do demandado abaixo qualificado, pelos motivos de fato e de direito que passo a expor:</p>
+
+            <h4 style="margin-bottom:5px;">DEMANDANTE</h4>
+            <p style="margin-top:0;"><strong>Nome:</strong> ${mkEdit(p.requerente_nome, 'requerente_nome')}, <strong>CPF/CNPJ:</strong> ${mkEdit(Masks.doc(p.requerente_documento), 'requerente_documento')}, residente e domiciliado(a) à ${mkEdit(p.requerente_endereco, 'requerente_endereco')}.</p>
+
+            <h4 style="margin-bottom:5px;">DEMANDADO</h4>
+            <p style="margin-top:0;"><strong>Nome:</strong> ${mkEdit(p.requerido_nome, 'requerido_nome')}, <strong>CPF/CNPJ:</strong> ${mkEdit(Masks.doc(p.requerido_documento), 'requerido_documento')}, residente e domiciliado(a) à ${mkEdit(p.requerido_endereco, 'requerido_endereco')}.</p>
+
+            <h4 style="margin-bottom:5px;">DESCRIÇÃO DO FATO, DO OBJETO E DO PEDIDO</h4>
+            <p style="margin-top:0; white-space:pre-wrap;">${mkEdit(p.resumo_fatos, 'resumo_fatos')}</p>
+
+            <p><strong>Valor da causa:</strong> ${mkEdit('R$ ' + Number(p.valor_causa).toLocaleString('pt-BR', {minimumFractionDigits: 2}), 'valor_causa')}</p>
+
+            <p>Pelo acima exposto, assim requer, se digne essa ${cam.nome || 'Câmara'}, em NOTIFICAR o Demandado para administração e instauração do procedimento de MEDIAÇÃO, CONCILIAÇÃO E ARBITRAGEM; Caso o demandado compareça na audiência prévia a ser designada por essa Câmara, onde haverá tentativa de conciliação, que sendo infrutífera, restará às partes se posicionarem sobre o interesse quanto à instauração do procedimento arbitral na forma convencionada pelo Regimento Interno desta Câmara Arbitral e nos termos da Lei Federal nº 9.307/96. O Demandante assume, desde já, o compromisso de apresentar, quando solicitado, quaisquer documentos que esta venha a pedir e nos prazos estipulados, sob pena de ter cancelado esse procedimento.</p>
+
+            <p><strong>AGENDADA PARA 1ª AUDIÊNCIA:</strong> ${mkEdit('__/__/____ às __:__', 'campo_livre_data_audiencia')}</p>
+
+            <div style="margin-top:60px; text-align:center;">
+                ___________________________________________________<br>
+                <strong>${mkEdit(p.requerente_nome, 'requerente_nome')}</strong><br>
+                Demandante
+            </div>
+        </div>`;
+    }
+    else if(num === 3) html = `<div style="font-family: 'Times New Roman', serif;"><h3>NOTIFICAÇÃO EXTRAJUDICIAL</h3><p>Prezado(a) ${mkEdit(p.requerido_nome, 'requerido_nome')}, fica notificado(a) sobre o processo nº ${p.numero_processo} movido por ${mkEdit(p.requerente_nome, 'requerente_nome')}.</p></div>`;
+    else if(num === 4) { if(!arb) return alert("Vincule um árbitro primeiro."); html = `<div style="font-family: 'Times New Roman', serif;"><h3>PORTARIA DE NOMEAÇÃO N° ${p.numero_processo}</h3><p>O Presidente da ${cam.nome || 'Câmara'}, RESOLVE:</p><p>NOMEAR o Sr(a) <strong>${arb.nome}</strong> para atuar como Juiz Arbitral no processo.</p><div style="margin-top:60px; text-align:center;">_________________________________<br>Presidente</div></div>`; }
+    else if(num === 5) { if(!arb) return alert("Vincule um árbitro primeiro."); html = `<div style="font-family: 'Times New Roman', serif;"><h3>TERMO DE COMPROMISSO DO ÁRBITRO</h3><p>O Sr(a) <strong>${arb.nome}</strong>, RG ${arb.rg || '-'}, CPF ${arb.cpf}, assume formalmente a função de Árbitro no Procedimento n° ${p.numero_processo}.</p><div style="margin-top:60px; text-align:center;">_________________________________<br>${arb.nome}<br>Árbitro</div></div>`; }
+    else if(num === 6) { if(!arb) return alert("Vincule um árbitro primeiro."); html = `<div style="font-family: 'Times New Roman', serif;"><h3>TERMO DE COMPROMISSO ARBITRAL</h3><p>Pelo presente instrumento, ${mkEdit(p.requerente_nome, 'requerente_nome')} e ${mkEdit(p.requerido_nome, 'requerido_nome')} elegem a ${cam.nome || 'Câmara'} e o árbitro <strong>${arb.nome}</strong> para dirimir o litígio do processo ${p.numero_processo}.</p><div style="margin-top:60px; display:flex; justify-content:space-between; text-align:center;"><div>___________________________<br>Requerente</div><div>___________________________<br>Requerido</div></div></div>`; }
+    else if(num === 7) { document.getElementById('btn-salvar-edicoes').style.display = 'none'; html = `<div style="font-family: 'Times New Roman', serif;"><h3>ATA DE AUDIÊNCIA N° ${p.numero_processo}</h3><p>Aos ${hoje}, realizou-se audiência referente ao processo.</p><h4>RELATO E TERMOS:</h4><p style="white-space: pre-wrap; text-align:justify;">${window.activeAudiencia?.texto_ata || 'Nenhum texto registrado na aba Instrução.'}</p><div style="margin-top:60px; text-align:center;">_________________________________<br>Árbitro / Partes</div></div>`; }
+    else if(num === 8) { document.getElementById('btn-salvar-edicoes').style.display = 'none'; html = `<div style="font-family: 'Times New Roman', serif;"><h3>SENTENÇA ARBITRAL - PROCESSO ${p.numero_processo}</h3><p>Partes: ${p.requerente_nome} e ${p.requerido_nome}.</p><h4>FUNDAMENTAÇÃO E DISPOSITIVO:</h4><p style="white-space: pre-wrap; text-align:justify;">${window.activeAudiencia?.texto_sentenca || 'Nenhum texto registrado na aba Instrução.'}</p><div style="margin-top:60px; text-align:center;">_________________________________<br>Juiz Arbitral</div></div>`; }
+    else if(num === 9) html = `<div style="font-family: 'Times New Roman', serif;"><h3>TERMO DE ENTREGA DE DOCUMENTOS</h3><p>Declaramos para os devidos fins que as partes receberam cópia da Sentença Arbitral proferida no processo ${p.numero_processo}.</p><div style="margin-top:60px; display:flex; justify-content:space-between; text-align:center;"><div>___________________________<br>Requerente</div><div>___________________________<br>Requerido</div></div></div>`;
+    else if(num === 10 && extraData) { document.getElementById('btn-salvar-edicoes').style.display = 'none'; let strData = String(extraData.dataPagamento); let dataPag = (strData !== 'null' && strData !== 'undefined' && strData !== '') ? new Date(strData + 'T00:00:00').toLocaleDateString('pt-BR') : '_________________'; html = `<div style="font-family: 'Times New Roman', serif;"><h3>RECIBO DE ACORDO - PARCELA ${extraData.num}</h3><p>Recebi de ${p.requerido_nome} a importância de R$ ${Number(extraData.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}, referente ao pagamento da parcela ${extraData.num} do acordo firmado no processo ${p.numero_processo}.</p><p>Data do Pagamento: ${dataPag}</p><div style="margin-top:60px; text-align:center;">_________________________________<br>${p.requerente_nome} (Recebedor)</div></div>`; }
+    else if(num === 11) html = `<div style="font-family: 'Times New Roman', serif;"><h3>RECIBO DE HONORÁRIOS DA CÂMARA</h3><p>A ${cam.nome || 'Câmara'} recebeu de ${mkEdit(p.requerente_nome, 'requerente_nome')} o valor de R$ ${Number(p.valor_causa * 0.1).toLocaleString('pt-BR')} referente aos honorários.</p></div>`;
     
     document.getElementById('p-body').innerHTML = html; 
     document.getElementById('modal-preview').style.display = 'flex';
