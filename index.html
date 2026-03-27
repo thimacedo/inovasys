@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>inovaSys - Gestão Arbitral</title>
+    <title class="sys-name">inovaSys - Gestão Arbitral</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖️</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
@@ -25,8 +25,9 @@
         .view { display: none; }
         .view.active { display: block; }
 
-        .sidebar { width: var(--sidebar-width); background: white; border-right: 1px solid #e2e8f0; position: fixed; height: 100vh; display: flex; flex-direction: column; z-index: 10; }
+        .sidebar { width: var(--sidebar-width); background: white; border-right: 1px solid #e2e8f0; position: fixed; height: 100vh; display: flex; flex-direction: column; z-index: 10; transition: 0.3s; }
         .sidebar-brand { padding: 25px; text-align: center; border-bottom: 1px solid #e2e8f0; }
+        .sidebar-brand img { max-width: 120px; max-height: 60px; object-fit: contain; }
         .nav-item { padding: 15px 25px; cursor: pointer; font-size: 14px; font-weight: 500; color: #64748b; border-left: 4px solid transparent; transition: 0.2s;}
         .nav-item:hover { background: #f8fafc; color: var(--color-accent); }
         .nav-item.active { background: #f1f5f9; color: var(--color-accent); border-left-color: var(--color-accent); }
@@ -88,8 +89,8 @@
 
     <div id="module-auth" class="module active" style="height: 100vh; justify-content: center; align-items: center; background: #ffffff;">
         <div style="background: white; padding: 40px; border-radius: 12px; width: 100%; max-width: 380px; text-align: center; border: 1px solid #e2e8f0;">
-            <img src="logo-inovasys.png" alt="inovaSys" style="max-width: 160px; margin-bottom: 25px;" onerror="this.style.display='none'">
-            <h2 style="margin-top: 0; color: var(--color-primary);">inovaSys</h2>
+            <img src="logo-inovasys.png" alt="Logotipo" class="sys-logo" style="max-width: 160px; max-height: 80px; margin-bottom: 25px; object-fit: contain;" onerror="this.style.display='none'">
+            <h2 style="margin-top: 0; color: var(--color-primary);" class="sys-name">inovaSys</h2>
             <form id="login-form">
                 <div style="text-align:left; margin-bottom:15px;"><label class="form-label">E-mail</label><input type="email" id="email" class="form-control" required></div>
                 <div style="text-align:left; margin-bottom:15px;"><label class="form-label">Senha</label><input type="password" id="password" class="form-control" required></div>
@@ -116,8 +117,8 @@
     <div id="module-app" class="module">
         <nav class="sidebar">
             <div class="sidebar-brand">
-                <img src="logo-inovasys.png" style="max-width: 120px;" onerror="this.style.display='none'">
-                <h3 style="margin: 0; color: var(--color-primary);">inovaSys</h3>
+                <img src="logo-inovasys.png" class="sys-logo" style="max-width: 120px; max-height: 60px; object-fit: contain; margin-bottom: 10px;" onerror="this.style.display='none'">
+                <h3 style="margin: 0; color: var(--color-primary);" class="sys-name">inovaSys</h3>
             </div>
             <div class="nav-item active" id="nav-dash">Painel e Processos</div>
             <div class="nav-item" id="nav-novo">Novo Protocolo</div>
@@ -187,7 +188,14 @@
             </div>
 
             <div id="view-detalhes" class="view">
-                <h2 id="det-titulo">Processo</h2>
+                <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 id="det-titulo" style="margin: 0;">Processo</h2>
+                    <div>
+                        <button class="btn btn-secondary" onclick="gerarDossie()" style="margin-right: 10px;">Gerar Dossiê</button>
+                        <button class="btn btn-secondary" onclick="showView('dash')">Voltar</button>
+                    </div>
+                </div>
+                
                 <div class="tab-menu">
                     <span class="tab-link active" onclick="switchTab('tab-dados', this)">Dados Iniciais</span>
                     <span class="tab-link" onclick="switchTab('tab-docs', this)">Modelos & Documentos</span>
@@ -354,7 +362,7 @@
                     <form id="camara-form">
                         <h4>Dados da Câmara</h4>
                         <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
-                            <div class="form-group"><label class="form-label">Nome</label><input type="text" id="cam_nome" class="form-control" required></div>
+                            <div class="form-group"><label class="form-label">Nome Institucional</label><input type="text" id="cam_nome" class="form-control" required></div>
                             <div class="form-group"><label class="form-label">CNPJ</label><input type="text" id="cam_cnpj" class="form-control" data-mask="doc" required></div>
                             <div class="form-group"><label class="form-label">Endereço</label><input type="text" id="cam_endereco" class="form-control" required></div>
                             <div class="form-group"><label class="form-label">Telefone</label><input type="text" id="cam_fone" class="form-control" data-mask="phone" required></div>
@@ -367,7 +375,7 @@
                         <div class="form-group"><label class="form-label">Webhook URL (Notificações)</label><input type="url" id="cam_webhook_url" class="form-control" placeholder="https://sua-api.com/webhook"></div>
                         <div class="form-group"><label class="form-label">Token/Secret (Opcional)</label><input type="text" id="cam_webhook_token" class="form-control" placeholder="Bearer seu_token_aqui"></div>
 
-                        <button type="submit" class="btn btn-success" style="margin-top:15px;">Salvar Configurações</button>
+                        <button type="submit" class="btn btn-success" style="margin-top:15px;">Salvar e Aplicar Identidade</button>
                     </form>
                 </div>
             </div>
@@ -420,6 +428,21 @@
         let activeProcess = null; let db_procs = []; let db_arbitros = []; let activeAudiencia = null;
         let chartFluxo, chartStatus;
 
+        // --- SISTEMA WHITE-LABEL ---
+        const aplicarIdentidadeVisual = () => {
+            try {
+                const conf = JSON.parse(localStorage.getItem('camara_config') || '{}');
+                const nomeSistema = conf.nome || 'inovaSys';
+                const logoSistema = conf.logo || 'logo-inovasys.png';
+                
+                document.querySelectorAll('.sys-name').forEach(el => el.innerText = nomeSistema);
+                document.querySelectorAll('.sys-logo').forEach(el => {
+                    el.src = logoSistema;
+                    el.style.display = 'inline-block';
+                });
+            } catch(e) {}
+        };
+
         // --- SISTEMA DE CONFIRMAÇÃO E TOAST ---
         let confirmActionCallback = null;
         window.showConfirm = (msg, callback) => { document.getElementById('confirm-msg').innerText = msg; confirmActionCallback = callback; document.getElementById('modal-confirm').style.display = 'flex'; };
@@ -454,11 +477,13 @@
         window.showView = showView;
 
         const iniciarSistema = async (user) => {
+            aplicarIdentidadeVisual();
             mostrarMudarView('module-app');
             try { const { data: perfil } = await supabase.from('perfis').select('*').eq('id', user.id).maybeSingle(); if (perfil && perfil.tipo_usuario === 'admin') { document.getElementById('nav-equipe').style.display = 'block'; document.getElementById('nav-camara').style.display = 'block'; } } catch (err) {}
             await Promise.all([carregarProcessos(), carregarDashAnalytics(), carregarArbitros(), carregarEquipe()]);
         };
 
+        aplicarIdentidadeVisual(); // Chamada inicial
         supabase.auth.getSession().then(({ data: { session } }) => { if (session) iniciarSistema(session.user); });
         supabase.auth.onAuthStateChange((event, session) => { if (event === 'SIGNED_IN' && session) iniciarSistema(session.user); else if (event === 'SIGNED_OUT') mostrarMudarView('module-auth'); });
         
@@ -511,26 +536,33 @@
             try {
                 const { data: aud } = await supabase.from('audiencias').select('*').eq('processo_id', id).maybeSingle();
                 activeAudiencia = aud || null; document.getElementById('texto_ata').value = aud?.texto_ata || ''; document.getElementById('texto_sentenca').value = aud?.texto_sentenca || '';
+                
                 const { data: acordo } = await supabase.from('acordos').select('id').eq('processo_id', id).maybeSingle();
                 if(acordo) {
                     const { data: parcs } = await supabase.from('parcelas').select('*').eq('acordo_id', acordo.id).order('numero_parcela');
                     document.getElementById('lista-parcelas').innerHTML = (parcs || []).map(pa => `<tr><td>${pa.numero_parcela}</td><td>${new Date(pa.data_vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</td><td>R$ ${Number(pa.valor_parcela).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td><td><span class="badge badge-${pa.status.toLowerCase()}">${pa.status}</span></td><td>${pa.status === 'Pendente' ? `<button class="btn btn-success btn-sm" onclick="pagarParcela(${pa.id})">Baixar</button>` : `<button class="btn btn-primary btn-sm" onclick="visualizarRecibo(${pa.id}, ${pa.numero_parcela}, '${pa.valor_parcela}', '${pa.data_pagamento}')">Recibo</button>`}</td></tr>`).join('');
                 } else document.getElementById('lista-parcelas').innerHTML = '<tr><td colspan="5" style="text-align:center;">Nenhum acordo firmado.</td></tr>';
+
                 await Promise.all([loadAnexos(), loadAndamento()]);
             } catch(e) {} showView('detalhes');
         };
 
         const loadAndamento = async () => {
             document.getElementById('proc_status').value = activeProcess.status;
-            const { data: notifs } = await supabase.from('notificacoes').select('*').eq('processo_id', activeProcess.id).order('data_envio', {ascending: false});
-            document.getElementById('lista-notificacoes').innerHTML = (notifs || []).map(n => `<tr><td>${n.tipo_comunicacao}</td><td>${n.destinatario}</td><td>${new Date(n.data_envio).toLocaleDateString('pt-BR')}</td><td>${n.status}</td><td>${n.observacoes || '-'}</td><td><button class="btn btn-danger btn-sm" onclick="excluirNotificacao(${n.id})">Excluir</button></td></tr>`).join('') || '<tr><td colspan="6" style="text-align:center;">Nenhuma comunicação registrada.</td></tr>';
-            const { data: hist } = await supabase.from('historico_processos').select('*').eq('processo_id', activeProcess.id).order('data_movimentacao', {ascending: false});
-            document.getElementById('lista-historico').innerHTML = (hist || []).map(h => `<tr><td>${new Date(h.data_movimentacao).toLocaleString('pt-BR')}</td><td>${h.descricao}</td><td>${h.status_anterior || '-'}</td><td><strong>${h.status_novo}</strong></td></tr>`).join('');
+            try {
+                const { data: notifs } = await supabase.from('notificacoes').select('*').eq('processo_id', activeProcess.id).order('data_envio', {ascending: false});
+                document.getElementById('lista-notificacoes').innerHTML = (notifs || []).map(n => `<tr><td>${n.tipo_comunicacao}</td><td>${n.destinatario}</td><td>${new Date(n.data_envio).toLocaleDateString('pt-BR')}</td><td>${n.status}</td><td>${n.observacoes || '-'}</td><td><button class="btn btn-danger btn-sm" onclick="excluirNotificacao(${n.id})">Excluir</button></td></tr>`).join('') || '<tr><td colspan="6" style="text-align:center;">Nenhuma comunicação registrada.</td></tr>';
+
+                const { data: hist } = await supabase.from('historico_processos').select('*').eq('processo_id', activeProcess.id).order('data_movimentacao', {ascending: false});
+                document.getElementById('lista-historico').innerHTML = (hist || []).map(h => `<tr><td>${new Date(h.data_movimentacao).toLocaleString('pt-BR')}</td><td>${h.descricao}</td><td>${h.status_anterior || '-'}</td><td><strong>${h.status_novo}</strong></td></tr>`).join('') || '<tr><td colspan="4" style="text-align:center;">Nenhuma movimentação registrada.</td></tr>';
+            } catch(e) {}
         };
 
         const loadAnexos = async () => {
-            const { data } = await supabase.from('processos_anexos').select('*').eq('processo_id', activeProcess.id);
-            document.getElementById('lista-anexos').innerHTML = (data || []).map(an => `<tr><td>${an.nome_arquivo}</td><td>${new Date(an.uploaded_at).toLocaleDateString('pt-BR')}</td><td><button class="btn btn-secondary btn-sm" onclick="downloadAnexo('${an.caminho_arquivo}')">Ver</button> <button class="btn btn-danger btn-sm" onclick="excluirAnexo(${an.id}, '${an.caminho_arquivo}')">Excluir</button></td></tr>`).join('') || '<tr><td colspan="3" style="text-align:center;">Nenhum arquivo anexado.</td></tr>';
+            try {
+                const { data } = await supabase.from('processos_anexos').select('*').eq('processo_id', activeProcess.id);
+                document.getElementById('lista-anexos').innerHTML = (data || []).map(an => `<tr><td>${an.nome_arquivo}</td><td>${new Date(an.uploaded_at).toLocaleDateString('pt-BR')}</td><td><button class="btn btn-secondary btn-sm" onclick="downloadAnexo('${an.caminho_arquivo}')">Ver</button> <button class="btn btn-danger btn-sm" onclick="excluirAnexo(${an.id}, '${an.caminho_arquivo}')">Excluir</button></td></tr>`).join('') || '<tr><td colspan="3" style="text-align:center;">Nenhum arquivo anexado.</td></tr>';
+            } catch(e) {}
         };
 
         // --- ATUALIZAÇÕES CRUD ---
@@ -566,7 +598,7 @@
             } catch(ex) { console.log('Sem webhook configurado.'); }
         };
 
-        // --- DOCUMENTOS INLINE ---
+        // --- DOCUMENTOS INLINE E DOSSIÊ ---
         const mkEdit = (val, col) => `<span class="editable-field" contenteditable="true" data-col="${col}">${val || '_________________'}</span>`;
         window.salvarEdicoesEmLinha = async () => {
             let p = {}; document.querySelectorAll('#pdf-area .editable-field').forEach(s => p[s.dataset.col] = s.innerText.trim());
@@ -595,6 +627,24 @@
             document.getElementById('p-body').innerHTML = html; document.getElementById('modal-preview').style.display = 'flex';
             document.getElementById('btn-download').onclick = () => { document.querySelectorAll('.editable-field').forEach(el => el.style.borderBottom = 'none'); html2pdf().from(document.getElementById('pdf-area')).set({ margin: 15, filename: `Doc_${p.numero_processo}.pdf` }).save(); setTimeout(() => document.querySelectorAll('.editable-field').forEach(el => el.style.borderBottom = '1px dashed var(--color-accent)'), 2000); };
         };
+
+        window.gerarDossie = async () => {
+            const cam = JSON.parse(localStorage.getItem('camara_config') || '{}'); const p = activeProcess;
+            document.getElementById('p-logo').src = cam.logo || ''; document.getElementById('p-logo').style.display = cam.logo ? 'inline-block' : 'none';
+            document.getElementById('p-cam-nome').innerText = cam.nome || 'CÂMARA ARBITRAL'; document.getElementById('p-cam-cnpj').innerText = cam.cnpj ? 'CNPJ: ' + cam.cnpj : '';
+            
+            const { data: hist } = await supabase.from('historico_processos').select('*').eq('processo_id', p.id).order('data_movimentacao', {ascending: true});
+            
+            let html = `<div style="text-align:center; margin-bottom: 30px;"><h2>DOSSIÊ DE PROCESSO ARBITRAL</h2><h3>Nº ${p.numero_processo}</h3></div>`;
+            html += `<h4>1. QUALIFICAÇÃO DAS PARTES</h4><p><strong>Requerente:</strong> ${p.requerente_nome} (Doc: ${p.requerente_documento})</p><p><strong>Requerido:</strong> ${p.requerido_nome} (Doc: ${p.requerido_documento})</p><p><strong>Valor da Causa:</strong> R$ ${Number(p.valor_causa).toLocaleString('pt-BR', {minimumFractionDigits:2})}</p><hr>`;
+            html += `<h4>2. HISTÓRICO DE MOVIMENTAÇÕES</h4><table border="1" cellpadding="5" cellspacing="0" width="100%" style="font-size:12px; text-align:left;"><tr><th>Data</th><th>Descrição</th><th>Status</th></tr>`;
+            html += (hist || []).map(h => `<tr><td>${new Date(h.data_movimentacao).toLocaleString('pt-BR')}</td><td>${h.descricao}</td><td>${h.status_novo}</td></tr>`).join('');
+            html += `</table>`;
+
+            document.getElementById('p-body').innerHTML = html; document.getElementById('btn-salvar-edicoes').style.display = 'none'; document.getElementById('modal-preview').style.display = 'flex';
+            document.getElementById('btn-download').onclick = () => { html2pdf().from(document.getElementById('pdf-area')).set({ margin: 15, filename: `Dossie_${p.numero_processo}.pdf` }).save(); };
+        };
+
         window.fecharModal = () => document.getElementById('modal-preview').style.display = 'none';
 
         // --- SUBMISSÕES E CRUD EXTRAS ---
@@ -607,7 +657,8 @@
 
         window.exportarCSV = () => { if (!window.db_procs || !window.db_procs.length) return showToast('Sem dados.'); let csv = 'Nº Processo,Requerente,Requerido,Valor Causa,Status,Data\n'; window.db_procs.forEach(p => { csv += `${p.numero_processo},"${p.requerente_nome}","${p.requerido_nome}",${p.valor_causa},${p.status},${new Date(p.created_at).toLocaleDateString('pt-BR')}\n`; }); const a = document.createElement('a'); a.href = window.URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'relatorio.csv'; a.click(); };
         
-        document.getElementById('processo-form').onsubmit = async (e) => { e.preventDefault(); const v = document.getElementById('valor_causa').value.replace(/[^\d,]/g,'').replace(',','.'); const n = new Date().getFullYear() + String(Math.floor(Math.random() * 90000)+10000); try { const { data:{user} } = await supabase.auth.getUser(); await supabase.from('processos').insert([{ numero_processo: n, requerente_nome: document.getElementById('req_nome').value, requerente_documento: document.getElementById('req_doc').value, requerente_endereco: document.getElementById('req_end').value, requerido_nome: document.getElementById('def_nome').value, requerido_documento: document.getElementById('def_doc').value, requerido_endereco: document.getElementById('def_end').value, valor_causa: parseFloat(v), resumo_fatos: document.getElementById('fatos').value, status: 'Protocolado', user_id: user.id }]); showToast("Protocolado!"); e.target.reset(); carregarProcessos(); showView('dash'); } catch (err) {} };
+        document.getElementById('processo-form').onsubmit = async (e) => { e.preventDefault(); const btn = e.target.querySelector('button[type="submit"]'); btn.innerText = 'Processando...'; btn.disabled = true;
+            const v_causa = document.getElementById('valor_causa').value.replace(/[^\d,]/g,'').replace(',','.'); const n = new Date().getFullYear() + String(Math.floor(Math.random() * 90000)+10000); try { const { data:{user} } = await supabase.auth.getUser(); await supabase.from('processos').insert([{ numero_processo: n, requerente_nome: document.getElementById('req_nome').value, requerente_documento: document.getElementById('req_doc').value, requerente_endereco: document.getElementById('req_end').value, requerido_nome: document.getElementById('def_nome').value, requerido_documento: document.getElementById('def_doc').value, requerido_endereco: document.getElementById('def_end').value, valor_causa: parseFloat(v), resumo_fatos: document.getElementById('fatos').value, status: 'Protocolado', user_id: user.id }]); showToast("Protocolado!"); e.target.reset(); carregarProcessos(); showView('dash'); } catch (err) {} finally { btn.innerText = 'Iniciar Procedimento'; btn.disabled = false; } };
         document.getElementById('arbitro-form').onsubmit = async (e) => { e.preventDefault(); await supabase.from('arbitros').insert([{ nome: document.getElementById('arb_nome').value, cpf: document.getElementById('arb_cpf').value, rg: document.getElementById('arb_rg').value, profissao: document.getElementById('arb_prof').value, endereco: document.getElementById('arb_end').value }]); showToast("Salvo!"); e.target.reset(); carregarArbitros(); };
         window.vincularArbitro = async () => { const a = document.getElementById('select-arbitro').value; if(a){ await supabase.from('processos').update({ arbitro_id: a }).eq('id', activeProcess.id); showToast('Vinculado!'); carregarProcessos(); } };
         window.salvarTextosAudiencia = async () => { const p = { processo_id: activeProcess.id, data_hora_audiencia: new Date().toISOString(), texto_ata: document.getElementById('texto_ata').value, texto_sentenca: document.getElementById('texto_sentenca').value }; if (activeAudiencia) await supabase.from('audiencias').update({texto_ata: p.texto_ata, texto_sentenca: p.texto_sentenca}).eq('id', activeAudiencia.id); else await supabase.from('audiencias').insert([p]); showToast("Textos salvos!"); openProc(activeProcess.id); };
@@ -615,7 +666,7 @@
         window.downloadAnexo = async (pt) => { const { data } = await supabase.storage.from('documentos_assinados').createSignedUrl(pt, 60); if(data) window.open(data.signedUrl, '_blank'); };
         window.visualizarRecibo = (id, num, valor, dt) => visualizarDoc(10, { num, valor, dataPagamento: dt });
 
-        document.getElementById('camara-form').onsubmit = (e) => { e.preventDefault(); localStorage.setItem('camara_config', JSON.stringify({ nome: document.getElementById('cam_nome').value, cnpj: document.getElementById('cam_cnpj').value, endereco: document.getElementById('cam_endereco').value, fone: document.getElementById('cam_fone').value, logo: localStorage.getItem('temp_logo') || '', webhook_url: document.getElementById('cam_webhook_url').value, webhook_token: document.getElementById('cam_webhook_token').value })); showToast("Câmara e Integrações Salvas!"); };
+        document.getElementById('camara-form').onsubmit = (e) => { e.preventDefault(); localStorage.setItem('camara_config', JSON.stringify({ nome: document.getElementById('cam_nome').value, cnpj: document.getElementById('cam_cnpj').value, endereco: document.getElementById('cam_endereco').value, fone: document.getElementById('cam_fone').value, logo: localStorage.getItem('temp_logo') || '', webhook_url: document.getElementById('cam_webhook_url').value, webhook_token: document.getElementById('cam_webhook_token').value })); aplicarIdentidadeVisual(); showToast("Configurações Salvas!"); };
         document.getElementById('cam_logo').onchange = (e) => { const r = new FileReader(); r.onload = ev => localStorage.setItem('temp_logo', ev.target.result); if(e.target.files[0]) r.readAsDataURL(e.target.files[0]); };
 
         document.getElementById('nav-dash').onclick = () => showView('dash'); document.getElementById('nav-novo').onclick = () => showView('novo'); document.getElementById('nav-arbitros').onclick = () => showView('arbitros'); document.getElementById('nav-equipe').onclick = () => showView('equipe'); document.getElementById('nav-camara').onclick = () => { try { const c = JSON.parse(localStorage.getItem('camara_config')); if(c) { document.getElementById('cam_nome').value = c.nome||''; document.getElementById('cam_cnpj').value = c.cnpj||''; document.getElementById('cam_endereco').value = c.endereco||''; document.getElementById('cam_fone').value = c.fone||''; document.getElementById('cam_webhook_url').value = c.webhook_url||''; document.getElementById('cam_webhook_token').value = c.webhook_token||''; } } catch(e) {} showView('camara'); };
