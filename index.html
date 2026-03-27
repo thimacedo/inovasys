@@ -42,7 +42,6 @@
         .btn-primary { background: var(--color-accent); }
         .btn-success { background: #10b981; }
         .btn-secondary { background: #64748b; }
-        .btn-danger { background: #ef4444; }
 
         .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
         .badge-pendente { background: #fef3c7; color: #92400e; }
@@ -80,18 +79,12 @@
 <body>
 
     <div id="module-auth" class="module active" style="height: 100vh; justify-content: center; align-items: center; background: #ffffff;">
-        <div style="background: white; padding: 40px; border-radius: 12px; width: 100%; max-width: 380px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;">
+        <div style="background: white; padding: 40px; border-radius: 12px; width: 100%; max-width: 380px; text-align: center; border: 1px solid #e2e8f0;">
             <img src="logo-inovasys.png" alt="inovaSys" style="max-width: 160px; margin-bottom: 25px;" onerror="this.style.display='none'">
             <h2 style="margin-top: 0; color: var(--color-primary);">inovaSys</h2>
             <form id="login-form">
-                <div style="text-align:left; margin-bottom:15px;">
-                    <label class="form-label">E-mail</label>
-                    <input type="email" id="email" class="form-control" required>
-                </div>
-                <div style="text-align:left; margin-bottom:15px;">
-                    <label class="form-label">Senha</label>
-                    <input type="password" id="password" class="form-control" required>
-                </div>
+                <div style="text-align:left; margin-bottom:15px;"><label class="form-label">E-mail</label><input type="email" id="email" class="form-control" required></div>
+                <div style="text-align:left; margin-bottom:15px;"><label class="form-label">Senha</label><input type="password" id="password" class="form-control" required></div>
                 <button type="submit" class="btn btn-primary" style="width:100%;" id="btn-login">Acessar Painel</button>
             </form>
         </div>
@@ -117,26 +110,12 @@
                     <h2>Painel de Controle</h2>
                     <input type="text" id="search-input" class="form-control" style="width: 250px;" placeholder="Pesquisar Processos...">
                 </div>
-
                 <div class="dashboard-grid">
-                    <div class="stat-card">
-                        <span class="stat-title">Processos Ativos</span>
-                        <span class="stat-value" id="dash-ativos">0</span>
-                    </div>
-                    <div class="stat-card">
-                        <span class="stat-title">Volume de Acordos</span>
-                        <span class="stat-value" id="dash-volume">R$ 0,00</span>
-                    </div>
-                    <div class="stat-card">
-                        <span class="stat-title">Total Recebido</span>
-                        <span class="stat-value success" id="dash-recebido">R$ 0,00</span>
-                    </div>
-                    <div class="stat-card">
-                        <span class="stat-title">Total Pendente</span>
-                        <span class="stat-value warning" id="dash-pendente">R$ 0,00</span>
-                    </div>
+                    <div class="stat-card"><span class="stat-title">Processos Ativos</span><span class="stat-value" id="dash-ativos">0</span></div>
+                    <div class="stat-card"><span class="stat-title">Volume de Acordos</span><span class="stat-value" id="dash-volume">R$ 0,00</span></div>
+                    <div class="stat-card"><span class="stat-title">Total Recebido</span><span class="stat-value success" id="dash-recebido">R$ 0,00</span></div>
+                    <div class="stat-card"><span class="stat-title">Total Pendente</span><span class="stat-value warning" id="dash-pendente">R$ 0,00</span></div>
                 </div>
-
                 <div class="card">
                     <h4>Últimos Processos Atualizados</h4>
                     <table>
@@ -154,8 +133,6 @@
                         <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
                             <div class="form-group"><label class="form-label">Nome Completo</label><input type="text" id="arb_nome" class="form-control" required></div>
                             <div class="form-group"><label class="form-label">CPF</label><input type="text" id="arb_cpf" class="form-control" data-mask="doc" required></div>
-                        </div>
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
                             <div class="form-group"><label class="form-label">RG</label><input type="text" id="arb_rg" class="form-control" required></div>
                             <div class="form-group"><label class="form-label">Profissão</label><input type="text" id="arb_prof" class="form-control" required></div>
                         </div>
@@ -164,21 +141,14 @@
                     </form>
                 </div>
                 <div class="card">
-                    <table>
-                        <thead><tr><th>Nome</th><th>CPF</th><th>Profissão</th></tr></thead>
-                        <tbody id="lista-arbitros"></tbody>
-                    </table>
+                    <table><thead><tr><th>Nome</th><th>CPF</th><th>Profissão</th></tr></thead><tbody id="lista-arbitros"></tbody></table>
                 </div>
             </div>
 
             <div id="view-equipe" class="view">
                 <h2>Gestão de Equipe</h2>
                 <div class="card">
-                    <h4>Membros Cadastrados</h4>
-                    <table>
-                        <thead><tr><th>Nome / E-mail</th><th>Data de Cadastro</th><th>Nível de Acesso</th></tr></thead>
-                        <tbody id="lista-equipe"></tbody>
-                    </table>
+                    <table><thead><tr><th>Nome / E-mail</th><th>Data de Cadastro</th><th>Nível de Acesso</th></tr></thead><tbody id="lista-equipe"></tbody></table>
                 </div>
             </div>
 
@@ -189,9 +159,9 @@
                         <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
                             <div class="form-group"><label class="form-label">Nome da Instituição</label><input type="text" id="cam_nome" class="form-control" required></div>
                             <div class="form-group"><label class="form-label">CNPJ</label><input type="text" id="cam_cnpj" class="form-control" data-mask="doc" required></div>
+                            <div class="form-group"><label class="form-label">Endereço Completo</label><input type="text" id="cam_endereco" class="form-control" required></div>
+                            <div class="form-group"><label class="form-label">Telefone/WhatsApp</label><input type="text" id="cam_fone" class="form-control" data-mask="phone" required></div>
                         </div>
-                        <div class="form-group"><label class="form-label">Endereço Completo</label><input type="text" id="cam_endereco" class="form-control" required></div>
-                        <div class="form-group"><label class="form-label">Telefone/WhatsApp</label><input type="text" id="cam_fone" class="form-control" data-mask="phone" required></div>
                         <div class="form-group"><label class="form-label">Logotipo (URL ou Base64)</label><input type="file" id="cam_logo" class="form-control" accept="image/*"></div>
                         <button type="submit" class="btn btn-success" style="width:auto;">Salvar Dados</button>
                     </form>
@@ -243,7 +213,6 @@
                             <div class="doc-item"><span>01. Capa do Processo</span><button class="btn btn-primary" onclick="visualizarDoc(1)">Visualizar</button></div>
                             <div class="doc-item"><span>02. Termo de Apresentação</span><button class="btn btn-primary" onclick="visualizarDoc(2)">Visualizar</button></div>
                         </div>
-
                         <h4 style="margin-top:30px;">Fase 2: Comunicação e Instalação</h4>
                         <div class="doc-list">
                             <div class="doc-item"><span>03. Notificação Extrajudicial</span><button class="btn btn-primary" onclick="visualizarDoc(3)">Visualizar</button></div>
@@ -251,7 +220,6 @@
                             <div class="doc-item"><span>05. Termo de Compromisso Árbitro</span><button class="btn btn-primary" onclick="visualizarDoc(5)">Visualizar</button></div>
                             <div class="doc-item"><span>11. Recibo de Honorários (Câmara)</span><button class="btn btn-primary" onclick="visualizarDoc(11)">Visualizar</button></div>
                         </div>
-
                         <h4 style="margin-top:30px;">Fase 3: Audiência e Decisão</h4>
                         <div class="doc-list">
                             <div class="doc-item"><span>06. Termo de Compromisso Arbitral</span><button class="btn btn-primary" onclick="visualizarDoc(6)">Visualizar</button></div>
@@ -280,57 +248,22 @@
                             <button class="btn btn-success" style="width:auto;" onclick="atualizarStatusProcesso()">Atualizar Fase</button>
                         </div>
                     </div>
-
                     <div class="card">
                         <h4>Registrar Comunicação (Notificações)</h4>
                         <form id="notificacao-form">
                             <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:15px; margin-bottom:15px;">
-                                <div>
-                                    <label class="form-label">Meio de Comunicação</label>
-                                    <select id="not_tipo" class="form-control" required>
-                                        <option value="WhatsApp">WhatsApp</option>
-                                        <option value="Correios/AR">Correios/AR</option>
-                                        <option value="E-mail">E-mail</option>
-                                        <option value="Presencial">Presencial</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="form-label">Destinatário</label>
-                                    <select id="not_dest" class="form-control" required>
-                                        <option value="Requerido">Requerido</option>
-                                        <option value="Requerente">Requerente</option>
-                                        <option value="Ambos">Ambos</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="form-label">Status da Entrega</label>
-                                    <select id="not_status" class="form-control" required>
-                                        <option value="Enviada">Enviada</option>
-                                        <option value="Entregue">Entregue</option>
-                                        <option value="Lida">Lida</option>
-                                        <option value="Devolvida">Devolvida / Falha</option>
-                                    </select>
-                                </div>
+                                <div><label class="form-label">Meio</label><select id="not_tipo" class="form-control" required><option value="WhatsApp">WhatsApp</option><option value="Correios/AR">Correios/AR</option><option value="E-mail">E-mail</option><option value="Presencial">Presencial</option></select></div>
+                                <div><label class="form-label">Destinatário</label><select id="not_dest" class="form-control" required><option value="Requerido">Requerido</option><option value="Requerente">Requerente</option><option value="Ambos">Ambos</option></select></div>
+                                <div><label class="form-label">Status</label><select id="not_status" class="form-control" required><option value="Enviada">Enviada</option><option value="Entregue">Entregue</option><option value="Lida">Lida</option><option value="Devolvida">Devolvida</option></select></div>
                             </div>
-                            <div class="form-group">
-                                <label class="form-label">Observações (Ex: Código de Rastreio)</label>
-                                <input type="text" id="not_obs" class="form-control">
-                            </div>
+                            <div class="form-group"><label class="form-label">Observações</label><input type="text" id="not_obs" class="form-control"></div>
                             <button type="submit" class="btn btn-primary">Registrar Comunicação</button>
                         </form>
-                        
-                        <table style="margin-top:20px;">
-                            <thead><tr><th>Meio</th><th>Destinatário</th><th>Data de Envio</th><th>Status</th><th>Obs</th></tr></thead>
-                            <tbody id="lista-notificacoes"></tbody>
-                        </table>
+                        <table style="margin-top:20px;"><thead><tr><th>Meio</th><th>Destinatário</th><th>Data</th><th>Status</th><th>Obs</th></tr></thead><tbody id="lista-notificacoes"></tbody></table>
                     </div>
-
                     <div class="card">
-                        <h4>Histórico e Auditoria do Processo</h4>
-                        <table>
-                            <thead><tr><th>Data/Hora</th><th>Descrição</th><th>Status Anterior</th><th>Novo Status</th></tr></thead>
-                            <tbody id="lista-historico"></tbody>
-                        </table>
+                        <h4>Auditoria do Processo</h4>
+                        <table><thead><tr><th>Data/Hora</th><th>Descrição</th><th>Status Anterior</th><th>Novo Status</th></tr></thead><tbody id="lista-historico"></tbody></table>
                     </div>
                 </div>
 
@@ -338,27 +271,16 @@
                     <div class="card">
                         <h4>Designação de Árbitro</h4>
                         <div style="display:flex; gap:10px; align-items:flex-end;">
-                            <div style="flex:1;">
-                                <label class="form-label">Árbitro Nomeado</label>
-                                <select id="select-arbitro" class="form-control"></select>
-                            </div>
-                            <button class="btn btn-success" style="width:auto;" onclick="vincularArbitro()">Vincular ao Processo</button>
+                            <div style="flex:1;"><label class="form-label">Árbitro Nomeado</label><select id="select-arbitro" class="form-control"></select></div>
+                            <button class="btn btn-success" style="width:auto;" onclick="vincularArbitro()">Vincular</button>
                         </div>
                     </div>
-
                     <div class="card">
                         <h4>Redação da Audiência e Sentença</h4>
-                        <div class="form-group">
-                            <label class="form-label">Texto da Ata de Audiência</label>
-                            <textarea id="texto_ata" class="form-control" rows="6" placeholder="Insira o relato do que ocorreu na audiência..."></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Fundamentação e Dispositivo da Sentença</label>
-                            <textarea id="texto_sentenca" class="form-control" rows="8" placeholder="Insira a fundamentação e a decisão proferida pelo árbitro..."></textarea>
-                        </div>
+                        <div class="form-group"><label class="form-label">Texto da Ata de Audiência</label><textarea id="texto_ata" class="form-control" rows="6"></textarea></div>
+                        <div class="form-group"><label class="form-label">Fundamentação e Dispositivo da Sentença</label><textarea id="texto_sentenca" class="form-control" rows="8"></textarea></div>
                         <button class="btn btn-success" style="width:auto;" onclick="salvarTextosAudiencia()">Salvar Textos Jurídicos</button>
                     </div>
-
                     <div class="card">
                         <h4>Termos do Acordo (Opcional)</h4>
                         <form id="acordo-form">
@@ -375,10 +297,7 @@
                 <div id="tab-financeiro" class="tab-content" style="display:none;">
                     <div class="card">
                         <h4>Cronograma de Pagamentos</h4>
-                        <table>
-                            <thead><tr><th>Parcela</th><th>Vencimento</th><th>Valor</th><th>Status</th><th>Ação</th></tr></thead>
-                            <tbody id="lista-parcelas"></tbody>
-                        </table>
+                        <table><thead><tr><th>Parcela</th><th>Vencimento</th><th>Valor</th><th>Status</th><th>Ação</th></tr></thead><tbody id="lista-parcelas"></tbody></table>
                     </div>
                 </div>
 
@@ -386,16 +305,10 @@
                     <div class="card">
                         <h4>Upload de Documentos Assinados</h4>
                         <div style="display:flex; gap:10px; align-items:flex-end; margin-bottom: 20px;">
-                            <div style="flex:1;">
-                                <label class="form-label">Selecione o Arquivo PDF</label>
-                                <input type="file" id="arquivo_anexo" class="form-control" accept="application/pdf">
-                            </div>
+                            <div style="flex:1;"><label class="form-label">Selecione o Arquivo PDF</label><input type="file" id="arquivo_anexo" class="form-control" accept="application/pdf"></div>
                             <button class="btn btn-success" style="width:auto;" onclick="uploadAnexo()">Enviar Arquivo</button>
                         </div>
-                        <table>
-                            <thead><tr><th>Nome do Arquivo</th><th>Data</th><th>Ação</th></tr></thead>
-                            <tbody id="lista-anexos"></tbody>
-                        </table>
+                        <table><thead><tr><th>Nome do Arquivo</th><th>Data</th><th>Ação</th></tr></thead><tbody id="lista-anexos"></tbody></table>
                     </div>
                 </div>
             </div>
@@ -433,7 +346,6 @@
         let db_arbitros = [];
         let activeAudiencia = null;
 
-        // --- MÁSCARAS ---
         const Masks = {
             doc: (v) => {
                 v = v.replace(/\D/g, "");
@@ -460,7 +372,6 @@
             }
         });
 
-        // --- NAVEGAÇÃO ---
         window.switchTab = (tabId, el) => {
             document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
             document.querySelectorAll('.tab-link').forEach(l => l.classList.remove('active'));
@@ -475,24 +386,16 @@
             if(document.getElementById('nav-'+id)) document.getElementById('nav-'+id).classList.add('active');
         };
 
-        // --- AUTENTICAÇÃO E INICIALIZAÇÃO SEGURA ---
         const iniciarSistema = async (user) => {
-            // Exibe a interface imediatamente
             document.getElementById('module-auth').classList.remove('active');
             document.getElementById('module-app').classList.add('active');
-
             try {
-                // Tenta carregar perfil para liberar menus admin (Não trava se falhar)
                 const { data: perfil } = await supabase.from('perfis').select('*').eq('id', user.id).maybeSingle();
                 if (perfil && perfil.tipo_usuario === 'admin') {
                     document.getElementById('nav-equipe').style.display = 'block';
                     document.getElementById('nav-camara').style.display = 'block';
                 }
-            } catch (err) {
-                console.warn("Erro ao carregar perfil:", err);
-            }
-
-            // Carrega os dados operacionais
+            } catch (err) {}
             await loadDataSafe();
         };
 
@@ -501,9 +404,8 @@
         });
 
         supabase.auth.onAuthStateChange((event, session) => {
-            if (event === 'SIGNED_IN' && session) {
-                iniciarSistema(session.user);
-            } else if (event === 'SIGNED_OUT') {
+            if (event === 'SIGNED_IN' && session) iniciarSistema(session.user);
+            else if (event === 'SIGNED_OUT') {
                 document.getElementById('module-app').classList.remove('active');
                 document.getElementById('module-auth').classList.add('active');
             }
@@ -523,22 +425,12 @@
             }
         };
 
-        document.getElementById('nav-logout').onclick = async () => {
-            await supabase.auth.signOut();
-        };
+        document.getElementById('nav-logout').onclick = async () => await supabase.auth.signOut();
 
-        // --- CARREGAMENTO DE DADOS (TRY/CATCH) ---
         const loadDataSafe = async () => {
             try {
-                await Promise.all([
-                    carregarProcessos(),
-                    carregarDashboardMetrics(),
-                    carregarArbitros(),
-                    carregarEquipe()
-                ]);
-            } catch (err) {
-                console.error("Erro em loadDataSafe:", err);
-            }
+                await Promise.all([carregarProcessos(), carregarDashboardMetrics(), carregarArbitros(), carregarEquipe()]);
+            } catch (err) {}
         };
 
         const carregarProcessos = async () => {
@@ -582,17 +474,12 @@
                 const { data } = await supabase.from('perfis').select('*').order('created_at', {ascending: false});
                 if (data) {
                     document.getElementById('lista-equipe').innerHTML = data.map(e => `
-                        <tr>
-                            <td>${e.nome || 'Usuário'}</td>
-                            <td>${new Date(e.created_at).toLocaleDateString('pt-BR')}</td>
-                            <td><span class="badge ${e.tipo_usuario === 'admin' ? 'badge-admin' : 'badge-status'}">${e.tipo_usuario}</span></td>
-                        </tr>
+                        <tr><td>${e.nome || 'Usuário'}</td><td>${new Date(e.created_at).toLocaleDateString('pt-BR')}</td><td><span class="badge ${e.tipo_usuario === 'admin' ? 'badge-admin' : 'badge-status'}">${e.tipo_usuario}</span></td></tr>
                     `).join('');
                 }
             } catch(e) {}
         };
 
-        // --- LÓGICA DE NEGÓCIO ---
         window.openProc = async (id) => {
             activeProcess = window.db_procs.find(p => p.id === id);
             document.getElementById('det-titulo').innerText = 'Processo ' + activeProcess.numero_processo;
@@ -624,7 +511,7 @@
                 }
 
                 await Promise.all([loadAnexos(), loadAndamento()]);
-            } catch(e) { console.error("Erro ao carregar detalhes", e); }
+            } catch(e) {}
             
             showView('detalhes');
         };
@@ -661,7 +548,80 @@
             else { alert('Fase atualizada com sucesso!'); activeProcess.status = novoStatus; await carregarProcessos(); loadAndamento(); }
         };
 
-        // --- DOCUMENTOS ---
+        window.vincularArbitro = async () => {
+            const arbId = document.getElementById('select-arbitro').value;
+            if(!arbId) return alert("Selecione um árbitro na lista.");
+            await supabase.from('processos').update({ arbitro_id: arbId }).eq('id', activeProcess.id);
+            alert('Árbitro vinculado com sucesso!');
+            carregarProcessos();
+        };
+
+        window.salvarTextosAudiencia = async () => {
+            const payload = {
+                processo_id: activeProcess.id,
+                data_hora_audiencia: new Date().toISOString(),
+                texto_ata: document.getElementById('texto_ata').value,
+                texto_sentenca: document.getElementById('texto_sentenca').value
+            };
+            
+            let error;
+            if (activeAudiencia) {
+                const res = await supabase.from('audiencias').update({texto_ata: payload.texto_ata, texto_sentenca: payload.texto_sentenca}).eq('id', activeAudiencia.id);
+                error = res.error;
+            } else {
+                const res = await supabase.from('audiencias').insert([payload]);
+                error = res.error;
+            }
+            if (error) alert("Erro ao salvar textos: " + error.message);
+            else { alert("Textos jurídicos salvos com sucesso!"); openProc(activeProcess.id); }
+        };
+
+        document.getElementById('notificacao-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const payload = {
+                processo_id: activeProcess.id,
+                tipo_comunicacao: document.getElementById('not_tipo').value,
+                destinatario: document.getElementById('not_dest').value,
+                status: document.getElementById('not_status').value,
+                observacoes: document.getElementById('not_obs').value
+            };
+            const { error } = await supabase.from('notificacoes').insert([payload]);
+            if(error) alert(error.message);
+            else { alert("Comunicação registrada!"); document.getElementById('notificacao-form').reset(); loadAndamento(); }
+        };
+
+        document.getElementById('acordo-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const val = document.getElementById('aco_valor').value.replace(/[^\d,]/g,'').replace(',','.');
+            const dataPrimeiraParcela = new Date(document.getElementById('aco_data').value + 'T00:00:00');
+            const payload = { processo_id: activeProcess.id, valor_acordado: parseFloat(val), quantidade_parcelas: parseInt(document.getElementById('aco_parc').value), dia_vencimento: dataPrimeiraParcela.getDate() };
+            const { error } = await supabase.from('acordos').insert([payload]);
+            if(error) alert(error.message); else { alert('Acordo e Parcelas Gerados!'); openProc(activeProcess.id); carregarDashboardMetrics(); }
+        };
+
+        window.pagarParcela = async (id) => {
+            await supabase.rpc('registrar_pagamento_parcela', { p_parcela_id: id });
+            alert('Pagamento registrado com sucesso!'); openProc(activeProcess.id); carregarDashboardMetrics();
+        };
+
+        window.uploadAnexo = async () => {
+            const fileInput = document.getElementById('arquivo_anexo');
+            const file = fileInput.files[0];
+            if(!file) return alert("Selecione um arquivo PDF.");
+            const path = `processo_${activeProcess.id}/${Date.now()}_${file.name}`;
+            const { error: uploadError } = await supabase.storage.from('documentos_assinados').upload(path, file);
+            if(uploadError) return alert(uploadError.message);
+            await supabase.from('processos_anexos').insert([{ processo_id: activeProcess.id, nome_arquivo: file.name, caminho_arquivo: path }]);
+            alert('Documento arquivado com sucesso!'); fileInput.value = ''; loadAnexos();
+        };
+
+        window.downloadAnexo = async (path) => {
+            const { data, error } = await supabase.storage.from('documentos_assinados').createSignedUrl(path, 60);
+            if(error) alert(error.message); else window.open(data.signedUrl, '_blank');
+        };
+
+        window.visualizarRecibo = (id, num, valor, dataPagamento) => visualizarDoc(10, { num, valor, dataPagamento });
+
         window.visualizarDoc = (num, extraData = null) => {
             let config = '{}';
             try { config = localStorage.getItem('camara_config') || '{}'; } catch(e){}
@@ -679,7 +639,31 @@
 
             if(num === 1) html = `<div style="text-align:center; border:2px solid #000; padding:50px;"><h2>PROCEDIMENTO N° ${p.numero_processo}</h2><h1 style="margin-top:50px;">CAPA DE PROCESSO</h1><p>Demandante: ${p.requerente_nome}</p><p>Demandado: ${p.requerido_nome}</p></div>`;
             else if(num === 2) html = `<h3>TERMO DE APRESENTAÇÃO N° ${p.numero_processo}</h3><p>Eu, ${p.requerente_nome}, venho formalizar pedido em face de ${p.requerido_nome}.</p><h4>FATOS:</h4><p>${p.resumo_fatos}</p><p><strong>VALOR DA CAUSA:</strong> R$ ${Number(p.valor_causa).toLocaleString('pt-BR')}</p>`;
-            else if(num === 8) html = `<h3>SENTENÇA ARBITRAL - PROCESSO ${p.numero_processo}</h3><p>Partes: ${p.requerente_nome} e ${p.requerido_nome}.</p><h4>FUNDAMENTAÇÃO E DISPOSITIVO:</h4><p style="white-space: pre-wrap;">${activeAudiencia?.texto_sentenca || 'Nenhum texto registrado na aba Instrução.'}</p><div style="margin-top:60px; text-align:center;">_________________________________<br>Juiz Arbitral</div>`;
+            else if(num === 3) html = `<h3>NOTIFICAÇÃO EXTRAJUDICIAL</h3><p>Prezado(a) ${p.requerido_nome}, fica notificado(a) sobre o processo nº ${p.numero_processo}.</p>`;
+            else if(num === 4) {
+                if(!arb) return alert("Vincule um árbitro primeiro.");
+                html = `<h3>PORTARIA DE NOMEAÇÃO N° ${p.numero_processo}</h3><p>O Presidente da ${cam.nome || 'Câmara'}, RESOLVE:</p><p>NOMEAR o Sr(a) <strong>${arb.nome}</strong> para atuar como Juiz Arbitral no processo.</p><div style="margin-top:60px; text-align:center;">_________________________________<br>Presidente</div>`;
+            }
+            else if(num === 5) {
+                if(!arb) return alert("Vincule um árbitro primeiro.");
+                html = `<h3>TERMO DE COMPROMISSO DO ÁRBITRO</h3><p>O Sr(a) <strong>${arb.nome}</strong>, RG ${arb.rg || '-'}, CPF ${arb.cpf}, assume formalmente a função de Árbitro no Procedimento n° ${p.numero_processo}.</p><div style="margin-top:60px; text-align:center;">_________________________________<br>${arb.nome}<br>Árbitro</div>`;
+            }
+            else if(num === 6) {
+                if(!arb) return alert("Vincule um árbitro primeiro.");
+                html = `<h3>TERMO DE COMPROMISSO ARBITRAL</h3><p>Pelo presente instrumento, ${p.requerente_nome} e ${p.requerido_nome} elegem a ${cam.nome || 'Câmara'} e o árbitro <strong>${arb.nome}</strong> para dirimir o litígio do processo ${p.numero_processo}, submetendo-se à Lei 9.307/96.</p><div style="margin-top:60px; display:flex; justify-content:space-between; text-align:center;"><div>___________________________<br>Requerente</div><div>___________________________<br>Requerido</div></div>`;
+            }
+            else if(num === 7) {
+                html = `<h3>ATA DE AUDIÊNCIA N° ${p.numero_processo}</h3><p>Aos ${hoje}, realizou-se audiência referente ao processo.</p><h4>RELATO E TERMOS:</h4><p style="white-space: pre-wrap;">${activeAudiencia?.texto_ata || 'Nenhum texto registrado na aba Instrução.'}</p><div style="margin-top:60px; text-align:center;">_________________________________<br>Árbitro / Partes</div>`;
+            }
+            else if(num === 8) {
+                html = `<h3>SENTENÇA ARBITRAL - PROCESSO ${p.numero_processo}</h3><p>Partes: ${p.requerente_nome} e ${p.requerido_nome}.</p><h4>FUNDAMENTAÇÃO E DISPOSITIVO:</h4><p style="white-space: pre-wrap;">${activeAudiencia?.texto_sentenca || 'Nenhum texto registrado na aba Instrução.'}</p><div style="margin-top:60px; text-align:center;">_________________________________<br>Juiz Arbitral</div>`;
+            }
+            else if(num === 9) html = `<h3>TERMO DE ENTREGA DE DOCUMENTOS</h3><p>Declaramos para os devidos fins que as partes receberam cópia da Sentença Arbitral proferida no processo ${p.numero_processo}.</p><div style="margin-top:60px; display:flex; justify-content:space-between; text-align:center;"><div>___________________________<br>Requerente</div><div>___________________________<br>Requerido</div></div>`;
+            else if(num === 10 && extraData) {
+                let dataPag = new Date(extraData.dataPagamento + 'T00:00:00').toLocaleDateString('pt-BR');
+                html = `<h3>RECIBO DE ACORDO - PARCELA ${extraData.num}</h3><p>Recebi de ${p.requerido_nome} a importância de R$ ${Number(extraData.valor).toLocaleString('pt-BR')}, referente ao pagamento da parcela ${extraData.num} do acordo firmado no processo ${p.numero_processo}.</p><p>Data do Pagamento: ${dataPag}</p><div style="margin-top:60px; text-align:center;">_________________________________<br>${p.requerente_nome} (Recebedor)</div>`;
+            }
+            else if(num === 11) html = `<h3>RECIBO DE HONORÁRIOS DA CÂMARA</h3><p>A ${cam.nome || 'Câmara'} recebeu de ${p.requerente_nome} o valor de R$ ${Number(p.valor_causa * 0.1).toLocaleString('pt-BR')} referente aos honorários.</p>`;
             
             document.getElementById('p-body').innerHTML = html;
             document.getElementById('modal-preview').style.display = 'flex';
@@ -688,7 +672,6 @@
 
         window.fecharModal = () => document.getElementById('modal-preview').style.display = 'none';
 
-        // --- CADASTROS ---
         document.getElementById('processo-form').onsubmit = async (e) => {
             e.preventDefault();
             const btn = e.target.querySelector('button[type="submit"]');
@@ -718,13 +701,31 @@
                 alert(`Processo ${numProc} protocolado com sucesso!`);
                 e.target.reset();
                 await carregarProcessos();
-                await carregarDashboardMetrics();
                 showView('dash');
             } catch (err) { alert("Erro ao protocolar: " + err.message); }
             finally { btn.innerText = 'Iniciar Procedimento'; btn.disabled = false; }
         };
 
-        // --- BINDS DE MENU RESTANTES ---
+        document.getElementById('arbitro-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const payload = { nome: document.getElementById('arb_nome').value, cpf: document.getElementById('arb_cpf').value, rg: document.getElementById('arb_rg').value, profissao: document.getElementById('arb_prof').value, endereco: document.getElementById('arb_end').value };
+            const { error } = await supabase.from('arbitros').insert([payload]);
+            if(error) alert("Erro: " + error.message); else { alert("Árbitro salvo!"); document.getElementById('arbitro-form').reset(); await carregarArbitros(); }
+        };
+
+        document.getElementById('camara-form').onsubmit = (e) => {
+            e.preventDefault();
+            const config = { nome: document.getElementById('cam_nome').value, cnpj: document.getElementById('cam_cnpj').value, endereco: document.getElementById('cam_endereco').value, fone: document.getElementById('cam_fone').value, logo: localStorage.getItem('temp_logo') || '' };
+            localStorage.setItem('camara_config', JSON.stringify(config));
+            alert("Dados Salvos com Sucesso!");
+        };
+
+        document.getElementById('cam_logo').onchange = (e) => {
+            const reader = new FileReader();
+            reader.onload = (ev) => localStorage.setItem('temp_logo', ev.target.result);
+            if(e.target.files[0]) reader.readAsDataURL(e.target.files[0]);
+        };
+
         document.getElementById('nav-dash').onclick = () => showView('dash');
         document.getElementById('nav-novo').onclick = () => showView('novo');
         document.getElementById('nav-arbitros').onclick = () => showView('arbitros');
